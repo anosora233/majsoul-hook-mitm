@@ -1,0 +1,5 @@
+﻿mitmproxy
+protobuf==3.16.0
+requests
+pyinstaller
+pywin32
