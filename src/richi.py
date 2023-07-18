@@ -1,4 +1,3 @@
-# 捕获websocket数据并解析雀魂"动作"语义为Json
 import json
 import base64
 import pb2 as pb
@@ -17,20 +16,17 @@ class MsgType(Enum):
 
 class RichiProto:
     def __init__(self):
-        # 解析一局的WS消息队列
-        self.tot = 0  # 当前总共解析的包数量
-        # (method_name:str,pb.MethodObj) for 256 sliding windows; req->res
-        self.res_type = {}  # int -> (method_name,pb2obj)
+        self.tot = 0
+        self.res_type = {}
         self.jsonProto = json.load(open("./bin/richi.json", "r"))
 
     def parse(self, flow_msg):
-        # parse一帧WS flow msg，要求按顺序parse
         buf = flow_msg.content
         from_client = flow_msg.from_client
         result = {}
-        msg_type = MsgType(buf[0])  # 通信报文类型
+        msg_type = MsgType(buf[0])
         if msg_type == MsgType.Notify:
-            msg_block = fromProtobuf(buf[1:])  # 解析剩余报文结构
+            msg_block = fromProtobuf(buf[1:])
             method_name = msg_block[0]["data"].decode()
             _, lq, message_name = method_name.split(".")
             liqi_pb2_notify = getattr(pb, message_name)
@@ -51,8 +47,8 @@ class RichiProto:
                 dict_obj["data"] = action_dict_obj
             msg_id = self.tot
         else:
-            msg_id = unpack("<H", buf[1:3])[0]  # 小端序解析报文编号(0~255)
-            msg_block = fromProtobuf(buf[3:])  # 解析剩余报文结构
+            msg_id = unpack("<H", buf[1:3])[0]
+            msg_block = fromProtobuf(buf[3:])
             if msg_type == MsgType.Req:
                 assert msg_id < 1 << 16
                 assert len(msg_block) == 2
@@ -72,7 +68,7 @@ class RichiProto:
                 self.res_type[msg_id] = (
                     method_name,
                     getattr(pb, proto_domain["responseType"]),
-                )  # wait response
+                )
             elif msg_type == MsgType.Res:
                 assert len(msg_block[0]["data"]) == 0
                 assert msg_id in self.res_type
@@ -94,10 +90,6 @@ class RichiProto:
 
 
 def fromProtobuf(buf) -> List[Dict]:
-    """
-    dump the struct of protobuf,观察报文结构
-    buf: protobuf bytes
-    """
     p = 0
     result = []
     while p < len(buf):
@@ -106,13 +98,11 @@ def fromProtobuf(buf) -> List[Dict]:
         block_id = buf[p] >> 3
         p += 1
         if block_type == 0:
-            # varint
             block_type = "varint"
-            data, p = parse_varint(buf, p)
+            data, p = parseVarint(buf, p)
         elif block_type == 2:
-            # string
             block_type = "string"
-            s_len, p = parse_varint(buf, p)
+            s_len, p = parseVarint(buf, p)
             data = buf[p : p + s_len]
             p += s_len
         else:
@@ -123,8 +113,7 @@ def fromProtobuf(buf) -> List[Dict]:
     return result
 
 
-def parse_varint(buf, p):
-    # parse a varint from protobuf
+def parseVarint(buf, p):
     data = 0
     base = 0
     while p < len(buf):

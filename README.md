@@ -20,7 +20,7 @@
 
 可以修改 *bin\settings.json* 中 *UPSTREAM_PROXY* 项，留空为不使用代理
 
-*e.g.* `"UPSTREAM_PROXY": "127.0.0.1:2080"`
+*e.g.* `"UPSTREAM_PROXY": "http://localhost:2080"`
 
 ## 特别感谢
 

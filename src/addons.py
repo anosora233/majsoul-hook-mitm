@@ -13,8 +13,8 @@ from base64 import b64decode
 # 导入配置
 SETTINGS = json.load(open("bin/settings.json", "r"))
 
-SEND_METHOD = SETTINGS["SEND_METHOD"]  # 需要发送给小助手的method
-SEND_ACTION = SETTINGS["SEND_ACTION"]  # '.lq.ActionPrototype'中，需要发送给小助手的action
+SEND_METHOD = SETTINGS["SEND_METHOD"]  # 需要发送给小助手的方法（method）
+SEND_ACTION = SETTINGS["SEND_ACTION"]  # '.lq.ActionPrototype'中，需要发送给小助手的动作（action）
 API_URL = SETTINGS["API_URL"]  # 小助手的地址
 UPSTREAM_PROXY = SETTINGS["UPSTREAM_PROXY"]
 
@@ -29,25 +29,25 @@ logging.info(
 )
 
 richi_proto = richi.RichiProto()
-# 禁用urllib3安全警告
+# 禁用 urllib3 的安全警告
 disable_warnings(InsecureRequestWarning)
 
 
 class WebSocketAddon:
     def websocket_message(self, flow: mitmproxy.http.HTTPFlow):
-        # 在捕获到WebSocket消息时触发
-        assert flow.websocket is not None  # make type checker happy
+        # 在捕获到 WebSocket 消息时触发
+        assert flow.websocket is not None  # 让类型检查器满意
         message = flow.websocket.messages[-1]
-        # 解析proto消息
+        # 解析 proto 消息
         result = richi_proto.parse(message)
-        if message.from_client is False:
+        if not message.from_client:
             logging.info(f"接收到：{result}")
-        if result["method"] in SEND_METHOD and message.from_client is False:
+        if result["method"] in SEND_METHOD and not message.from_client:
             if result["method"] == ".lq.ActionPrototype":
                 if result["data"]["name"] in SEND_ACTION:
                     data = result["data"]["data"]
                     if result["data"]["name"] == "ActionNewRound":
-                        # 雀魂弃用了md5改用sha256，但没有该字段会导致小助手无法解析牌局，也不能留空
+                        # 雀魂弃用了 md5 改用 sha256，但没有该字段会导致小助手无法解析牌局，也不能留空
                         # 所以干脆发一个假的，反正也用不到
                         data["md5"] = data["sha256"][:32]
                 else:
@@ -66,7 +66,7 @@ class WebSocketAddon:
                             including_default_value_fields=True,
                         )
                         if item["name"] == "ActionNewRound":
-                            # 这里也是假md5，理由同上
+                            # 这里也是假的 md5，理由同上
                             action_dict_obj["md5"] = action_dict_obj["sha256"][:32]
                         actions.append({"name": item["name"], "data": action_dict_obj})
                 data = {"sync_game_actions": actions}

@@ -165,3 +165,4 @@ mitmdump.log
 log/
 build/
 dist/
+demo/
