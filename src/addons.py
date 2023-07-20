@@ -11,7 +11,7 @@ from google.protobuf.json_format import MessageToDict
 from base64 import b64decode
 
 # 导入配置
-SETTINGS = json.load(open("bin/settings.json", "r"))
+SETTINGS = json.load(open("conf/settings.json", "r"))
 
 SEND_METHOD = SETTINGS["SEND_METHOD"]  # 需要发送给小助手的方法（method）
 SEND_ACTION = SETTINGS["SEND_ACTION"]  # '.lq.ActionPrototype'中，需要发送给小助手的动作（action）
@@ -38,6 +38,9 @@ class WebSocketAddon:
         # 在捕获到 WebSocket 消息时触发
         assert flow.websocket is not None  # 让类型检查器满意
         message = flow.websocket.messages[-1]
+        # 排除无效 WebSocket 消息
+        if message.content[0] not in [1, 2, 3]:
+            return
         # 解析 proto 消息
         result = richi_proto.parse(message)
         if not message.from_client:

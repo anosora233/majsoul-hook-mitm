@@ -160,9 +160,6 @@ cython_debug/
 #.idea/
 
 config.json
-mitmdump.log
 
 log/
-build/
-dist/
-demo/
+bin/

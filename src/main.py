@@ -12,17 +12,21 @@ import winreg
 
 
 ARGS = ["-p", "23410", "-s", "src/addons.py"]
-SETTINGS = load(open("bin/settings.json", "r"))
+SETTINGS = load(open("conf/settings.json", "r"))
 UPSTREAM_PROXY = SETTINGS["UPSTREAM_PROXY"]
 
 if len(UPSTREAM_PROXY):
     ARGS.extend(["-m", f"upstream:{UPSTREAM_PROXY}"])
 
 WindowsTitle = "Console · 🀄"
+WindowsDetected = False
 
 
 def top_alacritty(hwnd, mouse) -> None:
     if WindowsTitle in GetWindowText(hwnd):
+        global WindowsDetected
+        WindowsDetected = True
+
         rect = GetWindowRect(hwnd)
         SetWindowPos(
             hwnd,
@@ -62,7 +66,7 @@ def reset_proxy() -> None:
 
 
 def run(id: str) -> None:
-    system("bin\\alacritty.exe --config-file bin\\alacritty.yml")
+    system("bin\\alacritty.exe --config-file conf\\alacritty.yml")
 
     reset_proxy(), _exit(0)
 
@@ -71,7 +75,7 @@ if __name__ == "__main__":
     register(reset_proxy)
     start_new_thread(run, (WindowsTitle,))
 
-    sleep(0.5)
+    while not WindowsDetected:
+        EnumWindows(top_alacritty, None)
 
-    EnumWindows(top_alacritty, None)
     mitmdump(args=ARGS)

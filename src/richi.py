@@ -18,7 +18,7 @@ class RichiProto:
     def __init__(self):
         self.tot = 0
         self.res_type = {}
-        self.jsonProto = json.load(open("./bin/richi.json", "r"))
+        self.jsonProto = json.load(open("./conf/richi.json", "r"))
 
     def parse(self, flow_msg):
         buf = flow_msg.content
