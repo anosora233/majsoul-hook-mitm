@@ -62,7 +62,9 @@ def reset_proxy() -> None:
     winreg.SetValueEx(KEY, "ProxyServer", 0, winreg.REG_SZ, PROXY)
     winreg.SetValueEx(KEY, "ProxyEnable", 0, winreg.REG_DWORD, ENABLE)
 
+    print("=======================")
     print("RESET SYSTEM PROXY DONE")
+    print("=======================")
 
 
 def run(id: str) -> None:
@@ -71,7 +73,7 @@ def run(id: str) -> None:
     reset_proxy(), _exit(0)
 
 
-if __name__ == "__main__":
+def main() -> None:
     register(reset_proxy)
     start_new_thread(run, (WindowsTitle,))
 
@@ -79,3 +81,7 @@ if __name__ == "__main__":
         EnumWindows(top_alacritty, None)
 
     mitmdump(args=ARGS)
+
+
+if __name__ == "__main__":
+    main()

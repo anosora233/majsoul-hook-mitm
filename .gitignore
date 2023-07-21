@@ -162,4 +162,5 @@ cython_debug/
 config.json
 
 log/
-bin/
+runtime/
+site-packages/
