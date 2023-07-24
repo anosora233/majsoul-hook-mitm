@@ -2,22 +2,10 @@ name: PyStand Packing
 
 on:
   push:
+    tags:
+      - "*"
 
 jobs:
-  demo:
-    runs-on: windows-latest
-    steps:
-      - name: Download majsoul-helper
-        uses: robinraju/release-downloader@v1.8
-        with:
-          repository: "EndlessCheng/mahjong-helper"
-          fileName: "mahjong-helper-*-win64-x64.zip"
-          extract: true
-          latest: true
-
-      - name: List files
-        run: dir
-
   pack:
     if: startsWith(github.ref, 'refs/tags/')
     runs-on: windows-latest
@@ -30,6 +18,28 @@ jobs:
         with:
           python-version: "3.10"
 
+      - name: Download majsoul-helper
+        uses: robinraju/release-downloader@v1.8
+        with:
+          repository: "EndlessCheng/mahjong-helper"
+          fileName: "mahjong-helper-*-win64-x64.zip"
+          extract: true
+          latest: true
+
+      - name: Download PyStand
+        uses: robinraju/release-downloader@v1.8
+        with:
+          repository: "skywind3000/PyStand"
+          fileName: "PyStand-*-exe.zip"
+          extract: true
+          latest: true
+
+      - name: Copy executable files
+        run: |
+          mkdir bin
+          mv mahjong-helper.exe bin\console.exe
+          mv PyStand-x64-CLI\PyStand.exe richi-console.exe
+
       - name: Install dependencies
         run: |
           curl https://www.python.org/ftp/python/3.10.11/python-3.10.11-embed-amd64.zip -o runtime.zip
@@ -38,16 +48,16 @@ jobs:
           pip install -r requirements.txt -t site-packages
 
       - name: Create archives
-        run: 7z a richi-console-${{ github.ref_name }}.zip bin conf src runtime site-packages richi-console*
+        run: 7z a richi-console-${{ github.ref_name }}.7z bin conf src runtime site-packages richi-console*
 
       - name: Uploading Artifact
         uses: actions/upload-artifact@master
         with:
           name: deployment-${{ github.sha }}
-          path: richi-console-${{ github.ref_name }}.zip
+          path: richi-console-${{ github.ref_name }}.7z
 
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
           token: ${{ secrets.CUSTOM_GITHUB_TOKEN }}
-          files: richi-console-${{ github.ref_name }}.zip
+          files: richi-console-${{ github.ref_name }}.7z
