@@ -163,4 +163,7 @@ config.json
 
 log/
 runtime/
+bin/
 site-packages/
+*.exe
+*.lnk
