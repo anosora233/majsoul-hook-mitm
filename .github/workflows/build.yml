@@ -2,11 +2,24 @@ name: PyStand Packing
 
 on:
   push:
-    tags:
-      - '*'
 
 jobs:
+  demo:
+    runs-on: windows-latest
+    steps:
+      - name: Download majsoul-helper
+        uses: robinraju/release-downloader@v1.8
+        with:
+          repository: "EndlessCheng/mahjong-helper"
+          fileName: "mahjong-helper-*-win64-x64.zip"
+          extract: true
+          latest: true
+
+      - name: List files
+        run: dir
+
   pack:
+    if: startsWith(github.ref, 'refs/tags/')
     runs-on: windows-latest
     steps:
       - name: Checking out sources
