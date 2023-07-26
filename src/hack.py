@@ -22,7 +22,9 @@ class SkinHanlder:
         ".lq.Lobby.fetchRoom",
         ".lq.Lobby.joinRoom",
         ".lq.Lobby.oauth2Login",  # MAIN
+        ".lq.Lobby.login",  # MAIN
         ".lq.Lobby.fetchAccountInfo",
+        ".lq.Lobby.fetchBagInfo",
     ]
 
     def __init__(self) -> None:
@@ -35,15 +37,18 @@ class SkinHanlder:
         self.fake_slot = False
 
         if exists(self.profile):
-            self.characters = load(open(f"{self.profile}/characters.json", "r"))
-            self.character_id = self.characters["main_character_id"]
-            self.avatar_id = self.get_character(self.character_id)["skin"]
+            self.read()
 
     def save(self) -> None:
         dump(
             self.characters,
             open(f"{self.profile}/characters.json", "w"),
         )
+
+    def read(self) -> None:
+        self.characters = load(open(f"{self.profile}/characters.json", "r"))
+        self.character_id = self.characters["main_character_id"]
+        self.avatar_id = self.get_character(self.character_id)["skin"]
 
     def get_character(self, charid: int) -> Dict:
         for char in self.characters["characters"]:
@@ -134,7 +139,7 @@ class SkinHanlder:
             data["sort"] = [self.fake_character()[0]]
 
         # RESPONSE
-        if method == ".lq.Lobby.oauth2Login":
+        if method in [".lq.Lobby.oauth2Login", ".lq.Lobby.login"]:
             # 创建本地数据
             if not exists(self.profile):
                 mkdir(self.profile)
@@ -148,6 +153,7 @@ class SkinHanlder:
 
                 self.save()
             # 登录时获取账户信息并保存，并修改初始大厅显示角色
+            self.read()
             self.account_id = data["account_id"]
             data["account"]["avatar_id"] = self.avatar_id
         elif method == ".lq.Lobby.fetchCharacterInfo":
