@@ -1,14 +1,23 @@
-from os import system
+from os import system, mkdir
+from os.path import exists
 from _thread import start_new_thread
 from mitmproxy.tools.main import mitmdump
-from json import load
+from json import load, dump
 
-# import winreg
-
+if not exists("settings.json"):
+    SETTINGS = {
+        {
+            "enanble_helper": False,
+            "enable_skins": False,
+            "upstream_proxy": "",
+            "api_url": "https://localhost:12121/",
+        }
+    }
+    dump(SETTINGS, open("settings.json", "w"))
 
 ARGS = ["-p", "23410", "-s", "src/addons.py"]
-SETTINGS = load(open("conf/settings.json", "r"))
-UPSTREAM_PROXY = SETTINGS["UPSTREAM_PROXY"]
+SETTINGS = load(open("settings.json", "r"))
+UPSTREAM_PROXY = SETTINGS["upstream_proxy"]
 
 if len(UPSTREAM_PROXY):
     ARGS.extend(["-m", f"upstream:{UPSTREAM_PROXY}"])
@@ -43,12 +52,14 @@ WindowsTitle = "Console · 🀄"
 #     print("=======================")
 
 
-def run(id: str) -> None:
-    system('start cmd /c "title Console · 🀄 && bin\\console.exe -majsoul"')
+# def run(id: str) -> None:
+# # start_new_thread(run, (WindowsTitle,))
 
 
 def main() -> None:
-    start_new_thread(run, (WindowsTitle,))
+    if SETTINGS["enable_helper"]:
+        system('start cmd /c "title Console · 🀄 && bin\\console.exe -majsoul"')
+
     mitmdump(args=ARGS)
 
 

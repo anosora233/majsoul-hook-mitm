@@ -160,10 +160,12 @@ cython_debug/
 #.idea/
 
 config.json
+settings.json
 
 log/
 runtime/
 bin/
 site-packages/
+profile/
 *.exe
 *.lnk
