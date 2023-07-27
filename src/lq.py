@@ -27,11 +27,7 @@ class MsgType(Enum):
     Req = 2
     Res = 3
 
-
-from rich import print
-
 import hack
-
 
 class LQPROTO:
     def __init__(self) -> None:

@@ -6,12 +6,10 @@ from json import load, dump
 
 if not exists("settings.json"):
     SETTINGS = {
-        {
-            "enable_helper": False,
-            "enable_skins": False,
-            "upstream_proxy": "",
-            "api_url": "https://localhost:12121/",
-        }
+        "enable_helper": False,
+        "enable_skins": False,
+        "upstream_proxy": "",
+        "api_url": "https://localhost:12121/",
     }
     dump(SETTINGS, open("settings.json", "w"))
 
