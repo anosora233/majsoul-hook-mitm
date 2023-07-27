@@ -48,7 +48,7 @@ jobs:
           pip install -r requirements.txt -t site-packages
 
       - name: Create archives
-        run: 7z a richi-console-${{ github.ref_name }}.7z bin conf src runtime site-packages richi-console*
+        run: 7z a richi-console-${{ github.ref_name }}.7z bin src runtime site-packages richi-console*
 
       - name: Uploading Artifact
         uses: actions/upload-artifact@master
