@@ -35,6 +35,7 @@ class SkinHanlder:
         self.character_id = 200001
 
         self.fake_slot = False
+        self.last_charid = 200001
 
         if exists(self.profile):
             self.read()
@@ -86,7 +87,7 @@ class SkinHanlder:
             }
 
             self.characters["characters"].append(character)
-            for skin_id in range(skin, skin + 6):
+            for skin_id in range(skin, skin + 9):
                 self.characters["skins"].append(skin_id)
 
     def fake_character(self):
@@ -112,7 +113,7 @@ class SkinHanlder:
             if "character" in data["update"]:
                 for i in range(0, len(data["update"]["character"]["characters"])):
                     data["update"]["character"]["characters"][i] = self.get_character(
-                        data["update"]["character"]["characters"][i]["charid"]
+                        self.last_charid
                     )
 
         # REQUEST
@@ -128,6 +129,7 @@ class SkinHanlder:
             # 修改角色皮肤时保存本地，并用一姬、二姐替代
             self.get_character(data["character_id"])["skin"] = data["skin"]
             self.avatar_id = self.get_character(self.character_id)["skin"]
+            self.last_charid = data["character_id"]
             self.save()
 
             data["character_id"], data["skin"] = self.fake_character()
@@ -177,6 +179,18 @@ class SkinHanlder:
             # 修改状态面板立绘
             if data["account"]["account_id"] == self.account_id:
                 data["account"]["avatar_id"] = self.avatar_id
+        elif method == ".lq.Lobby.fetchBagInfo":
+            """ERROR ITEM
+            305214
+            305314
+            """
+
+            items = []
+            error_items = [305214, 305314, 305525, 305526, 305533, 305539, 305546]
+            for i in range(305001, 308000):
+                if i not in error_items:
+                    items.append({"item_id": i, "stack": 1})
+            data["bag"]["items"] = items
         elif method in [
             ".lq.Lobby.joinRoom",
             ".lq.Lobby.fetchRoom",

@@ -70,18 +70,13 @@ class LQPROTO:
             )
 
             if method_name in self.not_tasks.keys():
-                data = self.not_tasks[method_name](
+                dict_obj = self.not_tasks[method_name](
                     method=method_name,
                     data=dict_obj,
                 )
                 proto_obj = ParseDict(
-                    js_dict=data,
+                    js_dict=dict_obj,
                     message=liqi_pb2_notify(),
-                )
-                dict_obj = MessageToDict(
-                    proto_obj,
-                    preserving_proto_field_name=True,
-                    including_default_value_fields=True,
                 )
 
                 msg_block[1]["data"] = proto_obj.SerializeToString()
@@ -119,18 +114,13 @@ class LQPROTO:
                 )
 
                 if method_name in self.req_tasks.keys():
-                    data = self.req_tasks[method_name](
+                    dict_obj = self.req_tasks[method_name](
                         method=method_name,
                         data=dict_obj,
                     )
                     proto_obj = ParseDict(
-                        js_dict=data,
+                        js_dict=dict_obj,
                         message=liqi_pb2_req(),
-                    )
-                    dict_obj = MessageToDict(
-                        proto_obj,
-                        preserving_proto_field_name=True,
-                        including_default_value_fields=True,
                     )
 
                     msg_block[1]["data"] = proto_obj.SerializeToString()
@@ -152,18 +142,13 @@ class LQPROTO:
                 )
 
                 if method_name in self.res_tasks.keys():
-                    data = self.res_tasks[method_name](
+                    dict_obj = self.res_tasks[method_name](
                         method=method_name,
                         data=dict_obj,
                     )
                     proto_obj = ParseDict(
-                        js_dict=data,
+                        js_dict=dict_obj,
                         message=liqi_pb2_res(),
-                    )
-                    dict_obj = MessageToDict(
-                        proto_obj,
-                        preserving_proto_field_name=True,
-                        including_default_value_fields=True,
                     )
 
                     msg_block[1]["data"] = proto_obj.SerializeToString()

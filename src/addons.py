@@ -57,7 +57,7 @@ SOUL_SNIS = [
 # 导入配置
 SETTINGS = json.load(open("settings.json", "r"))
 API_URL = SETTINGS["api_url"]  # 小助手的地址
-logging.info(f"配置: {SETTINGS}")
+logging.warning(f"Settings: {SETTINGS}")
 
 # 初始化
 LQPROTO = lq.LQPROTO()
@@ -90,10 +90,10 @@ class WebSocketAddon:
             logging.warning(f"<<-- Server <<--: {result}")
 
             if SETTINGS["enable_helper"]:
-                to_helper(result=result)
+                post_helper(result=result)
 
 
-def to_helper(result: Dict) -> None:
+def post_helper(result: Dict) -> None:
     # 兼容小助手
     if result["method"] in SEND_METHOD:
         if result["method"] == ".lq.ActionPrototype":

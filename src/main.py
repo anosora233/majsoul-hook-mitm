@@ -7,7 +7,7 @@ from json import load, dump
 if not exists("settings.json"):
     SETTINGS = {
         {
-            "enanble_helper": False,
+            "enable_helper": False,
             "enable_skins": False,
             "upstream_proxy": "",
             "api_url": "https://localhost:12121/",
