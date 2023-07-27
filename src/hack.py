@@ -14,17 +14,23 @@ class SkinHanlder:
         ".lq.Lobby.changeMainCharacter",
         ".lq.Lobby.changeCharacterSkin",
         ".lq.Lobby.updateCharacterSort",
+        # 装扮
+        ".lq.Lobby.saveCommonViews",
+        ".lq.Lobby.useCommonView",
     ]
     res = [
+        ".lq.Lobby.fetchAccountInfo",
         ".lq.Lobby.fetchCharacterInfo",
         ".lq.Lobby.createRoom",
         ".lq.FastTest.authGame",
         ".lq.Lobby.fetchRoom",
         ".lq.Lobby.joinRoom",
-        ".lq.Lobby.oauth2Login",  # MAIN
-        ".lq.Lobby.login",  # MAIN
-        ".lq.Lobby.fetchAccountInfo",
+        # 装扮
         ".lq.Lobby.fetchBagInfo",
+        ".lq.Lobby.fetchAllCommonViews",
+        # 登录
+        ".lq.Lobby.oauth2Login",
+        ".lq.Lobby.login",
     ]
 
     def __init__(self) -> None:
@@ -33,6 +39,7 @@ class SkinHanlder:
         self.account_id = 101000000
         self.avatar_id = 400101
         self.character_id = 200001
+        self.commonviews = {"views": [{}] * 10, "use": 0}
 
         self.fake_slot = False
         self.last_charid = 200001
@@ -45,8 +52,13 @@ class SkinHanlder:
             self.characters,
             open(f"{self.profile}/characters.json", "w"),
         )
+        dump(
+            self.commonviews,
+            open(f"{self.profile}/commonviews.json", "w"),
+        )
 
     def read(self) -> None:
+        self.commonviews = load(open(f"{self.profile}/commonviews.json", "r"))
         self.characters = load(open(f"{self.profile}/characters.json", "r"))
         self.character_id = self.characters["main_character_id"]
         self.avatar_id = self.get_character(self.character_id)["skin"]
@@ -55,6 +67,13 @@ class SkinHanlder:
         for char in self.characters["characters"]:
             if char["charid"] == charid:
                 return char
+
+    def init_commonviews(self) -> None:
+        for i in range(0, 10):
+            self.commonviews["views"][i] = {
+                "values": [{"slot": 8, "item_id": 0, "type": 0, "item_id_list": []}],
+                "index": i,
+            }
 
     def init_characters(self) -> None:
         self.characters = {
@@ -98,6 +117,13 @@ class SkinHanlder:
             self.fake_slot = True
             return 200002, 400201
 
+    def fake_views_data(self):
+        return {
+            "views": [{"slot": 8, "item_id": 0, "type": 0, "item_id_list": []}],
+            "save_index": 9,
+            "is_use": 0,
+        }
+
     def handler(self, method: str, data: Dict) -> Dict:
         # NOTIFY
         if method == ".lq.NotifyRoomPlayerUpdate":
@@ -139,6 +165,18 @@ class SkinHanlder:
             self.save()
 
             data["sort"] = [self.fake_character()[0]]
+        elif method == ".lq.Lobby.saveCommonViews":
+            # 修改装扮时保存本地，并替换原数据
+            self.commonviews["views"][data["save_index"]]["values"] = data["views"]
+            self.save()
+
+            data = self.fake_views_data()
+        elif method == ".lq.Lobby.useCommonView":
+            # 选择装扮时保存本地，并替换原数据
+            self.commonviews["use"] = data["index"]
+            self.save()
+
+            data["index"] = 9
 
         # RESPONSE
         if method in [".lq.Lobby.oauth2Login", ".lq.Lobby.login"]:
@@ -146,6 +184,7 @@ class SkinHanlder:
             if not exists(self.profile):
                 mkdir(self.profile)
 
+                self.init_commonviews()
                 self.init_characters()
                 self.avatar_id = data["account"]["avatar_id"]
                 self.character_id = (int)((self.avatar_id - 400000) / 100 + 200000)
@@ -179,18 +218,17 @@ class SkinHanlder:
             # 修改状态面板立绘
             if data["account"]["account_id"] == self.account_id:
                 data["account"]["avatar_id"] = self.avatar_id
+        elif method == ".lq.Lobby.fetchAllCommonViews":
+            # 装扮本地数据替换
+            data = self.commonviews
         elif method == ".lq.Lobby.fetchBagInfo":
-            """ERROR ITEM
-            305214
-            305314
-            """
-
+            # 添加全部装扮
             items = []
-            error_items = [305214, 305314, 305525, 305526, 305533, 305539, 305546]
+            removed_items = [305214, 305314, 305525, 305526, 305533, 305539, 305546]
             for i in range(305001, 308000):
-                if i not in error_items:
+                if i not in removed_items:
                     items.append({"item_id": i, "stack": 1})
-            data["bag"]["items"] = items
+            data["bag"]["items"].extend(items)
         elif method in [
             ".lq.Lobby.joinRoom",
             ".lq.Lobby.fetchRoom",
