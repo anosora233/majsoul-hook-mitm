@@ -209,6 +209,10 @@ class SkinHanlder:
                     data["players"][i]["character"] = self.get_character(
                         self.character_id
                     )
+                    # 应用装扮
+                    data["players"][i]["views"] = self.commonviews["views"][
+                        self.commonviews["use"]
+                    ]["values"]
                 # 其他玩家报菜名，对机器人无效
                 else:
                     data["players"][i]["character"]["level"] = 5

@@ -18,7 +18,7 @@
 
 ## 使用方法
 
-1. 启动 Mitmproxy 代理服务器
+1. 启动 Mitmproxy 代理服务器 | 或使用 [Releases](https://github.com/anosora233/richi-console/releases) 携带版（不含最新功能）
 
    ```powershell
    # 同步仓库 | 或者 Download ZIP 并解压
@@ -50,19 +50,20 @@
 
 首次启动 Mitmproxy 代理服务器后会自动生成配置文件 settings.json
 
-| 键             | 释义       | 默认值                   | 示例                     |
-| -------------- | ---------- | ------------------------ | ------------------------ |
-| enable_helper  | 启用小助手 | false                    | false                    |
-| enable_skins   | 启用全皮肤 | false                    | true                     |
-| upstream_proxy | 上游代理   | 无                       | http://localhost:2080    |
-| api_url        | 小助手地址 | https://localhost:12121/ | https://localhost:12121/ |
+所有功能默认都不启用，请根据需求自行设定。
+
+| 释义       | 键             | 值                 |
+| ---------- | -------------- | ------------------ |
+| 启用小助手 | enable_helper  | true \| false      |
+| 启用全皮肤 | enable_skins   | true \| false      |
+| 前置代理   | upstream_proxy | null \| http://... |
 
 ## 特别感谢
 
-- [Avenshy/majsoul-mitmproxy](https://github.com/Avenshy/mahjong-helper-majsoul-mitmproxy)
-
-- [EndlessCheng/mahjong-helper](https://github.com/EndlessCheng/mahjong-helper)
-
 - [skywind3000/PyStand](https://github.com/skywind3000/PyStand)
 
+- [Avenshy/majsoul-mitmproxy](https://github.com/Avenshy/mahjong-helper-majsoul-mitmproxy)
+
 - [747929791/majsoul_wrapper](https://github.com/747929791/majsoul_wrapper)
+
+- [EndlessCheng/mahjong-helper](https://github.com/EndlessCheng/mahjong-helper)

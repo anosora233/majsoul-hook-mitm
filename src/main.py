@@ -8,17 +8,15 @@ if not exists("settings.json"):
     SETTINGS = {
         "enable_helper": False,
         "enable_skins": False,
-        "upstream_proxy": "",
-        "api_url": "https://localhost:12121/",
+        "upstream_proxy": None,
     }
-    dump(SETTINGS, open("settings.json", "w"))
+    dump(SETTINGS, open("settings.json", "w"), indent=2)
 
 ARGS = ["-p", "23410", "-s", "src/addons.py"]
 SETTINGS = load(open("settings.json", "r"))
-UPSTREAM_PROXY = SETTINGS["upstream_proxy"]
 
-if len(UPSTREAM_PROXY):
-    ARGS.extend(["-m", f"upstream:{UPSTREAM_PROXY}"])
+if SETTINGS["upstream_proxy"]:
+    ARGS.extend(["-m", f"upstream:{SETTINGS['upstream_proxy']}"])
 
 WindowsTitle = "Console · 🀄"
 

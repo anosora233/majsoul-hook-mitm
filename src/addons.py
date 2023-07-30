@@ -55,8 +55,8 @@ SOUL_SNIS = [
 ]
 
 # 导入配置
+API_URL = "https://localhost:12121/"  # 小助手的地址
 SETTINGS = json.load(open("settings.json", "r"))
-API_URL = SETTINGS["api_url"]  # 小助手的地址
 logging.warning(f"Settings: {SETTINGS}")
 
 # 初始化
