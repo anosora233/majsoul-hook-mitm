@@ -7,6 +7,7 @@ import lq
 import lq_pb2 as pb
 import hack
 
+from os import system
 from typing import Dict, List
 from urllib3 import disable_warnings
 from urllib3.exceptions import InsecureRequestWarning
@@ -47,12 +48,6 @@ SEND_ACTION = [
     "ActionNewCard",
     "ActionGangResultEnd",
 ]  # 需要发送给小助手的动作（ACTION）
-SOUL_SNIS = [
-    "maj-soul.com",
-    "maj-soul.net",
-    "mahjongsoul.com",
-    "yo-star.com",
-]
 
 # 导入配置
 API_URL = "https://localhost:12121/"  # 小助手的地址
@@ -62,17 +57,10 @@ logging.warning(f"Settings: {SETTINGS}")
 # 初始化
 LQPROTO = lq.LQPROTO()
 if SETTINGS["enable_skins"]:
-    skin_handler = hack.SkinHanlder()
-    LQPROTO.bond(skin_handler)
-
-
-# 排除无效 WebSocket 消息
-# 不适用于 Steam 端
-def check_sni(server_sni: str) -> bool:
-    for sni in SOUL_SNIS:
-        if sni in server_sni:
-            return True
-    return False
+    handler = hack.FakeDataHandler()
+    LQPROTO.bond(handle=handler.skin_handle, methods=hack.SKIN_METHODS)
+if SETTINGS["enable_helper"]:
+    system('start cmd /c "title Console · 🀄 && bin\\console.exe -majsoul"')
 
 
 class WebSocketAddon:
@@ -100,7 +88,8 @@ def post_helper(result: Dict) -> None:
             if result["data"]["name"] in SEND_ACTION:
                 data = result["data"]["data"]
                 if result["data"]["name"] == "ActionNewRound":
-                    # 雀魂弃用了 md5 改用 sha256，但没有该字段会导致小助手无法解析牌局，也不能留空
+                    # 雀魂弃用了 md5 改用 sha256
+                    # 但没有该字段会导致小助手无法解析牌局，也不能留空
                     # 所以干脆发一个假的，反正也用不到
                     data["md5"] = data["sha256"][:32]
             else:
@@ -129,7 +118,7 @@ def post_helper(result: Dict) -> None:
         logging.info(f"已发送：{data}")
         requests.post(API_URL, json=data, verify=False)
         if "liqi" in data.keys():  # 补发立直消息
-            logging.warning(f'已发送：{data["liqi"]}')
+            logging.info(f'已发送：{data["liqi"]}')
             requests.info(API_URL, json=data["liqi"], verify=False)
 
 

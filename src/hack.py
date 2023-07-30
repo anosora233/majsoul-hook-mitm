@@ -3,26 +3,25 @@ from json import load, dump
 from os.path import exists
 from os import mkdir
 
-
-class SkinHanlder:
-    notify = [
+SKIN_METHODS = {
+    "notify": [
         ".lq.NotifyRoomPlayerUpdate",
         ".lq.NotifyGameFinishRewardV2",
         ".lq.NotifyAccountUpdate",
-    ]
-    req = [
+    ],
+    "req": [
         ".lq.Lobby.changeMainCharacter",
         ".lq.Lobby.changeCharacterSkin",
         ".lq.Lobby.updateCharacterSort",
         # 装扮
         ".lq.Lobby.saveCommonViews",
         ".lq.Lobby.useCommonView",
-    ]
-    res = [
+    ],
+    "res": [
+        ".lq.FastTest.authGame",
         ".lq.Lobby.fetchAccountInfo",
         ".lq.Lobby.fetchCharacterInfo",
         ".lq.Lobby.createRoom",
-        ".lq.FastTest.authGame",
         ".lq.Lobby.fetchRoom",
         ".lq.Lobby.joinRoom",
         # 装扮
@@ -31,8 +30,11 @@ class SkinHanlder:
         # 登录
         ".lq.Lobby.oauth2Login",
         ".lq.Lobby.login",
-    ]
+    ],
+}
 
+
+class FakeDataHandler:
     def __init__(self) -> None:
         self.profile_path = "profile"
         self.profile = "error.json"
@@ -123,7 +125,7 @@ class SkinHanlder:
             "is_use": 0,
         }
 
-    def handler(self, method: str, data: Dict) -> Dict:
+    def skin_handle(self, method: str, data: Dict) -> Dict:
         # NOTIFY
         if method == ".lq.NotifyRoomPlayerUpdate":
             # 房间中添加、减少玩家时修改立绘

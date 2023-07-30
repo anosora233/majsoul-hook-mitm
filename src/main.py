@@ -53,9 +53,6 @@ WindowsTitle = "Console · 🀄"
 
 
 def main() -> None:
-    if SETTINGS["enable_helper"]:
-        system('start cmd /c "title Console · 🀄 && bin\\console.exe -majsoul"')
-
     mitmdump(args=ARGS)
 
 

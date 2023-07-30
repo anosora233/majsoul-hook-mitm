@@ -27,7 +27,9 @@ class MsgType(Enum):
     Req = 2
     Res = 3
 
+
 import hack
+
 
 class LQPROTO:
     def __init__(self) -> None:
@@ -35,17 +37,18 @@ class LQPROTO:
         self.res_type = {}
         self.jsonProto = json.load(open("./src/lq.json", "r"))
 
-        self.not_tasks = {}
-        self.req_tasks = {}
-        self.res_tasks = {}
+        # 监听目标方法及回调函数
+        self.tasks = []
 
-    def bond(self, handler) -> None:
-        for method in handler.notify:
-            self.not_tasks[method] = handler.handler
-        for method in handler.req:
-            self.req_tasks[method] = handler.handler
-        for method in handler.res:
-            self.res_tasks[method] = handler.handler
+    def bond(self, handle, methods: Dict) -> None:
+        self.tasks.append(
+            {
+                "notify": methods["notify"],
+                "req": methods["req"],
+                "res": methods["res"],
+                "handle": handle,
+            }
+        )
 
     def parse(self, flow_msg: WebSocketMessage) -> Dict:
         buf = flow_msg.content
@@ -65,18 +68,12 @@ class LQPROTO:
                 including_default_value_fields=True,
             )
 
-            if method_name in self.not_tasks.keys():
-                dict_obj = self.not_tasks[method_name](
-                    method=method_name,
-                    data=dict_obj,
-                )
-                proto_obj = ParseDict(
-                    js_dict=dict_obj,
-                    message=liqi_pb2_notify(),
-                )
-
-                msg_block[1]["data"] = proto_obj.SerializeToString()
-                flow_msg.content = buf[:1] + toProtobuf(msg_block)
+            for task in self.tasks:
+                if method_name in task["notify"]:
+                    dict_obj = task["handle"](method=method_name, data=dict_obj)
+                    proto_obj = ParseDict(js_dict=dict_obj, message=liqi_pb2_notify())
+                    msg_block[1]["data"] = proto_obj.SerializeToString()
+                    flow_msg.content = buf[:1] + toProtobuf(msg_block)
 
             if "data" in dict_obj:
                 B = base64.b64decode(dict_obj["data"])
@@ -109,18 +106,12 @@ class LQPROTO:
                     including_default_value_fields=True,
                 )
 
-                if method_name in self.req_tasks.keys():
-                    dict_obj = self.req_tasks[method_name](
-                        method=method_name,
-                        data=dict_obj,
-                    )
-                    proto_obj = ParseDict(
-                        js_dict=dict_obj,
-                        message=liqi_pb2_req(),
-                    )
-
-                    msg_block[1]["data"] = proto_obj.SerializeToString()
-                    flow_msg.content = buf[:3] + toProtobuf(msg_block)
+                for task in self.tasks:
+                    if method_name in task["req"]:
+                        dict_obj = task["handle"](method=method_name, data=dict_obj)
+                        proto_obj = ParseDict(js_dict=dict_obj, message=liqi_pb2_req())
+                        msg_block[1]["data"] = proto_obj.SerializeToString()
+                        flow_msg.content = buf[:3] + toProtobuf(msg_block)
 
                 self.res_type[msg_id] = (
                     method_name,
@@ -137,18 +128,12 @@ class LQPROTO:
                     including_default_value_fields=True,
                 )
 
-                if method_name in self.res_tasks.keys():
-                    dict_obj = self.res_tasks[method_name](
-                        method=method_name,
-                        data=dict_obj,
-                    )
-                    proto_obj = ParseDict(
-                        js_dict=dict_obj,
-                        message=liqi_pb2_res(),
-                    )
-
-                    msg_block[1]["data"] = proto_obj.SerializeToString()
-                    flow_msg.content = buf[:3] + toProtobuf(msg_block)
+                for task in self.tasks:
+                    if method_name in task["res"]:
+                        dict_obj = task["handle"](method=method_name, data=dict_obj)
+                        proto_obj = ParseDict(js_dict=dict_obj, message=liqi_pb2_res())
+                        msg_block[1]["data"] = proto_obj.SerializeToString()
+                        flow_msg.content = buf[:3] + toProtobuf(msg_block)
         result = {
             "id": msg_id,
             "type": msg_type,
