@@ -34,7 +34,11 @@ class SkinHanlder:
     ]
 
     def __init__(self) -> None:
-        self.profile = "profile"
+        self.profile_path = "profile"
+        self.profile = "error.json"
+
+        if not exists(self.profile_path):
+            mkdir(self.profile_path)
 
         self.account_id = 101000000
         self.avatar_id = 400101
@@ -44,22 +48,17 @@ class SkinHanlder:
         self.fake_slot = False
         self.last_charid = 200001
 
-        if exists(self.profile):
-            self.read()
-
     def save(self) -> None:
         dump(
-            self.characters,
-            open(f"{self.profile}/characters.json", "w"),
-        )
-        dump(
-            self.commonviews,
-            open(f"{self.profile}/commonviews.json", "w"),
+            {"characters": self.characters, "commonviews": self.commonviews},
+            open(self.profile, "w"),
         )
 
     def read(self) -> None:
-        self.commonviews = load(open(f"{self.profile}/commonviews.json", "r"))
-        self.characters = load(open(f"{self.profile}/characters.json", "r"))
+        profile_data = load(open(self.profile, "r"))
+
+        self.commonviews = profile_data["commonviews"]
+        self.characters = profile_data["characters"]
         self.character_id = self.characters["main_character_id"]
         self.avatar_id = self.get_character(self.character_id)["skin"]
 
@@ -181,9 +180,13 @@ class SkinHanlder:
         # RESPONSE
         if method in [".lq.Lobby.oauth2Login", ".lq.Lobby.login"]:
             # 创建本地数据
-            if not exists(self.profile):
-                mkdir(self.profile)
+            self.account_id = data["account_id"]
+            self.profile = f"{self.profile_path}/{self.account_id}.json"
 
+            if exists(self.profile):
+                self.read()
+            else:
+                # 生成数据信息
                 self.init_commonviews()
                 self.init_characters()
                 self.avatar_id = data["account"]["avatar_id"]
@@ -191,11 +194,8 @@ class SkinHanlder:
 
                 self.characters["main_character_id"] = self.character_id
                 self.get_character(self.character_id)["skin"] = self.avatar_id
-
                 self.save()
-            # 登录时获取账户信息并保存，并修改初始大厅显示角色
-            self.read()
-            self.account_id = data["account_id"]
+            # 修改大厅显示角色
             data["account"]["avatar_id"] = self.avatar_id
         elif method == ".lq.Lobby.fetchCharacterInfo":
             # 全角色数据替换
