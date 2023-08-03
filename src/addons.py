@@ -70,7 +70,10 @@ class WebSocketAddon:
         message = flow.websocket.messages[-1]
 
         # 解析 PROTO 消息
-        result = LQPROTO.parse(message)
+        try:
+            result = LQPROTO.parse(message)
+        except Exception as err:
+            result = {"error": err, "method": ".not.Supprt", "content": message.content}
 
         if message.from_client:
             logging.info(f"-->> Cilent -->>: {result}")

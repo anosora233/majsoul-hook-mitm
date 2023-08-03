@@ -4,7 +4,7 @@
 
 并在其基础上添加了一些扩展功能
 
-在 Windows 10 64 位系统上 Steam 客户端通过测试。
+在 Windows 10 64 位系统上 Steam 客户端通过测试
 
 ## 用前须知
 
@@ -18,7 +18,7 @@
 
 ## 使用方法
 
-1. 启动 Mitmproxy 代理服务器 | 或使用 [Releases](https://github.com/anosora233/richi-console/releases) 携带版（不含最新功能）
+1. 启动 Mitmproxy 代理服务器 | 或使用 [Releases](https://github.com/anosora233/richi-console/releases) 携带版（可能不含最新功能）
 
    ```powershell
    # 同步仓库 | 或者 Download ZIP 并解压
@@ -27,6 +27,9 @@
    # 配置国内镜像源 (可选)
    python -m pip install --upgrade pip
    pip config set global.index-url https://mirror.nju.edu.cn/pypi/web/simple
+   # 添加小助手
+   mkdir bin
+   cp /path/to/mahjong-helper.exe bin/console.exe
    # 安装依赖
    python -m pip install -r requirements.txt
    # 启动 Mitmproxy
@@ -50,7 +53,7 @@
 
 首次启动 Mitmproxy 代理服务器后会自动生成配置文件 settings.json
 
-所有功能默认都不启用，请根据需求自行设定。
+所有功能默认都不启用，请根据需求自行设定
 
 | 释义       | 键             | 值                 |
 | ---------- | -------------- | ------------------ |
