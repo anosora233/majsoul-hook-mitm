@@ -13,6 +13,8 @@ SKIN_METHODS = {
         ".lq.Lobby.changeMainCharacter",
         ".lq.Lobby.changeCharacterSkin",
         ".lq.Lobby.updateCharacterSort",
+        # 头衔
+        ".lq.Lobby.useTitle",
         # 装扮
         ".lq.Lobby.saveCommonViews",
         ".lq.Lobby.useCommonView",
@@ -24,6 +26,8 @@ SKIN_METHODS = {
         ".lq.Lobby.createRoom",
         ".lq.Lobby.fetchRoom",
         ".lq.Lobby.joinRoom",
+        # 头衔
+        ".lq.Lobby.fetchTitleList",
         # 装扮
         ".lq.Lobby.fetchBagInfo",
         ".lq.Lobby.fetchAllCommonViews",
@@ -45,24 +49,36 @@ class FakeDataHandler:
         self.account_id = 101000000
         self.avatar_id = 400101
         self.character_id = 200001
+        self.title = 0
         self.commonviews = {"views": [{}] * 10, "use": 0}
+        self.characters = []
 
         self.fake_slot = False
         self.last_charid = 200001
 
     def save(self) -> None:
         dump(
-            {"characters": self.characters, "commonviews": self.commonviews},
+            {
+                "title": self.title,
+                "characters": self.characters,
+                "commonviews": self.commonviews,
+            },
             open(self.profile, "w"),
         )
 
     def read(self) -> None:
         profile_data = load(open(self.profile, "r"))
 
-        self.commonviews = profile_data["commonviews"]
-        self.characters = profile_data["characters"]
-        self.character_id = self.characters["main_character_id"]
-        self.avatar_id = self.get_character(self.character_id)["skin"]
+        if str("title") in profile_data:
+            self.title = profile_data["title"]
+        if str("commonviews") in profile_data:
+            self.commonviews = profile_data["commonviews"]
+        if str("characters") in profile_data:
+            self.characters = profile_data["characters"]
+            self.character_id = self.characters["main_character_id"]
+            self.avatar_id = self.get_character(self.character_id)["skin"]
+        else:
+            self.init_characters()
 
     def get_character(self, charid: int) -> Dict:
         for char in self.characters["characters"]:
@@ -145,7 +161,7 @@ class FakeDataHandler:
 
         # REQUEST
         if method == ".lq.Lobby.changeMainCharacter":
-            # 修改主角色时保存本地，并用一姬、二姐替代
+            # 修改主角色时存储，并用一姬、二姐替代
             self.character_id = data["character_id"]
             self.characters["main_character_id"] = self.character_id
             self.avatar_id = self.get_character(self.character_id)["skin"]
@@ -153,7 +169,7 @@ class FakeDataHandler:
 
             data["character_id"], _ = self.fake_character()
         elif method == ".lq.Lobby.changeCharacterSkin":
-            # 修改角色皮肤时保存本地，并用一姬、二姐替代
+            # 修改角色皮肤时存储，并用一姬、二姐替代
             self.get_character(data["character_id"])["skin"] = data["skin"]
             self.avatar_id = self.get_character(self.character_id)["skin"]
             self.last_charid = data["character_id"]
@@ -161,23 +177,29 @@ class FakeDataHandler:
 
             data["character_id"], data["skin"] = self.fake_character()
         elif method == ".lq.Lobby.updateCharacterSort":
-            # 修改星标角色时保存本地，并用一姬、二姐替代
+            # 修改星标角色时存储，并用一姬、二姐替代
             self.characters["character_sort"] = data["sort"]
             self.save()
 
             data["sort"] = [self.fake_character()[0]]
         elif method == ".lq.Lobby.saveCommonViews":
-            # 修改装扮时保存本地，并替换原数据
+            # 修改装扮时存储，并替换原数据
             self.commonviews["views"][data["save_index"]]["values"] = data["views"]
             self.save()
 
             data = self.fake_views_data()
         elif method == ".lq.Lobby.useCommonView":
-            # 选择装扮时保存本地，并替换原数据
+            # 选择装扮时存储，并替换原数据
             self.commonviews["use"] = data["index"]
             self.save()
 
             data["index"] = 9
+        elif method == ".lq.Lobby.useTitle":
+            # 选择头衔时存储，并替换原数据
+            self.title = data["title"]
+            self.save()
+
+            data["title"] = 0
 
         # RESPONSE
         if method in [".lq.Lobby.oauth2Login", ".lq.Lobby.login"]:
@@ -197,8 +219,9 @@ class FakeDataHandler:
                 self.characters["main_character_id"] = self.character_id
                 self.get_character(self.character_id)["skin"] = self.avatar_id
                 self.save()
-            # 修改大厅显示角色
+            # 修改立绘、头衔
             data["account"]["avatar_id"] = self.avatar_id
+            data["account"]["title"] = self.title
         elif method == ".lq.Lobby.fetchCharacterInfo":
             # 全角色数据替换
             data = self.characters
@@ -215,34 +238,63 @@ class FakeDataHandler:
                     data["players"][i]["views"] = self.commonviews["views"][
                         self.commonviews["use"]
                     ]["values"]
+                    # 应用头衔
+                    data["players"][i]["title"] = self.title
                 # 其他玩家报菜名，对机器人无效
                 else:
                     data["players"][i]["character"]["level"] = 5
                     data["players"][i]["character"]["exp"] = 1
                     data["players"][i]["character"]["is_upgraded"] = True
         elif method == ".lq.Lobby.fetchAccountInfo":
-            # 修改状态面板立绘
+            # 修改状态面板立绘、头衔
             if data["account"]["account_id"] == self.account_id:
                 data["account"]["avatar_id"] = self.avatar_id
+                data["account"]["title"] = self.title
         elif method == ".lq.Lobby.fetchAllCommonViews":
             # 装扮本地数据替换
             data = self.commonviews
         elif method == ".lq.Lobby.fetchBagInfo":
             # 添加全部装扮
             items = []
-            removed_items = [305214, 305314, 305525, 305526, 305533, 305539, 305546]
+            removed_items = [
+                305214,
+                305314,
+                305525,
+                305526,
+                305533,
+                305539,
+                305546,
+            ]
             for i in range(305001, 308000):
                 if i not in removed_items:
                     items.append({"item_id": i, "stack": 1})
             data["bag"]["items"].extend(items)
+        elif method == ".lq.Lobby.fetchTitleList":
+            # 添加部分有效头衔
+            title_list = []
+            removed_title = [
+                600017,
+                600024,
+                600025,
+                600029,
+                600030,
+                600041,
+                600043,
+                600044,
+            ]
+            for i in range(600047, 600001, -1):
+                if i not in removed_title:
+                    title_list.append(i)
+            data["title_list"] = title_list
         elif method in [
             ".lq.Lobby.joinRoom",
             ".lq.Lobby.fetchRoom",
             ".lq.Lobby.createRoom",
         ]:
-            # 在加入、获取、创建房间时修改己方立绘、角色
+            # 在加入、获取、创建房间时修改己方头衔、立绘、角色
             for i in range(0, len(data["room"]["persons"])):
                 if data["room"]["persons"][i]["account_id"] == self.account_id:
+                    data["room"]["persons"][i]["title"] = self.title
                     data["room"]["persons"][i]["avatar_id"] = self.avatar_id
                     data["room"]["persons"][i]["character"] = self.get_character(
                         self.character_id
