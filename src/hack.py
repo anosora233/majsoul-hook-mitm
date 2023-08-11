@@ -277,6 +277,8 @@ class FakeDataHandler:
                 305533,
                 305539,
                 305546,
+                305501,
+                305555,
             ]
             for i in range(305001, 308000):
                 if i not in removed_items:
