@@ -150,9 +150,10 @@ class FakeDataHandler:
     def skin_handle(self, method: str, data: Dict) -> Dict:
         # NOTIFY
         if method == ".lq.NotifyRoomPlayerUpdate":
-            # 房间中添加、减少玩家时修改立绘
+            # 房间中添加、减少玩家时修改立绘、头衔
             for i in range(0, len(data["player_list"])):
                 if data["player_list"][i]["account_id"] == self.account_id:
+                    data["player_list"][i]["title"] = self.title
                     data["player_list"][i]["avatar_id"] = self.avatar_id
         elif method == ".lq.NotifyGameFinishRewardV2":
             # 终局结算时，不播放羁绊动画
