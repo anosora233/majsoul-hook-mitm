@@ -13,6 +13,8 @@ SKIN_METHODS = {
         ".lq.Lobby.changeMainCharacter",
         ".lq.Lobby.changeCharacterSkin",
         ".lq.Lobby.updateCharacterSort",
+        # 加载图
+        ".lq.Lobby.setLoadingImage",
         # 头衔
         ".lq.Lobby.useTitle",
         # 装扮
@@ -50,6 +52,7 @@ class FakeDataHandler:
         self.avatar_id = 400101
         self.character_id = 200001
         self.title = 0
+        self.loading_image = []
         self.commonviews = {"views": [{}] * 10, "use": 0}
         self.characters = []
 
@@ -60,6 +63,7 @@ class FakeDataHandler:
         dump(
             {
                 "title": self.title,
+                "loading_image": self.loading_image,
                 "characters": self.characters,
                 "commonviews": self.commonviews,
             },
@@ -71,6 +75,8 @@ class FakeDataHandler:
 
         if str("title") in profile_data:
             self.title = profile_data["title"]
+        if str("loading_image") in profile_data:
+            self.loading_image = profile_data["loading_image"]
         if str("commonviews") in profile_data:
             self.commonviews = profile_data["commonviews"]
         if str("characters") in profile_data:
@@ -200,6 +206,12 @@ class FakeDataHandler:
             self.save()
 
             data["title"] = 0
+        elif method == ".lq.Lobby.setLoadingImage":
+            # 选择加载图时存储，并替换原数据
+            self.loading_image = data["images"]
+            self.save()
+
+            data["images"] = []
 
         # RESPONSE
         if method in [".lq.Lobby.oauth2Login", ".lq.Lobby.login"]:
@@ -219,9 +231,10 @@ class FakeDataHandler:
                 self.characters["main_character_id"] = self.character_id
                 self.get_character(self.character_id)["skin"] = self.avatar_id
                 self.save()
-            # 修改立绘、头衔
+            # 修改立绘、头衔、加载图
             data["account"]["avatar_id"] = self.avatar_id
             data["account"]["title"] = self.title
+            data["account"]["loading_image"] = self.loading_image
         elif method == ".lq.Lobby.fetchCharacterInfo":
             # 全角色数据替换
             data = self.characters
