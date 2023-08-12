@@ -161,6 +161,7 @@ cython_debug/
 
 config.json
 settings.json
+version.json
 
 log/
 runtime/

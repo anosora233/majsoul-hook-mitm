@@ -48,6 +48,8 @@ class FakeDataHandler:
         if not exists(self.profile_path):
             mkdir(self.profile_path)
 
+        self.max_charid = load(open("version.json", "r"))["max_charid"]
+
         self.account_id = 101000000
         self.avatar_id = 400101
         self.character_id = 200001
@@ -83,6 +85,7 @@ class FakeDataHandler:
             self.characters = profile_data["characters"]
             self.character_id = self.characters["main_character_id"]
             self.avatar_id = self.get_character(self.character_id)["skin"]
+            self.update_characters()
         else:
             self.init_characters()
 
@@ -115,7 +118,7 @@ class FakeDataHandler:
         # 200002 二姐
         # ......
         # 200075
-        for charid in range(200001, 200076):
+        for charid in range(200001, self.max_charid):
             skin = 400000 + (charid - 200000) * 100 + 1
             character = {
                 "charid": charid,
@@ -131,6 +134,31 @@ class FakeDataHandler:
             self.characters["characters"].append(character)
             for skin_id in range(skin, skin + 9):
                 self.characters["skins"].append(skin_id)
+
+    def update_characters(self) -> None:
+        if len(self.characters["characters"]) == self.max_charid - 200001:
+            return
+
+        for charid in range(
+            len(self.characters["characters"]) + 200001, self.max_charid
+        ):
+            skin = 400000 + (charid - 200000) * 100 + 1
+            character = {
+                "charid": charid,
+                "level": 5,
+                "exp": 1,
+                "skin": skin,
+                "extra_emoji": [],
+                "is_upgraded": True,
+                "rewarded_level": [],
+                "views": [],
+            }
+
+            self.characters["characters"].append(character)
+            for skin_id in range(skin, skin + 9):
+                self.characters["skins"].append(skin_id)
+
+        self.save()
 
     def fake_character(self):
         if self.fake_slot:
