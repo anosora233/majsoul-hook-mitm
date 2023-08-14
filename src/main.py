@@ -1,60 +1,41 @@
-from os import system, mkdir
+import os
 from os.path import exists
-from _thread import start_new_thread
-from mitmproxy.tools.main import mitmdump
 from json import load, dump
 
 if not exists("settings.json"):
     SETTINGS = {
+        "listen_port": 80,
         "enable_helper": False,
         "enable_skins": False,
         "upstream_proxy": None,
+        "pure_python_protobuf": False,
+        # "upstream_proxy": "http://127.0.0.1:12345"
     }
     dump(SETTINGS, open("settings.json", "w"), indent=2)
 
-ARGS = ["-p", "23410", "-s", "src/addons.py"]
 SETTINGS = load(open("settings.json", "r"))
-
-if SETTINGS["upstream_proxy"]:
-    ARGS.extend(["-m", f"upstream:{SETTINGS['upstream_proxy']}"])
-
-WindowsTitle = "Console · 🀄"
-
-# REGISTRY = winreg.ConnectRegistry(None, winreg.HKEY_CURRENT_USER)
-# KEY = winreg.OpenKey(
-#     REGISTRY,
-#     r"Software\Microsoft\Windows\CurrentVersion\Internet Settings",
-#     0,
-#     winreg.KEY_ALL_ACCESS,
-# )
-
-# try:
-#     PROXY, __ = winreg.QueryValueEx(KEY, "ProxyServer")
-#     ENABLE, __ = winreg.QueryValueEx(KEY, "ProxyEnable")
-# except Exception:
-#     PROXY = ""
-#     ENABLE = 0
-
-# winreg.SetValueEx(KEY, "ProxyServer", 0, winreg.REG_SZ, "127.0.0.1:23410")
-# winreg.SetValueEx(KEY, "ProxyEnable", 0, winreg.REG_DWORD, 1)
+if SETTINGS["pure_python_protobuf"]:
+    os.environ["PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION"] = "python"
 
 
-# def reset_proxy() -> None:
-#     winreg.SetValueEx(KEY, "ProxyServer", 0, winreg.REG_SZ, PROXY)
-#     winreg.SetValueEx(KEY, "ProxyEnable", 0, winreg.REG_DWORD, ENABLE)
-
-#     print("=======================")
-#     print("RESET SYSTEM PROXY DONE")
-#     print("=======================")
-
-
-# def run(id: str) -> None:
-# # start_new_thread(run, (WindowsTitle,))
-
-
-def main() -> None:
-    mitmdump(args=ARGS)
-
+async def start_proxy():
+    from addons import WebSocketAddon
+    from mitmproxy.tools.dump import DumpMaster
+    from mitmproxy import options
+    mode = [f"upstream:{SETTINGS['upstream_proxy']}"] if SETTINGS["upstream_proxy"] else ["regular"]
+    opts = options.Options(listen_host="0.0.0.0", listen_port=SETTINGS["listen_port"], http2=False, mode=mode)
+    master = DumpMaster(
+        opts,
+        with_termlog=False,
+        with_dumper=False,
+    )
+    master.addons.add(WebSocketAddon())
+    await master.run()
+    return master
 
 if __name__ == "__main__":
-    main()
+    import asyncio
+    try:
+        asyncio.run(start_proxy())
+    except KeyboardInterrupt:
+        pass
