@@ -1,25 +1,23 @@
 import json
 import base64
-import lq_pb2 as pb
+import proto.liqi_pb2 as pb
 
 from struct import unpack
 from enum import Enum
 from typing import List, Dict
 from google.protobuf.json_format import MessageToDict, ParseDict
-
 from mitmproxy.websocket import WebSocketMessage
 
 """ 
     # msg_block Notify
-    [{'id': 1, 'type': 'string','data': b'.lq.ActionPrototype'},
-    {'id': 2, 'type': 'string','data': b'protobuf_bytes'}]
-    # msg_block Req & Res
-    [{'id': 1, 'type': 'string','data': b'.lq.FastTest.authGame'},
-    {'id': 2, 'type': 'string','data': b'protobuf_bytes'}]
-    # debug
-    print(f"Before: {flow_msg.content}")
-    print(f"After: {flow_msg.content}")
+    [   {'id': 1, 'type': 'string','data': b'.lq.ActionPrototype'},
+        {'id': 2, 'type': 'string','data': b'protobuf_bytes'}       ]
+    # msg_block Request & Response
+    [   {'id': 1, 'type': 'string','data': b'.lq.FastTest.authGame'},
+        {'id': 2, 'type': 'string','data': b'protobuf_bytes'}       ]
 """
+
+JSON_PROTO = json.load(open("./src/proto/liqi.json", "r"))
 
 
 class MsgType(Enum):
@@ -28,32 +26,23 @@ class MsgType(Enum):
     Res = 3
 
 
-import hack
+class Handler(object):
+    def handle(self, flow_msg: WebSocketMessage, parse_obj: Dict) -> bool:
+        return modify(flow_msg=flow_msg, parse_obj=parse_obj)
+
+    def methods(self, type: MsgType) -> List:
+        pass
 
 
 class LQPROTO:
     def __init__(self) -> None:
         self.tot = 0
         self.res_type = {}
-        self.jsonProto = json.load(open("./src/lq.json", "r"))
-
-        # 监听目标方法及回调函数
-        self.tasks = []
-
-    def bond(self, handle, methods: Dict) -> None:
-        self.tasks.append(
-            {
-                "notify": methods["notify"],
-                "req": methods["req"],
-                "res": methods["res"],
-                "handle": handle,
-            }
-        )
 
     def parse(self, flow_msg: WebSocketMessage) -> Dict:
         buf = flow_msg.content
         from_client = flow_msg.from_client
-        result = {}
+        parse_obj = {}
         msg_type = MsgType(buf[0])
 
         if msg_type == MsgType.Notify:
@@ -67,13 +56,6 @@ class LQPROTO:
                 preserving_proto_field_name=True,
                 including_default_value_fields=True,
             )
-
-            for task in self.tasks:
-                if method_name in task["notify"]:
-                    dict_obj = task["handle"](method=method_name, data=dict_obj)
-                    proto_obj = ParseDict(js_dict=dict_obj, message=liqi_pb2_notify())
-                    msg_block[1]["data"] = proto_obj.SerializeToString()
-                    flow_msg.content = buf[:1] + toProtobuf(msg_block)
 
             if "data" in dict_obj:
                 B = base64.b64decode(dict_obj["data"])
@@ -95,9 +77,9 @@ class LQPROTO:
                 assert msg_id not in self.res_type
                 method_name = msg_block[0]["data"].decode()
                 _, lq, service, rpc = method_name.split(".")
-                proto_domain = self.jsonProto["nested"][lq]["nested"][service][
-                    "methods"
-                ][rpc]
+                proto_domain = JSON_PROTO["nested"][lq]["nested"][service]["methods"][
+                    rpc
+                ]
                 liqi_pb2_req = getattr(pb, proto_domain["requestType"])
                 proto_obj = liqi_pb2_req.FromString(msg_block[1]["data"])
                 dict_obj = MessageToDict(
@@ -105,13 +87,6 @@ class LQPROTO:
                     preserving_proto_field_name=True,
                     including_default_value_fields=True,
                 )
-
-                for task in self.tasks:
-                    if method_name in task["req"]:
-                        dict_obj = task["handle"](method=method_name, data=dict_obj)
-                        proto_obj = ParseDict(js_dict=dict_obj, message=liqi_pb2_req())
-                        msg_block[1]["data"] = proto_obj.SerializeToString()
-                        flow_msg.content = buf[:3] + toProtobuf(msg_block)
 
                 self.res_type[msg_id] = (
                     method_name,
@@ -127,21 +102,56 @@ class LQPROTO:
                     preserving_proto_field_name=True,
                     including_default_value_fields=True,
                 )
-
-                for task in self.tasks:
-                    if method_name in task["res"]:
-                        dict_obj = task["handle"](method=method_name, data=dict_obj)
-                        proto_obj = ParseDict(js_dict=dict_obj, message=liqi_pb2_res())
-                        msg_block[1]["data"] = proto_obj.SerializeToString()
-                        flow_msg.content = buf[:3] + toProtobuf(msg_block)
-        result = {
+        parse_obj = {
             "id": msg_id,
             "type": msg_type,
             "method": method_name,
             "data": dict_obj,
         }
         self.tot += 1
-        return result
+        return parse_obj
+
+
+def modify(flow_msg: WebSocketMessage, parse_obj: Dict) -> bool:
+    buf = flow_msg.content
+
+    data = parse_obj["data"]
+    msg_type = parse_obj["type"]
+    method_name = parse_obj["method"]
+
+    if msg_type == MsgType.Notify:
+        if str("data") in data:
+            """Not yet supported"""
+            return False
+
+        msg_block = fromProtobuf(buf[1:])
+        _, lq, message_name = method_name.split(".")
+        liqi_pb2_notify = getattr(pb, message_name)
+        proto_obj = ParseDict(js_dict=data, message=liqi_pb2_notify())
+        msg_block[1]["data"] = proto_obj.SerializeToString()
+        flow_msg.content = buf[:1] + toProtobuf(msg_block)
+    else:
+        msg_block = fromProtobuf(buf[3:])
+        if msg_type == MsgType.Req:
+            assert len(msg_block) == 2
+
+            _, lq, service, rpc = method_name.split(".")
+            proto_domain = JSON_PROTO["nested"][lq]["nested"][service]["methods"][rpc]
+            liqi_pb2_req = getattr(pb, proto_domain["requestType"])
+            proto_obj = ParseDict(js_dict=data, message=liqi_pb2_req())
+            msg_block[1]["data"] = proto_obj.SerializeToString()
+            flow_msg.content = buf[:3] + toProtobuf(msg_block)
+        elif msg_type == MsgType.Res:
+            assert len(msg_block[0]["data"]) == 0
+
+            _, lq, service, rpc = method_name.split(".")
+            proto_domain = JSON_PROTO["nested"][lq]["nested"][service]["methods"][rpc]
+            liqi_pb2_res = getattr(pb, proto_domain["responseType"])
+            proto_obj = ParseDict(js_dict=data, message=liqi_pb2_res())
+            msg_block[1]["data"] = proto_obj.SerializeToString()
+            flow_msg.content = buf[:3] + toProtobuf(msg_block)
+
+        return True
 
 
 def fromProtobuf(buf) -> List[Dict]:

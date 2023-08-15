@@ -29,7 +29,7 @@
    pip config set global.index-url https://mirror.nju.edu.cn/pypi/web/simple
    # 添加小助手
    mkdir bin
-   cp /path/to/mahjong-helper.exe bin/console.exe
+   cp path/to/mahjong-helper.exe bin/console.exe
    # 安装依赖
    python -m pip install -r requirements.txt
    # 启动 Mitmproxy

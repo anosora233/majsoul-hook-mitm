@@ -1,70 +1,27 @@
+from typing import Dict, Any
+from mitmproxy import http, ctx
+from liqi import LQPROTO, MsgType
+from os.path import exists
+from mitmproxy.websocket import WebSocketMessage
+
+import os
 import json
-import logging
-import requests
-import mitmproxy.http
-import random
-import os.path
-
-import lq
-import lq_pb2 as pb
-import hack
-
-from os import system
-from typing import Dict, List
-from urllib3 import disable_warnings
-from urllib3.exceptions import InsecureRequestWarning
-from google.protobuf.json_format import MessageToDict
-from base64 import b64decode
-
-# 禁用 urllib3 的安全警告
-disable_warnings(InsecureRequestWarning)
-
-SEND_METHOD = [
-    ".lq.Lobby.oauth2Login",
-    ".lq.Lobby.fetchFriendList",
-    ".lq.FastTest.authGame",
-    ".lq.NotifyPlayerLoadGameReady",
-    ".lq.ActionPrototype",
-    ".lq.Lobby.fetchGameRecordList",
-    ".lq.FastTest.syncGame",
-    ".lq.Lobby.login",
-]  # 需要发送给小助手的方法（METHOD）
-SEND_ACTION = [
-    "ActionNewRound",
-    "ActionDealTile",
-    "ActionAnGangAddGang",
-    "ActionChiPengGang",
-    "ActionNoTile",
-    "ActionHule",
-    "ActionBaBei",
-    "ActionLiuJu",
-    "ActionUnveilTile",
-    "ActionHuleXueZhanMid",
-    "ActionGangResult",
-    "ActionRevealTile",
-    "ActionChangeTile",
-    "ActionSelectGap",
-    "ActionLiqi",
-    "ActionDiscardTile",
-    "ActionHuleXueZhanEnd",
-    "ActionNewCard",
-    "ActionGangResultEnd",
-]  # 需要发送给小助手的动作（ACTION）
 
 
-def update_version() -> None:
-    # 下载资源文件
-    rand_var_a = random.randint(0, 1e9)
-    rand_var_b = random.randint(0, 1e9)
+def obtain_max_charid():
+    import requests
+    import random
+
+    rand_var_a: int = random.randint(0, 1e9)
+    rand_var_b: int = random.randint(0, 1e9)
 
     ver_url = f"https://game.maj-soul.com/1/version.json?randv={rand_var_a}{rand_var_b}"
     response = requests.get(ver_url, proxies={"https": SETTINGS["upstream_proxy"]})
     response.raise_for_status()
     ver_data = response.json()
 
-    if os.path.exists("version.json"):
+    if exists("version.json"):
         res_data = json.load(open("version.json", "r"))
-        logging.warning(f"{res_data['version']} version.json detected")
         if res_data["version"] == ver_data["version"]:
             return
 
@@ -73,12 +30,10 @@ def update_version() -> None:
     response.raise_for_status()
     res_data = response.json()
 
-    # 获取最新角色
     max_charid = 200070
     while str(f"extendRes/emo/e{max_charid}/0.png") in res_data["res"]:
         max_charid += 1
 
-    logging.warning(f"{ver_data['version']} version.json updated")
     json.dump(
         {
             "version": ver_data["version"],
@@ -89,83 +44,86 @@ def update_version() -> None:
     )
 
 
-def convert_helper(result: Dict) -> None:
-    # 兼容小助手
-    if result["method"] in SEND_METHOD:
-        if result["method"] == ".lq.ActionPrototype":
-            if result["data"]["name"] in SEND_ACTION:
-                data = result["data"]["data"]
-                if result["data"]["name"] == "ActionNewRound":
-                    # 雀魂弃用了 md5 改用 sha256
-                    # 但没有该字段会导致小助手无法解析牌局，也不能留空
-                    # 所以干脆发一个假的，反正也用不到
-                    data["md5"] = data["sha256"][:32]
-            else:
-                return
-        elif result["method"] == ".lq.FastTest.syncGame":  # 重新进入对局时
-            actions = []
-            for item in result["data"]["game_restore"]["actions"]:
-                if item["data"] == "":
-                    actions.append({"name": item["name"], "data": {}})
-                else:
-                    b64 = b64decode(item["data"])
-                    action_proto_obj = getattr(pb, item["name"]).FromString(b64)
-                    action_dict_obj = MessageToDict(
-                        action_proto_obj,
-                        preserving_proto_field_name=True,
-                        including_default_value_fields=True,
-                    )
-                    if item["name"] == "ActionNewRound":
-                        # 这里也是假的 md5，理由同上
-                        action_dict_obj["md5"] = action_dict_obj["sha256"][:32]
-                    actions.append({"name": item["name"], "data": action_dict_obj})
-            data = {"sync_game_actions": actions}
-        else:
-            data = result["data"]
+def init_player(login_id: str) -> Dict:
+    handlers = []
 
-        logging.info(f"已发送：{data}")
-        requests.post(API_URL, json=data, verify=False)
+    if SETTINGS["enable_skins"]:
+        handlers.append(__import__("skin").SkinHandler())
+    if SETTINGS["enable_helper"]:
+        pass
 
-        if "liqi" in data.keys():
-            # 补发立直消息
-            logging.info(f'已发送：{data["liqi"]}')
-            requests.info(API_URL, json=data["liqi"], verify=False)
-
-
-# 导入配置
-API_URL = "https://localhost:12121/"  # 小助手的地址
-SETTINGS = json.load(open("settings.json", "r"))
-logging.warning(f"Settings: {SETTINGS}")
-
-# 初始化
-LQPROTO = lq.LQPROTO()
-if SETTINGS["enable_skins"]:
-    update_version()
-    handler = hack.FakeDataHandler()
-    LQPROTO.bond(handle=handler.skin_handle, methods=hack.SKIN_METHODS)
-if SETTINGS["enable_helper"]:
-    system('start cmd /c "title Console · 🀄 && bin\\console.exe -majsoul"')
+    return {
+        "conn_ids": [login_id],
+        "handlers": handlers,
+    }
 
 
 class WebSocketAddon:
-    def websocket_message(self, flow: mitmproxy.http.HTTPFlow):
-        # 在捕获到 WebSocket 消息时触发
-        assert flow.websocket is not None  # 类型检查
-        message = flow.websocket.messages[-1]
+    def __init__(self) -> None:
+        self.proto = LQPROTO()
+        self.players = {}
 
-        # 解析 PROTO 消息
-        try:
-            result = LQPROTO.parse(message)
-        except Exception as err:
-            result = {"error": err, "method": ".not.Supprt", "content": message.content}
+    def invoke(self, conn_id: str, flow_msg: WebSocketMessage, parse_obj: Dict):
+        type = parse_obj["type"]
+        method = parse_obj["method"]
+
+        for player in self.players.values():
+            if conn_id in player["conn_ids"]:
+                for handler in player["handlers"]:
+                    if method in handler.methods(type):
+                        handler.handle(flow_msg=flow_msg, parse_obj=parse_obj)
+
+    def terminate_conn(self, conn_id: str):
+        for player in self.players.values():
+            if conn_id in player["conn_ids"]:
+                player["conn_ids"].remove(conn_id)
+
+    def websocket_message(self, flow: http.HTTPFlow):
+        assert flow.websocket is not None
+        message = flow.websocket.messages[-1]
+        parse_obj = self.proto.parse(message)
+
+        if (
+            parse_obj["method"] in [".lq.Lobby.oauth2Login", ".lq.Lobby.login"]
+            and parse_obj["type"] == MsgType.Res
+        ):
+            account_id = parse_obj["data"]["account_id"]
+
+            if account_id in self.players:
+                self.players[account_id]["conn_ids"].append(flow.client_conn.id)
+            else:
+                self.players[account_id] = init_player(flow.client_conn.id)
+
+        elif (
+            parse_obj["method"] == ".lq.FastTest.authGame"
+            and parse_obj["type"] == MsgType.Req
+        ):
+            account_id = parse_obj["data"]["account_id"]
+            assert account_id in self.players
+            self.players[account_id]["conn_ids"].append(flow.client_conn.id)
+
+        for account_id, value in self.players.items():
+            ctx.log.warn(f"{account_id}: {value['conn_ids']}")
+
+        self.invoke(flow.client_conn.id, flow_msg=message, parse_obj=parse_obj)
 
         if message.from_client:
-            logging.info(f"-->> Cilent -->>: {result}")
+            ctx.log.warn(f"[{flow.client_conn.id[:13]}]-->>: {parse_obj}")
         else:
-            logging.warning(f"<<-- Server <<--: {result}")
+            ctx.log.warn(f"[{flow.client_conn.id[:13]}]<<--: {parse_obj}")
 
-            if SETTINGS["enable_helper"]:
-                convert_helper(result=result)
+    def websocket_error(self, flow: http.HTTPFlow):
+        self.terminate_conn(flow.client_conn.id)
 
+    def websocket_end(self, flow: http.HTTPFlow):
+        self.terminate_conn(flow.client_conn.id)
+
+
+SETTINGS: Dict[str, Any] = json.load(open("settings.json", "r"))
+
+if SETTINGS["enable_skins"]:
+    obtain_max_charid()
+if SETTINGS["pure_python_protobuf"]:
+    os.environ["PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION"] = "python"
 
 addons = [WebSocketAddon()]
