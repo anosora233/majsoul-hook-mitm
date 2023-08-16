@@ -188,6 +188,8 @@ service Lobby {
 	rpc fetchServerTime (ReqCommon) returns (ResServerTime);
 	rpc fetchShopInfo (ReqCommon) returns (ResShopInfo);
 	rpc fetchShopInterval (ReqCommon) returns (ResFetchShopInterval);
+	rpc fetchSimulationGameRank (ReqFetchSimulationGameRank) returns (ResFetchSimulationGameRank);
+	rpc fetchSimulationGameRecord (ReqFetchSimulationGameRecord) returns (ResFetchSimulationGameRecord);
 	rpc fetchTitleList (ReqCommon) returns (ResTitleList);
 	rpc fetchVipReward (ReqCommon) returns (ResVipReward);
 	rpc fetchVoteActivity (ReqFetchVoteActivity) returns (ResFetchVoteActivity);
@@ -278,10 +280,12 @@ service Lobby {
 	rpc setLoadingImage (ReqSetLoadingImage) returns (ResCommon);
 	rpc shopPurchase (ReqShopPurchase) returns (ResShopPurchase);
 	rpc signup (ReqSignupAccount) returns (ResSignupAccount);
+	rpc simulationActivityTrain (ReqSimulationActivityTrain) returns (ResSimulationActivityTrain);
 	rpc solveGooglePayOrderV3 (ReqSolveGooglePlayOrderV3) returns (ResCommon);
 	rpc solveGooglePlayOrder (ReqSolveGooglePlayOrder) returns (ResCommon);
 	rpc startCustomizedContest (ReqStartCustomizedContest) returns (ResCommon);
 	rpc startRoom (ReqRoomStart) returns (ResCommon);
+	rpc startSimulationActivityGame (ReqStartSimulationActivityGame) returns (ResStartSimulationActivityGame);
 	rpc startUnifiedMatch (ReqStartUnifiedMatch) returns (ResCommon);
 	rpc stopCustomizedContest (ReqCommon) returns (ResCommon);
 	rpc takeAttachmentFromMail (ReqTakeAttachment) returns (ResCommon);
@@ -410,6 +414,7 @@ message AccountActivityUpdate {
 	repeated lq.ActivityFriendGiftData friend_gift_data = 5;
 	repeated lq.ActivityUpgradeData upgrade_data = 6;
 	repeated lq.ActivityGachaUpdateData gacha_data = 7;
+	repeated lq.ActivitySimulationData simulation_data = 8;
 }
 
 message AccountCacheView {
@@ -1070,6 +1075,43 @@ message ActivityRankPointData {
 	int32 point = 2;
 	bool gained_reward = 3;
 	uint32 gainable_time = 4;
+}
+
+message ActivitySimulationDailyContest {
+	uint32 day = 1;
+	repeated uint32 characters = 2;
+	repeated ActivitySimulationGameRecord records = 3;
+	uint32 round = 4;
+}
+
+message ActivitySimulationData {
+	uint32 activity_id = 1;
+	repeated uint32 stats = 2;
+	uint32 stamina_update_time = 3;
+	repeated ActivitySimulationDailyContest daily_contest = 4;
+	repeated ActivitySimulationTrainRecord train_records = 5;
+}
+
+message ActivitySimulationGameRecord {
+	uint32 round = 1;
+	repeated uint32 seats = 2;
+	string uuid = 3;
+	uint32 start_time = 4;
+	repeated int32 scores = 5;
+	repeated ActivitySimulationGameRecordMessage messages = 6;
+}
+
+message ActivitySimulationGameRecordMessage {
+	uint32 type = 1;
+	repeated uint32 args = 2;
+	uint32 xun = 3;
+}
+
+message ActivitySimulationTrainRecord {
+	uint32 time = 1;
+	repeated int32 modify_stats = 2;
+	repeated uint32 final_stats = 3;
+	uint32 type = 4;
 }
 
 message ActivitySpotData {
@@ -2352,6 +2394,7 @@ message PaymentSettingV2 {
 		uint32 end_time = 2;
 		uint32 goods_click_action = 3;
 		string goods_click_text = 4;
+		repeated string enabled_channel = 5;
 	}
 	message PaymentSettingUnit {
 		string platform = 1;
@@ -3413,6 +3456,16 @@ message ReqFetchRankPointLeaderboard {
 	uint32 leaderboard_id = 1;
 }
 
+message ReqFetchSimulationGameRank {
+	uint32 activity_id = 1;
+	uint32 day = 2;
+}
+
+message ReqFetchSimulationGameRecord {
+	string game_uuid = 1;
+	uint32 activity_id = 2;
+}
+
 message ReqFetchVoteActivity {
 	uint32 activity_id = 1;
 }
@@ -3869,6 +3922,11 @@ message ReqSignupAccount {
 	string tag = 7;
 }
 
+message ReqSimulationActivityTrain {
+	uint32 activity_id = 1;
+	uint32 type = 2;
+}
+
 message ReqSolveGooglePlayOrder {
 	string inapp_purchase_data = 2;
 	string inapp_data_signature = 3;
@@ -3884,6 +3942,10 @@ message ReqSolveGooglePlayOrderV3 {
 message ReqStartCustomizedContest {
 	uint32 unique_id = 1;
 	string client_version_string = 2;
+}
+
+message ReqStartSimulationActivityGame {
+	uint32 activity_id = 1;
 }
 
 message ReqStartUnifiedMatch {
@@ -4034,6 +4096,7 @@ message ResAccountActivityData {
 	repeated lq.ActivityFriendGiftData friend_gift_data = 20;
 	repeated lq.ActivityUpgradeData upgrade_data = 21;
 	repeated lq.ActivityGachaUpdateData gacha_data = 22;
+	repeated lq.ActivitySimulationData simulation_data = 23;
 	message ActivityRichmanData {
 		uint32 activity_id = 1;
 		uint32 location = 2;
@@ -4763,6 +4826,20 @@ message ResFetchShopInterval {
 	}
 }
 
+message ResFetchSimulationGameRank {
+	Error error = 1;
+	repeated RankInfo rank = 2;
+	message RankInfo {
+		uint32 character = 1;
+		float score = 2;
+	}
+}
+
+message ResFetchSimulationGameRecord {
+	Error error = 1;
+	repeated ActivitySimulationGameRecordMessage messages = 2;
+}
+
 message ResFetchVoteActivity {
 	Error error = 1;
 	repeated uint32 vote_rank = 2;
@@ -5205,9 +5282,20 @@ message ResSignupAccount {
 	Error error = 1;
 }
 
+message ResSimulationActivityTrain {
+	Error error = 1;
+	uint32 result_type = 2;
+	repeated uint32 final_stats = 4;
+}
+
 message ResStartObserve {
 	GameLiveHead head = 1;
 	GameLiveSegment passed = 2;
+}
+
+message ResStartSimulationActivityGame {
+	Error error = 1;
+	repeated lq.ActivitySimulationGameRecord records = 2;
 }
 
 message ResSyncGame {

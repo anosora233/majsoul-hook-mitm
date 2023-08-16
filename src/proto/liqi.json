@@ -1447,6 +1447,11 @@
               "rule": "repeated",
               "type": "lq.ActivityGachaUpdateData",
               "id": 7
+            },
+            "simulation_data": {
+              "rule": "repeated",
+              "type": "lq.ActivitySimulationData",
+              "id": 8
             }
           }
         },
@@ -1546,6 +1551,64 @@
             "activity_id": { "type": "uint32", "id": 1 },
             "gained": { "rule": "repeated", "type": "GachaRecord", "id": 2 },
             "remain_count": { "type": "uint32", "id": 3 }
+          }
+        },
+        "ActivitySimulationGameRecordMessage": {
+          "fields": {
+            "type": { "type": "uint32", "id": 1 },
+            "args": { "rule": "repeated", "type": "uint32", "id": 2 },
+            "xun": { "type": "uint32", "id": 3 }
+          }
+        },
+        "ActivitySimulationGameRecord": {
+          "fields": {
+            "round": { "type": "uint32", "id": 1 },
+            "seats": { "rule": "repeated", "type": "uint32", "id": 2 },
+            "uuid": { "type": "string", "id": 3 },
+            "start_time": { "type": "uint32", "id": 4 },
+            "scores": { "rule": "repeated", "type": "int32", "id": 5 },
+            "messages": {
+              "rule": "repeated",
+              "type": "ActivitySimulationGameRecordMessage",
+              "id": 6
+            }
+          }
+        },
+        "ActivitySimulationDailyContest": {
+          "fields": {
+            "day": { "type": "uint32", "id": 1 },
+            "characters": { "rule": "repeated", "type": "uint32", "id": 2 },
+            "records": {
+              "rule": "repeated",
+              "type": "ActivitySimulationGameRecord",
+              "id": 3
+            },
+            "round": { "type": "uint32", "id": 4 }
+          }
+        },
+        "ActivitySimulationTrainRecord": {
+          "fields": {
+            "time": { "type": "uint32", "id": 1 },
+            "modify_stats": { "rule": "repeated", "type": "int32", "id": 2 },
+            "final_stats": { "rule": "repeated", "type": "uint32", "id": 3 },
+            "type": { "type": "uint32", "id": 4 }
+          }
+        },
+        "ActivitySimulationData": {
+          "fields": {
+            "activity_id": { "type": "uint32", "id": 1 },
+            "stats": { "rule": "repeated", "type": "uint32", "id": 2 },
+            "stamina_update_time": { "type": "uint32", "id": 3 },
+            "daily_contest": {
+              "rule": "repeated",
+              "type": "ActivitySimulationDailyContest",
+              "id": 4
+            },
+            "train_records": {
+              "rule": "repeated",
+              "type": "ActivitySimulationTrainRecord",
+              "id": 5
+            }
           }
         },
         "ActivitySpotData": {
@@ -1762,7 +1825,12 @@
                 "start_time": { "type": "uint32", "id": 1 },
                 "end_time": { "type": "uint32", "id": 2 },
                 "goods_click_action": { "type": "uint32", "id": 3 },
-                "goods_click_text": { "type": "string", "id": 4 }
+                "goods_click_text": { "type": "string", "id": 4 },
+                "enabled_channel": {
+                  "rule": "repeated",
+                  "type": "string",
+                  "id": 5
+                }
               }
             },
             "PaymentSettingUnit": {
@@ -3717,6 +3785,22 @@
             "taskRequest": {
               "requestType": "ReqTaskRequest",
               "responseType": "ResCommon"
+            },
+            "simulationActivityTrain": {
+              "requestType": "ReqSimulationActivityTrain",
+              "responseType": "ResSimulationActivityTrain"
+            },
+            "fetchSimulationGameRecord": {
+              "requestType": "ReqFetchSimulationGameRecord",
+              "responseType": "ResFetchSimulationGameRecord"
+            },
+            "startSimulationActivityGame": {
+              "requestType": "ReqStartSimulationActivityGame",
+              "responseType": "ResStartSimulationActivityGame"
+            },
+            "fetchSimulationGameRank": {
+              "requestType": "ReqFetchSimulationGameRank",
+              "responseType": "ResFetchSimulationGameRank"
             }
           }
         },
@@ -5856,6 +5940,11 @@
               "rule": "repeated",
               "type": "lq.ActivityGachaUpdateData",
               "id": 22
+            },
+            "simulation_data": {
+              "rule": "repeated",
+              "type": "lq.ActivitySimulationData",
+              "id": 23
             }
           },
           "nested": {
@@ -6745,6 +6834,68 @@
         "ReqTaskRequest": {
           "fields": {
             "params": { "rule": "repeated", "type": "uint32", "id": 1 }
+          }
+        },
+        "ReqSimulationActivityTrain": {
+          "fields": {
+            "activity_id": { "type": "uint32", "id": 1 },
+            "type": { "type": "uint32", "id": 2 }
+          }
+        },
+        "ResSimulationActivityTrain": {
+          "fields": {
+            "error": { "type": "Error", "id": 1 },
+            "result_type": { "type": "uint32", "id": 2 },
+            "final_stats": { "rule": "repeated", "type": "uint32", "id": 4 }
+          }
+        },
+        "ReqFetchSimulationGameRecord": {
+          "fields": {
+            "game_uuid": { "type": "string", "id": 1 },
+            "activity_id": { "type": "uint32", "id": 2 }
+          }
+        },
+        "ResFetchSimulationGameRecord": {
+          "fields": {
+            "error": { "type": "Error", "id": 1 },
+            "messages": {
+              "rule": "repeated",
+              "type": "ActivitySimulationGameRecordMessage",
+              "id": 2
+            }
+          }
+        },
+        "ReqStartSimulationActivityGame": {
+          "fields": { "activity_id": { "type": "uint32", "id": 1 } }
+        },
+        "ResStartSimulationActivityGame": {
+          "fields": {
+            "error": { "type": "Error", "id": 1 },
+            "records": {
+              "rule": "repeated",
+              "type": "lq.ActivitySimulationGameRecord",
+              "id": 2
+            }
+          }
+        },
+        "ReqFetchSimulationGameRank": {
+          "fields": {
+            "activity_id": { "type": "uint32", "id": 1 },
+            "day": { "type": "uint32", "id": 2 }
+          }
+        },
+        "ResFetchSimulationGameRank": {
+          "fields": {
+            "error": { "type": "Error", "id": 1 },
+            "rank": { "rule": "repeated", "type": "RankInfo", "id": 2 }
+          },
+          "nested": {
+            "RankInfo": {
+              "fields": {
+                "character": { "type": "uint32", "id": 1 },
+                "score": { "type": "float", "id": 2 }
+              }
+            }
           }
         },
         "ActionMJStart": { "fields": {} },
