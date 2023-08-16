@@ -226,7 +226,7 @@ class SkinHandler(Handler):
                 self.commonviews["use"] = data["index"]
                 self.save()
 
-                data["index"] = 9
+                data["index"] = 0
             elif method == ".lq.Lobby.useTitle":
                 # 选择头衔时存储，并替换原数据
                 self.title = data["title"]
@@ -272,6 +272,7 @@ class SkinHandler(Handler):
                     # 替换头像，角色、头衔
                     if player["account_id"] in self.fake_pool:
                         object: SkinHandler = self.fake_pool[player["account_id"]]
+                        player["title"] = object.title
                         player["avatar_id"] = object.avatar_id
                         player["character"] = object.get_character(object.character_id)
                         player["views"] = object.get_views()

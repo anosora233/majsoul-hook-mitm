@@ -81,7 +81,14 @@ class WebSocketAddon:
     def websocket_message(self, flow: http.HTTPFlow):
         assert flow.websocket is not None
         message = flow.websocket.messages[-1]
-        parse_obj = self.proto.parse(message)
+
+        try:
+            parse_obj = self.proto.parse(message)
+        except:
+            ctx.log.error("---->> Unsupported Websocket Message <<----")
+            ctx.log.warn(__import__("traceback").format_exc())
+
+            return
 
         if (
             parse_obj["method"] in [".lq.Lobby.oauth2Login", ".lq.Lobby.login"]
