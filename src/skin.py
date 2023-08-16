@@ -3,6 +3,8 @@ from typing import Dict, List, Any, Type, Tuple
 from json import load, dump
 from os.path import exists
 from os import mkdir
+from random import choice
+from copy import deepcopy
 from liqi import Handler, MsgType
 
 
@@ -63,7 +65,13 @@ class SkinHandler(Handler):
                 return char
 
     def get_views(self) -> Dict:
-        return self.commonviews["views"][self.commonviews["use"]]["values"]
+        views = deepcopy(self.commonviews["views"][self.commonviews["use"]]["values"])
+
+        for slot in views:
+            if slot["type"]:
+                slot["item_id"] = choice(slot["item_id_list"])
+                slot["type"], slot["item_id_list"] = 0, []
+        return views
 
     def init_commonviews(self) -> None:
         for i in range(0, 10):
@@ -296,15 +304,20 @@ class SkinHandler(Handler):
                 removed_items = [
                     305214,
                     305314,
-                    305525,
                     305526,
+                    # 双聖の眷属たち
+                    305525,
                     305533,
                     305539,
                     305546,
+                    305553,
+                    # 重复头像框
                     305501,
                     305555,
+                    # 重复牌面
+                    305725,
                 ]
-                for i in range(305001, 308000):
+                for i in range(305001, 309000):
                     if i not in removed_items:
                         items.append({"item_id": i, "stack": 1})
                 data["bag"]["items"].extend(items)

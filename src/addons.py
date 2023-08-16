@@ -90,13 +90,20 @@ class WebSocketAddon:
 
             return
 
+        if message.from_client:
+            ctx.log.warn(f"[{flow.client_conn.id[:13]}]-->>: {parse_obj}")
+        else:
+            ctx.log.warn(f"[{flow.client_conn.id[:13]}]<<--: {parse_obj}")
+
         if (
             parse_obj["method"] in [".lq.Lobby.oauth2Login", ".lq.Lobby.login"]
             and parse_obj["type"] == MsgType.Res
         ):
             account_id = parse_obj["data"]["account_id"]
 
-            if account_id in self.players:
+            if account_id == 0:
+                return
+            elif account_id in self.players:
                 self.players[account_id]["conn_ids"].append(flow.client_conn.id)
             else:
                 self.players[account_id] = init_player(flow.client_conn.id)
@@ -113,11 +120,6 @@ class WebSocketAddon:
             ctx.log.warn(f"{account_id}: {value['conn_ids']}")
 
         self.invoke(flow.client_conn.id, flow_msg=message, parse_obj=parse_obj)
-
-        if message.from_client:
-            ctx.log.warn(f"[{flow.client_conn.id[:13]}]-->>: {parse_obj}")
-        else:
-            ctx.log.warn(f"[{flow.client_conn.id[:13]}]<<--: {parse_obj}")
 
     def websocket_error(self, flow: http.HTTPFlow):
         self.terminate_conn(flow.client_conn.id)
