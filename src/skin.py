@@ -11,6 +11,35 @@ from liqi import Handler, MsgType
 class SkinHandler(Handler):
     fake_pool: Dict[int, Type["SkinHandler"]] = {}
 
+    available_frame = {
+        305510,
+        305529,
+        305537,
+        305542,
+        305545,
+        305551,
+        305552,
+        305554,
+    } | set(range(305520, 305524))
+
+    removed_items = set(range(305501, 305556)).difference(available_frame) | {
+        305214,
+        305314,
+        305526,
+        305725,
+    }
+
+    removed_title = {
+        600017,
+        600024,
+        600025,
+        600029,
+        600030,
+        600041,
+        600043,
+        600044,
+    }
+
     def __init__(self) -> None:
         self.profile_path: str = "profile"
         self.profile: str = "error.json"
@@ -75,10 +104,7 @@ class SkinHandler(Handler):
 
     def init_commonviews(self) -> None:
         for i in range(0, 10):
-            self.commonviews["views"][i] = {
-                "values": [{"slot": 8, "item_id": 0, "type": 0, "item_id_list": []}],
-                "index": i,
-            }
+            self.commonviews["views"][i] = {"values": [], "index": i}
 
     def init_characters(self) -> None:
         self.characters = {
@@ -301,41 +327,15 @@ class SkinHandler(Handler):
             elif method == ".lq.Lobby.fetchBagInfo":
                 # 添加全部装扮
                 items = []
-                removed_items = [
-                    305214,
-                    305314,
-                    305526,
-                    # 双聖の眷属たち
-                    305525,
-                    305533,
-                    305539,
-                    305546,
-                    305553,
-                    # 重复头像框
-                    305501,
-                    305555,
-                    # 重复牌面
-                    305725,
-                ]
                 for i in range(305001, 309000):
-                    if i not in removed_items:
+                    if i not in self.removed_items:
                         items.append({"item_id": i, "stack": 1})
                 data["bag"]["items"].extend(items)
             elif method == ".lq.Lobby.fetchTitleList":
                 # 添加部分有效头衔
                 title_list = []
-                removed_title = [
-                    600017,
-                    600024,
-                    600025,
-                    600029,
-                    600030,
-                    600041,
-                    600043,
-                    600044,
-                ]
                 for i in range(600047, 600001, -1):
-                    if i not in removed_title:
+                    if i not in self.removed_title:
                         title_list.append(i)
                 data["title_list"] = title_list
             elif method in [
