@@ -219,8 +219,6 @@ class SkinHandler(Handler):
                 # 登录
                 ".lq.Lobby.oauth2Login",
                 ".lq.Lobby.login",
-                # 登录完成
-                ".lq.Lobby.fetchDailyTask",
             ]
 
     def handle(self, flow_msg: WebSocketMessage, parse_obj: Dict) -> bool:
@@ -300,18 +298,18 @@ class SkinHandler(Handler):
                 self.account_id = data["account_id"]
                 self.profile = f"{self.profile_path}/{self.account_id}.json"
 
+                if exists(self.profile):
+                    self.read()
+                else:
+                    self.commonviews = self.init_commonviews()
+                    self.characters = self.init_characters()
+
                 # 保存原始的立绘、头衔、加载图
                 avatar_id = data["account"]["avatar_id"]
                 character_id = (int)((avatar_id - 400000) / 100 + 200000)
                 self.original_char = (character_id, avatar_id)
                 self.original_title = data["account"]["title"]
                 self.original_loading_image = data["account"]["loading_image"]
-
-                if exists(self.profile):
-                    self.read()
-                else:
-                    self.commonviews = self.init_commonviews()
-                    self.characters = self.init_characters()
 
                 # 修改立绘、头衔、加载图
                 data["account"]["avatar_id"] = self.avatar_id
@@ -322,6 +320,7 @@ class SkinHandler(Handler):
             elif method == ".lq.Lobby.fetchCharacterInfo":
                 # 保存原顺序
                 self.original_sort = data["character_sort"]
+                self.save()
                 # 全角色数据替换
                 data.update(self.characters)
             elif method == ".lq.FastTest.authGame":
@@ -352,6 +351,7 @@ class SkinHandler(Handler):
                     if view["index"] == data["use"]:
                         self.original_views["views"] = view["values"]
                         self.original_views["save_index"] = data["use"]
+                self.save()
                 # 装扮本地数据替换
                 data.update(self.commonviews)
             elif method == ".lq.Lobby.fetchBagInfo":
@@ -383,10 +383,5 @@ class SkinHandler(Handler):
                             person["character"] = object.get_character(
                                 object.character_id
                             )
-            elif method == ".lq.Lobby.fetchDailyTask":
-                # 进大厅后保存数据
-                self.save()
-
-                return False
 
         return super().handle(flow_msg, parse_obj)
