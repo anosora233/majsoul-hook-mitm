@@ -62,39 +62,41 @@ class SkinHandler(Handler):
         self.original_loading_image: List[int] = []
 
     def save(self) -> None:
-        dump(
-            {
-                "title": self.title,
-                "loading_image": self.loading_image,
-                "characters": self.characters,
-                "commonviews": self.commonviews,
-                # 原始数据
-                "original_sort": self.original_sort,
-                "original_char": self.original_char,
-                "original_title": self.original_title,
-                "original_views": self.original_views,
-                "original_loading_image": self.original_loading_image,
-            },
-            open(self.profile, "w"),
-        )
+        with open(self.profile, "w") as file:
+            dump(
+                {
+                    "title": self.title,
+                    "loading_image": self.loading_image,
+                    "characters": self.characters,
+                    "commonviews": self.commonviews,
+                    # 原始数据
+                    "original_sort": self.original_sort,
+                    "original_char": self.original_char,
+                    "original_title": self.original_title,
+                    "original_views": self.original_views,
+                    "original_loading_image": self.original_loading_image,
+                },
+                file,
+            )
 
     def read(self) -> None:
-        profile_data = load(open(self.profile, "r"))
+        with open(self.profile, "r") as file:
+            conf = load(file)
 
-        self.original_char = tuple(profile_data.get("original_char"))
-        self.original_sort = profile_data.get("original_sort")
-        self.original_title = profile_data.get("original_title")
-        self.original_views = profile_data.get("original_views")
-        self.original_loading_image = profile_data.get("original_loading_image")
+            self.original_char = tuple(conf.get("original_char", ()))
+            self.original_sort = conf.get("original_sort")
+            self.original_title = conf.get("original_title")
+            self.original_views = conf.get("original_views")
+            self.original_loading_image = conf.get("original_loading_image")
 
-        self.title = profile_data.get("title", 0)
-        self.loading_image = profile_data.get("loading_image", [])
-        self.commonviews = profile_data.get("commonviews", self.init_commonviews())
-        self.characters = profile_data.get("characters", self.init_characters())
+            self.title = conf.get("title", 0)
+            self.loading_image = conf.get("loading_image", [])
+            self.commonviews = conf.get("commonviews", self.init_commonviews())
+            self.characters = conf.get("characters", self.init_characters())
 
-        self.character_id = self.characters["main_character_id"]
-        self.avatar_id = self.get_character(self.character_id)["skin"]
-        self.update_characters()
+            self.character_id = self.characters["main_character_id"]
+            self.avatar_id = self.get_character(self.character_id)["skin"]
+            self.update_characters()
 
     def get_character(self, charid: int) -> Dict:
         for char in self.characters["characters"]:
@@ -114,13 +116,13 @@ class SkinHandler(Handler):
             for slot in self.commonviews["views"][self.commonviews["use"]]["values"]
         ]
 
-    def init_commonviews(self) -> Dict[str, any]:
+    def init_commonviews(self) -> Dict[str, Any]:
         commonviews = {"views": [{}] * 10, "use": 0}
         for i in range(0, 10):
             commonviews["views"][i] = {"values": [], "index": i}
         return commonviews
 
-    def init_characters(self) -> Dict[str, any]:
+    def init_characters(self) -> Dict[str, Any]:
         characters = {
             "characters": [],
             "skins": [],
