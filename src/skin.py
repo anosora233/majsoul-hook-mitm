@@ -4,7 +4,6 @@ from json import load, dump
 from os.path import exists
 from os import mkdir
 from random import choice
-from copy import deepcopy
 from liqi import Handler, MsgType
 
 
@@ -94,8 +93,7 @@ class SkinHandler(Handler):
                 return char
 
     def get_views(self) -> Dict:
-        views = deepcopy(self.commonviews["views"][self.commonviews["use"]]["values"])
-
+        views = self.commonviews["views"][self.commonviews["use"]]["values"].copy()
         for slot in views:
             if slot["type"]:
                 slot["item_id"] = choice(slot["item_id_list"])
@@ -254,7 +252,7 @@ class SkinHandler(Handler):
                 self.commonviews["views"][data["save_index"]]["values"] = data["views"]
                 self.save()
 
-                data = {"views": [], "save_index": 9, "is_use": 0}
+                data.update({"views": [], "save_index": 9, "is_use": 0})
             elif method == ".lq.Lobby.useCommonView":
                 # 选择装扮时存储，并替换原数据
                 self.commonviews["use"] = data["index"]
@@ -299,7 +297,7 @@ class SkinHandler(Handler):
                 self.fake_pool[self.account_id] = self
             elif method == ".lq.Lobby.fetchCharacterInfo":
                 # 全角色数据替换
-                data = self.characters
+                data.update(self.characters)
             elif method == ".lq.FastTest.authGame":
                 # 进入对局时
                 for player in data["players"]:
@@ -323,7 +321,7 @@ class SkinHandler(Handler):
                     data["account"]["title"] = object.title
             elif method == ".lq.Lobby.fetchAllCommonViews":
                 # 装扮本地数据替换
-                data = self.commonviews
+                data.update(self.commonviews)
             elif method == ".lq.Lobby.fetchBagInfo":
                 # 添加全部装扮
                 items = []
@@ -354,5 +352,4 @@ class SkinHandler(Handler):
                                 object.character_id
                             )
 
-        parse_obj.update({"type": type, "data": data, "method": method})
         return super().handle(flow_msg, parse_obj)
