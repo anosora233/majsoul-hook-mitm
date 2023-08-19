@@ -33,6 +33,9 @@ class Handler(object):
     def methods(self, type: MsgType) -> List:
         pass
 
+    def drop(self, parse_obj: Dict) -> None:
+        parse_obj["method"], parse_obj["data"] = ".lq.Lobby.heatbeat", []
+
 
 class LQPROTO:
     def __init__(self) -> None:
@@ -128,6 +131,7 @@ def modify(flow_msg: WebSocketMessage, parse_obj: Dict) -> bool:
         _, lq, message_name = method_name.split(".")
         liqi_pb2_notify = getattr(pb, message_name)
         proto_obj = ParseDict(js_dict=data, message=liqi_pb2_notify())
+        msg_block[0]["data"] = parse_obj["method"].encode()
         msg_block[1]["data"] = proto_obj.SerializeToString()
         flow_msg.content = buf[:1] + toProtobuf(msg_block)
     else:
@@ -139,6 +143,7 @@ def modify(flow_msg: WebSocketMessage, parse_obj: Dict) -> bool:
             proto_domain = JSON_PROTO["nested"][lq]["nested"][service]["methods"][rpc]
             liqi_pb2_req = getattr(pb, proto_domain["requestType"])
             proto_obj = ParseDict(js_dict=data, message=liqi_pb2_req())
+            msg_block[0]["data"] = parse_obj["method"].encode()
             msg_block[1]["data"] = proto_obj.SerializeToString()
             flow_msg.content = buf[:3] + toProtobuf(msg_block)
         elif msg_type == MsgType.Res:
@@ -148,10 +153,11 @@ def modify(flow_msg: WebSocketMessage, parse_obj: Dict) -> bool:
             proto_domain = JSON_PROTO["nested"][lq]["nested"][service]["methods"][rpc]
             liqi_pb2_res = getattr(pb, proto_domain["responseType"])
             proto_obj = ParseDict(js_dict=data, message=liqi_pb2_res())
+            msg_block[0]["data"] = parse_obj["method"].encode()
             msg_block[1]["data"] = proto_obj.SerializeToString()
             flow_msg.content = buf[:3] + toProtobuf(msg_block)
 
-        return True
+    return True
 
 
 def fromProtobuf(buf) -> List[Dict]:

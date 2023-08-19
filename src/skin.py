@@ -46,6 +46,7 @@ class SkinHandler(Handler):
             mkdir(self.profile_path)
 
         self.last_charid: int = 200001
+        self.original_char: Tuple[int, int] = (200001, 400101)
 
         self.title: int = 0
         self.account_id: int = 100000000
@@ -55,12 +56,6 @@ class SkinHandler(Handler):
         self.characters: Dict[str, Any] = {}
         self.commonviews: Dict[str, Any] = {}
 
-        self.original_char: Tuple[int, int] = ()
-        self.original_sort: List[int] = []
-        self.original_title: int = 0
-        self.original_views: Dict[str, Any] = {}
-        self.original_loading_image: List[int] = []
-
     def save(self) -> None:
         with open(self.profile, "w") as file:
             dump(
@@ -69,12 +64,6 @@ class SkinHandler(Handler):
                     "loading_image": self.loading_image,
                     "characters": self.characters,
                     "commonviews": self.commonviews,
-                    # 原始数据
-                    "original_sort": self.original_sort,
-                    "original_char": self.original_char,
-                    "original_title": self.original_title,
-                    "original_views": self.original_views,
-                    "original_loading_image": self.original_loading_image,
                 },
                 file,
             )
@@ -82,12 +71,6 @@ class SkinHandler(Handler):
     def read(self) -> None:
         with open(self.profile, "r") as file:
             conf = load(file)
-
-            self.original_char = tuple(conf.get("original_char", ()))
-            self.original_sort = conf.get("original_sort")
-            self.original_title = conf.get("original_title")
-            self.original_views = conf.get("original_views")
-            self.original_loading_image = conf.get("original_loading_image")
 
             self.title = conf.get("title", 0)
             self.loading_image = conf.get("loading_image", [])
@@ -240,9 +223,10 @@ class SkinHandler(Handler):
                 data["main_character"] = {"exp": 1, "add": 0, "level": 5}
             elif method == ".lq.NotifyAccountUpdate":
                 # 修改角色皮肤时
-                if str("character") in data["update"]:
-                    for character in data["update"]["character"]["characters"]:
-                        character.update(self.get_character(self.last_charid))
+                if str("character") not in data["update"]:
+                    return False
+                for character in data["update"]["character"]["characters"]:
+                    character.update(self.get_character(self.last_charid))
         # REQUEST
         elif type == MsgType.Req:
             if method == ".lq.Lobby.changeMainCharacter":
@@ -252,7 +236,7 @@ class SkinHandler(Handler):
                 self.avatar_id = self.get_character(self.character_id)["skin"]
                 self.save()
 
-                data["character_id"], _ = self.original_char
+                super().drop(parse_obj=parse_obj)
             elif method == ".lq.Lobby.changeCharacterSkin":
                 # 修改角色皮肤时存储，并替换原数据
                 self.get_character(data["character_id"])["skin"] = data["skin"]
@@ -266,31 +250,31 @@ class SkinHandler(Handler):
                 self.characters["character_sort"] = data["sort"]
                 self.save()
 
-                data["sort"] = self.original_sort
+                super().drop(parse_obj=parse_obj)
             elif method == ".lq.Lobby.saveCommonViews":
                 # 修改装扮时存储，并替换原数据
                 self.commonviews["views"][data["save_index"]]["values"] = data["views"]
                 self.save()
 
-                data.update(self.original_views)
+                super().drop(parse_obj=parse_obj)
             elif method == ".lq.Lobby.useCommonView":
                 # 选择装扮时存储，并替换原数据
                 self.commonviews["use"] = data["index"]
                 self.save()
 
-                data["index"] = self.original_views["save_index"]
+                super().drop(parse_obj=parse_obj)
             elif method == ".lq.Lobby.useTitle":
                 # 选择头衔时存储，并替换原数据
                 self.title = data["title"]
                 self.save()
 
-                data["title"] = self.original_title
+                super().drop(parse_obj=parse_obj)
             elif method == ".lq.Lobby.setLoadingImage":
                 # 选择加载图时存储，并替换原数据
                 self.loading_image = data["images"]
                 self.save()
 
-                data["images"] = self.original_loading_image
+                super().drop(parse_obj=parse_obj)
         # RESPONSE
         elif type == MsgType.Res:
             if method in [".lq.Lobby.oauth2Login", ".lq.Lobby.login"]:
@@ -303,13 +287,12 @@ class SkinHandler(Handler):
                 else:
                     self.commonviews = self.init_commonviews()
                     self.characters = self.init_characters()
+                    self.save()
 
-                # 保存原始的立绘、头衔、加载图
+                # 保存原角色及皮肤编号
                 avatar_id = data["account"]["avatar_id"]
                 character_id = (int)((avatar_id - 400000) / 100 + 200000)
                 self.original_char = (character_id, avatar_id)
-                self.original_title = data["account"]["title"]
-                self.original_loading_image = data["account"]["loading_image"]
 
                 # 修改立绘、头衔、加载图
                 data["account"]["avatar_id"] = self.avatar_id
@@ -318,9 +301,6 @@ class SkinHandler(Handler):
 
                 self.fake_pool[self.account_id] = self
             elif method == ".lq.Lobby.fetchCharacterInfo":
-                # 保存原顺序
-                self.original_sort = data["character_sort"]
-                self.save()
                 # 全角色数据替换
                 data.update(self.characters)
             elif method == ".lq.FastTest.authGame":
@@ -345,13 +325,6 @@ class SkinHandler(Handler):
                     data["account"]["avatar_id"] = object.avatar_id
                     data["account"]["title"] = object.title
             elif method == ".lq.Lobby.fetchAllCommonViews":
-                # 保存原装扮槽位
-                self.original_views = {"views": [], "save_index": 0, "is_use": 0}
-                for view in data["views"]:
-                    if view["index"] == data["use"]:
-                        self.original_views["views"] = view["values"]
-                        self.original_views["save_index"] = data["use"]
-                self.save()
                 # 装扮本地数据替换
                 data.update(self.commonviews)
             elif method == ".lq.Lobby.fetchBagInfo":
@@ -374,14 +347,13 @@ class SkinHandler(Handler):
                 ".lq.Lobby.createRoom",
             ]:
                 # 在加入、获取、创建房间时修改己方头衔、立绘、角色
-                if str("room") in data:
-                    for person in data["room"]["persons"]:
-                        if person["account_id"] in self.fake_pool:
-                            object: SkinHandler = self.fake_pool[person["account_id"]]
-                            person["title"] = object.title
-                            person["avatar_id"] = object.avatar_id
-                            person["character"] = object.get_character(
-                                object.character_id
-                            )
+                if str("room") not in data:
+                    return False
+                for person in data["room"]["persons"]:
+                    if person["account_id"] in self.fake_pool:
+                        object: SkinHandler = self.fake_pool[person["account_id"]]
+                        person["title"] = object.title
+                        person["avatar_id"] = object.avatar_id
+                        person["character"] = object.get_character(object.character_id)
 
         return super().handle(flow_msg, parse_obj)
