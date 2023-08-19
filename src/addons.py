@@ -24,8 +24,8 @@ def init_version():
     response.raise_for_status()
     ver_data = response.json()
 
-    res_data = json.load(open("version.json", "r")) if exists("version.json") else None
-    if res_data and res_data["version"] != ver_data["version"]:
+    server = settings.get("server")
+    if not server or server["version"] != ver_data["version"]:
         res_url = f"https://game.maj-soul.com/1/resversion{ver_data['version']}.json"
         response = requests.get(res_url, proxies={"https": settings["upstream_proxy"]})
         response.raise_for_status()
@@ -35,10 +35,7 @@ def init_version():
         while str(f"extendRes/emo/e{max_charid}/0.png") in res_data["res"]:
             max_charid += 1
 
-        res_data = {"version": ver_data["version"], "max_charid": max_charid}
-        json.dump(res_data, open("version.json", "w"), indent=2)
-
-    print(json.dumps(res_data, indent=2))
+        settings["server"] = {"version": ver_data["version"], "max_charid": max_charid}
 
 
 def init_logger(name: str, level: str) -> logging.Logger:
@@ -54,8 +51,8 @@ def init_player(login_id: str) -> Dict:
     handlers = []
     if settings["enable_skins"]:
         handlers.append(__import__("skin").SkinHandler())
-    if settings["enable_helper"]:
-        pass
+    if settings["enable_aider"]:
+        handlers.append(__import__("aider").AiderHandler())
     return {"conn_ids": [login_id], "handlers": handlers}
 
 
@@ -101,7 +98,7 @@ class WebSocketAddon:
             logger.debug(f"[{flow.client_conn.id[:13]}] <<-- {parse_obj}")
 
         if (
-            parse_obj["method"] in [".lq.Lobby.oauth2Login", ".lq.Lobby.login"]
+            parse_obj["method"] in {".lq.Lobby.oauth2Login", ".lq.Lobby.login"}
             and parse_obj["type"] == MsgType.Res
         ):
             account_id = parse_obj["data"]["account_id"]
@@ -138,24 +135,26 @@ settings = {
     "log_level": "info",
     "listen_port": 23410,
     "enable_skins": False,
-    "enable_helper": False,
+    "enable_aider": False,
     "upstream_proxy": None,
     "pure_python_protobuf": False,
 }
 
-if exists("settings.json"):
-    settings.update(json.load(open("settings.json", "r")))
-    json.dump(settings, open("settings.json", "w"), indent=2)
-    print("---->> Load Configuration <<----\n", json.dumps(settings, indent=2))
-else:
+if not exists("settings.json"):
     json.dump(settings, open("settings.json", "w"), indent=2)
     print("---->> Initialize Configuration <<----\n", json.dumps(settings, indent=2))
-    exit(0)
+    input("Press Enter to exit ... ")
+    raise SystemExit
 
-addons = [WebSocketAddon()]
-logger = init_logger("logger", settings["log_level"].upper())
+settings.update(json.load(open("settings.json", "r")))
 
 if settings["enable_skins"]:
     init_version()
 if settings["pure_python_protobuf"]:
     os.environ["PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION"] = "python"
+
+json.dump(settings, open("settings.json", "w"), indent=2)
+print("---->> Load Configuration <<----\n", json.dumps(settings, indent=2))
+
+addons = [WebSocketAddon()]
+logger = init_logger("logger", settings["log_level"].upper())

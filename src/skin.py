@@ -1,14 +1,13 @@
 from mitmproxy.websocket import WebSocketMessage
-from typing import Dict, List, Any, Type, Tuple
+from typing import Dict, List, Any, Set, Type, Tuple
 from json import load, dump
 from os.path import exists
 from os import mkdir
 from random import choice
 from liqi import Handler, MsgType
 
-
 class SkinHandler(Handler):
-    max_charid: int = load(open("version.json", "r"))["max_charid"]
+    max_charid: int = __import__("addons").settings["server"]["max_charid"]
     fake_pool: Dict[int, Type["SkinHandler"]] = {}
 
     available_frame = {
@@ -166,15 +165,15 @@ class SkinHandler(Handler):
 
         self.save()
 
-    def methods(self, type: MsgType) -> List:
+    def methods(self, type: MsgType) -> Set[str]:
         if type == MsgType.Notify:
-            return [
+            return {
                 ".lq.NotifyRoomPlayerUpdate",
                 ".lq.NotifyGameFinishRewardV2",
                 ".lq.NotifyAccountUpdate",
-            ]
+            }
         elif type == MsgType.Req:
-            return [
+            return {
                 ".lq.Lobby.changeMainCharacter",
                 ".lq.Lobby.changeCharacterSkin",
                 ".lq.Lobby.updateCharacterSort",
@@ -185,9 +184,9 @@ class SkinHandler(Handler):
                 # 装扮
                 ".lq.Lobby.saveCommonViews",
                 ".lq.Lobby.useCommonView",
-            ]
+            }
         elif type == MsgType.Res:
-            return [
+            return {
                 ".lq.FastTest.authGame",
                 ".lq.Lobby.fetchAccountInfo",
                 ".lq.Lobby.fetchCharacterInfo",
@@ -202,7 +201,7 @@ class SkinHandler(Handler):
                 # 登录
                 ".lq.Lobby.oauth2Login",
                 ".lq.Lobby.login",
-            ]
+            }
 
     def handle(self, flow_msg: WebSocketMessage, parse_obj: Dict) -> bool:
         type = parse_obj["type"]

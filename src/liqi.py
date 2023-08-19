@@ -4,7 +4,7 @@ import proto.liqi_pb2 as pb
 
 from struct import unpack
 from enum import Enum
-from typing import List, Dict
+from typing import List, Dict, Set
 from google.protobuf.json_format import MessageToDict, ParseDict
 from mitmproxy.websocket import WebSocketMessage
 
@@ -30,7 +30,7 @@ class Handler(object):
     def handle(self, flow_msg: WebSocketMessage, parse_obj: Dict) -> bool:
         return modify(flow_msg=flow_msg, parse_obj=parse_obj)
 
-    def methods(self, type: MsgType) -> List:
+    def methods(self, type: MsgType) -> Set[str]:
         pass
 
     def drop(self, parse_obj: Dict) -> None:
@@ -60,7 +60,7 @@ class LQPROTO:
                 including_default_value_fields=True,
             )
 
-            if "data" in dict_obj:
+            if str("data") in dict_obj:
                 B = base64.b64decode(dict_obj["data"])
                 action_proto_obj = getattr(pb, dict_obj["name"]).FromString(decode(B))
                 action_dict_obj = MessageToDict(
@@ -105,6 +105,17 @@ class LQPROTO:
                     preserving_proto_field_name=True,
                     including_default_value_fields=True,
                 )
+
+                if str("game_restore") in dict_obj:
+                    for action in dict_obj["game_restore"]["actions"]:
+                        b64 = base64.b64decode(action["data"])
+                        action_proto_obj = getattr(pb, action["name"]).FromString(b64)
+                        action_dict_obj = MessageToDict(
+                            action_proto_obj,
+                            preserving_proto_field_name=True,
+                            including_default_value_fields=True,
+                        )
+                        action["data"] = action_dict_obj
         parse_obj = {
             "id": msg_id,
             "type": msg_type,

@@ -1,8 +1,3 @@
-from os import environ
-from os.path import exists
-from json import load, dump
-
-
 async def start_proxy():
     from addons import addons, settings
     from mitmproxy.tools.dump import DumpMaster
