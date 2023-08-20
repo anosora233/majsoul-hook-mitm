@@ -11,6 +11,13 @@ import os
 import json
 import logging
 
+logging.basicConfig(
+    level=logging.root.getEffectiveLevel(),
+    format="%(message)s",
+    datefmt="[%X]",
+    handlers=[RichHandler(rich_tracebacks=True)],
+)
+
 
 def init_version():
     import requests
@@ -36,15 +43,6 @@ def init_version():
             max_charid += 1
 
         settings["server"] = {"version": ver_data["version"], "max_charid": max_charid}
-
-
-def init_logger(name: str, level: str) -> logging.Logger:
-    logger = logging.getLogger(name=name)
-    logger.setLevel(level.upper())
-    handler = RichHandler()
-    handler.setFormatter(logging.Formatter(fmt="%(message)s", datefmt="%H:%M:%S"))
-    logger.addHandler(handler)
-    return logger
 
 
 def init_player(login_id: str) -> Dict:
@@ -157,4 +155,5 @@ json.dump(settings, open("settings.json", "w"), indent=2)
 print("---->> Load Configuration <<----\n", json.dumps(settings, indent=2))
 
 addons = [WebSocketAddon()]
-logger = init_logger("logger", settings["log_level"].upper())
+logger = logging.getLogger(__name__)
+logger.setLevel(settings["log_level"].upper())

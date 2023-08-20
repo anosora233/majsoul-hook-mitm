@@ -6,6 +6,7 @@ from os import mkdir
 from random import choice
 from liqi import Handler, MsgType
 
+
 class SkinHandler(Handler):
     max_charid: int = __import__("addons").settings["server"]["max_charid"]
     fake_pool: Dict[int, Type["SkinHandler"]] = {}
