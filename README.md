@@ -50,12 +50,12 @@ python richi-console.py
 
 1. 浏览器添加 _SwitchyOmega_ 插件，配置代理规则并应用
 
-   <img title="" src="./imgs/mitm.png" alt="proxyserver.png" data-align="inline" width = "600">
-   <img title="" src="./imgs/switch.png" alt="proxyserver.png" data-align="inline" width = "600">
+   <img title="" src="./imgs/mitm.png" alt="mitm.png" data-align="inline" width = "600">
+   <img title="" src="./imgs/switch.png" alt="switch.png" data-align="inline" width = "600">
 
 2. 在浏览器访问 [_mitm.it_](http://mitm.it) 并安装 _CA_ 证书，
 
-   <img title="" src="./imgs/cert.png" alt="proxyserver.png" data-align="inline" width = "600">
+   <img title="" src="./imgs/cert.png" alt="cert.png" data-align="inline" width = "600">
 
 3. 在浏览器启动游戏即可
 
