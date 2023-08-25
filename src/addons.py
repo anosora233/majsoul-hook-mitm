@@ -12,6 +12,8 @@ def init_player(login_id: str) -> Dict:
         handlers.append(__import__("skin").SkinHandler())
     if settings["enable_aider"]:
         handlers.append(__import__("aider").AiderHandler())
+    if settings["enable_chest"]:
+        handlers.append(__import__("chest").ChestHandler())
     return {"conn_ids": [login_id], "handlers": handlers}
 
 
@@ -26,11 +28,13 @@ class WebSocketAddon:
 
         for player in self.players.values():
             if conn_id in player["conn_ids"]:
+                modify = False
                 for handler in player["handlers"]:
                     if method in handler.methods(msg_type):
-                        if handler.handle(flow_msg=flow_msg, parse_obj=parse_obj):
-                            logger.info(f"[i][red]Modified[/red] {conn_id}[/i]")
-                            logger.info(parse_obj)
+                        modify = handler.handle(flow_msg=flow_msg, parse_obj=parse_obj)
+                if modify:
+                    logger.info(f"[i][red]Modified[/red] {conn_id}[/i]")
+                    logger.info(parse_obj)
 
     def websocket_message(self, flow: http.HTTPFlow):
         # make type checker happy

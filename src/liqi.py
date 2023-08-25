@@ -164,7 +164,7 @@ def modify(flow_msg: WebSocketMessage, parse_obj: Dict) -> bool:
             proto_domain = JSON_PROTO["nested"][lq]["nested"][service]["methods"][rpc]
             liqi_pb2_res = getattr(pb, proto_domain["responseType"])
             proto_obj = ParseDict(js_dict=data, message=liqi_pb2_res())
-            msg_block[0]["data"] = parse_obj["method"].encode()
+            # msg_block[0]["data"] = parse_obj["method"].encode()
             msg_block[1]["data"] = proto_obj.SerializeToString()
             flow_msg.content = buf[:3] + toProtobuf(msg_block)
 

@@ -69,6 +69,7 @@ settings = {
     "listen_port": 23410,
     "enable_skins": False,
     "enable_aider": False,
+    "enable_chest": False,
     "upstream_proxy": None,
     "pure_python_protobuf": False,
 }
