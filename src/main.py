@@ -1,5 +1,6 @@
 async def start_proxy():
-    from addons import addons, settings
+    from addons import addons
+    from config import settings
     from mitmproxy.tools.dump import DumpMaster
     from mitmproxy import options
 
