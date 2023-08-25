@@ -16,7 +16,7 @@ async def start_proxy():
     )
     master = DumpMaster(
         opts,
-        with_termlog=False,
+        with_termlog=True,
         with_dumper=settings["dumper"],
     )
 
