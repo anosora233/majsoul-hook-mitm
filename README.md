@@ -2,21 +2,18 @@
 
 本项目以**中间人攻击**的形式抓取经过代理服务器的网络通信
 
-以实现 **修改游戏数据** 或 **转发数据并分析** 的功能
+以实现 **修改数据、转发数据** 等功能
 
 ## 用前须知
 
-> _魔改千万条，安全第一条。_
+> 魔改千万条，安全第一条。使用不规范，账号两行泪。
+
+> 本插件仅供学习参考交流，不得用于商业用途，否则后果自负。
 >
-> _使用不规范，账号两行泪。_
->
-> _本插件仅供学习参考交流，_
->
-> _请使用者于下载 24 小时内自行删除，不得用于商业用途，否则后果自负。_
+> **目前封号及其严重，逢开必封！本脚本仅供体验**
 
 ## 主要功能
 
-- [x] 游戏实时数据查看
 - [x] 兼容小助手
 - [x] 本地全皮肤
 - [ ] 本地昵称
@@ -37,7 +34,7 @@ cd richi-console
 # 配置国内镜像源 (可选)
 python -m pip install --upgrade pip
 pip config set global.index-url https://mirror.nju.edu.cn/pypi/web/simple
-# 添加小助手
+# 添加小助手 (可选)
 mkdir bin
 cp path/to/mahjong-helper.exe bin/console.exe
 # 安装依赖
@@ -45,21 +42,6 @@ python -m pip install -r requirements.txt
 # 启动 Mitmproxy 代理服务器
 python richi-console.py
 ```
-
-### 网页版
-
-1. 浏览器添加 _SwitchyOmega_ 插件，配置代理规则并应用
-
-   <img title="" src="./imgs/mitm.png" alt="mitm.png" data-align="inline" width = "600">
-   <img title="" src="./imgs/switch.png" alt="switch.png" data-align="inline" width = "600">
-
-2. 在浏览器访问 [_mitm.it_](http://mitm.it) 并安装 _CA_ 证书，
-
-   <img title="" src="./imgs/cert.png" alt="cert.png" data-align="inline" width = "600">
-
-3. 在浏览器启动游戏即可
-
-4. 不使用本插件时切换 SwitchyOmega 代理规则即可
 
 ### 客户端
 
@@ -76,11 +58,26 @@ python richi-console.py
 
 4. 不使用本插件时关闭 _Proxifier_ 即可
 
+### 网页版
+
+1. 浏览器添加 _SwitchyOmega_ 插件，配置代理规则并应用
+
+   <img title="" src="./imgs/mitm.png" alt="mitm.png" data-align="inline" width = "800">
+   <img title="" src="./imgs/switch.png" alt="switch.png" data-align="inline" width = "800">
+
+2. 在浏览器访问 [_mitm.it_](http://mitm.it) 并安装 _CA_ 证书
+
+   <img title="" src="./imgs/cert.png" alt="cert.png" data-align="inline" width = "400">
+
+3. 在浏览器启动游戏即可
+
+4. 不使用本插件时切换 _SwitchyOmega_ 代理规则即可
+
 ## 配置文件
 
 首次启动 _Mitmproxy_ 代理服务器后会自动生成配置文件 _settings.json_
 
-**<u>默认不启用任何功能</u>**，请根据需求自行配置编辑 _settings.json_
+**默认不启用任何功能**，请根据需求自行配置编辑 _settings.json_
 
 | 释义       | 键             | 可用值                |
 | ---------- | -------------- | --------------------- |
