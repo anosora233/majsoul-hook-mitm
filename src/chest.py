@@ -12,33 +12,36 @@ class ChestHandler(Handler):
         self.up_views = up_views
         self.count = 10
 
-    def methods(self, type: MsgType) -> Set[str]:
-        if type == MsgType.Notify:
+    def methods(self, msg_type: MsgType) -> Set[str]:
+        if msg_type == MsgType.Notify:
             return set()
-        if type == MsgType.Req:
+        if msg_type == MsgType.Req:
             return {
                 ".lq.Lobby.openChest",
             }
-        if type == MsgType.Res:
+        if msg_type == MsgType.Res:
             return {
-                ".lq.Lobby.openChest",
+                ".lq.Lobby.fetchAccountInfo",
                 ".lq.Lobby.oauth2Login",
                 ".lq.Lobby.login",
+                ".lq.Lobby.openChest",
             }
 
     def handle(self, flow_msg: WebSocketMessage, parse_obj: Dict) -> bool:
-        type = parse_obj["type"]
+        msg_type = parse_obj["type"]
         data = parse_obj["data"]
         method = parse_obj["method"]
 
-        if method in [".lq.Lobby.oauth2Login", ".lq.Lobby.login"]:
-            data["account"]["platform_diamond"][0] = {"id": 100001, "count": 99999}
-        elif method == ".lq.Lobby.openChest":
-            if type == MsgType.Req:
-                self.count = data["count"]
+        if method in [
+            ".lq.Lobby.oauth2Login",
+            ".lq.Lobby.login",
+            ".lq.Lobby.fetchAccountInfo",
+        ]:
+            if data["account"]["platform_diamond"]:
+                data["account"]["platform_diamond"][0] = {"id": 100001, "count": 66666}
 
-                super().drop(parse_obj=parse_obj)
-            elif type == MsgType.Res:
+        elif method == ".lq.Lobby.openChest":
+            if msg_type == MsgType.Res:
                 results = []
 
                 for i in range(0, self.count):
@@ -48,7 +51,7 @@ class ChestHandler(Handler):
                         if self.up_characters and random() <= 0.2:
                             id = choice(self.up_characters)
                         else:
-                            id = randint(200003, SkinHandler.max_charid - 1)
+                            id = randint(200003, SkinHandler.MAX_CHARID - 1)
                         results.append({"reward": {"id": id, "count": 1}})
                     elif rand <= 0.20:
                         if self.up_views and random() <= 0.49:
@@ -63,8 +66,11 @@ class ChestHandler(Handler):
                     {
                         "results": results,
                         "total_open_count": self.count,
-                        "faith_count": 0,
                     }
                 )
+            elif msg_type == MsgType.Req:
+                self.count = data["count"]
+
+                super().drop(parse_obj=parse_obj)
 
         return super().handle(flow_msg, parse_obj)

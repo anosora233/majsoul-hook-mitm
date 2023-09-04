@@ -12,8 +12,9 @@ disable_warnings(InsecureRequestWarning)
 
 
 class AiderHandler(Handler):
-    port: int = 23330
-    actions: Set[str] = {
+    PORT: int = 23330
+
+    ACTIONS: Set[str] = {
         "ActionNewRound",
         "ActionDealTile",
         "ActionAnGangAddGang",
@@ -38,22 +39,22 @@ class AiderHandler(Handler):
     def __init__(self) -> None:
         with socket(AF_INET, SOCK_STREAM) as s:
             s.settimeout(0.02)
-            if s.connect_ex(("127.0.0.1", self.port)) != 0:
-                cmd = f'start cmd /c "title Console · 🀄 && bin\\console.exe -majsoul -p {self.port}"'
+            if s.connect_ex(("127.0.0.1", self.PORT)) != 0:
+                cmd = f'start cmd /c "title Console · 🀄 && bin\\console.exe -majsoul -p {self.PORT}"'
                 system(cmd)
 
-        self.api = f"https://127.0.0.1:{self.port}"
-        self.__class__.port += 1
+        self.api = f"https://127.0.0.1:{self.PORT}"
+        self.__class__.PORT += 1
 
-    def methods(self, type: MsgType) -> Set[str]:
-        if type == MsgType.Notify:
+    def methods(self, msg_type: MsgType) -> Set[str]:
+        if msg_type == MsgType.Notify:
             return {
                 ".lq.NotifyPlayerLoadGameReady",
                 ".lq.ActionPrototype",
             }
-        if type == MsgType.Req:
+        if msg_type == MsgType.Req:
             return set()
-        if type == MsgType.Res:
+        if msg_type == MsgType.Res:
             return {
                 ".lq.FastTest.authGame",
                 ".lq.FastTest.syncGame",
@@ -69,7 +70,7 @@ class AiderHandler(Handler):
 
         # Thanks to Avenshy
         if method == ".lq.ActionPrototype":
-            if data["name"] not in self.actions:
+            if data["name"] not in self.ACTIONS:
                 return False
             elif data["name"] == "ActionNewRound":
                 data["data"]["md5"] = data["data"]["sha256"][:32]

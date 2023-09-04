@@ -9,10 +9,10 @@ from google.protobuf.json_format import MessageToDict, ParseDict
 from mitmproxy.websocket import WebSocketMessage
 
 """ 
-    # msg_block Notify
+    # msg_block notify
     [   {'id': 1, 'type': 'string','data': b'.lq.ActionPrototype'},
         {'id': 2, 'type': 'string','data': b'protobuf_bytes'}       ]
-    # msg_block Request & Response
+    # msg_block request & response
     [   {'id': 1, 'type': 'string','data': b'.lq.FastTest.authGame'},
         {'id': 2, 'type': 'string','data': b'protobuf_bytes'}       ]
 """
@@ -30,11 +30,11 @@ class Handler(object):
     def handle(self, flow_msg: WebSocketMessage, parse_obj: Dict) -> bool:
         return modify(flow_msg=flow_msg, parse_obj=parse_obj)
 
-    def methods(self, type: MsgType) -> Set[str]:
-        pass
+    def methods(self, msg_type: MsgType) -> Set[str]:
+        raise NotImplementedError
 
     def drop(self, parse_obj: Dict) -> None:
-        parse_obj["method"], parse_obj["data"] = ".lq.Lobby.heatbeat", []
+        parse_obj["method"], parse_obj["data"] = ".lq.Lobby.heatbeat", {}
 
 
 class LQPROTO:
