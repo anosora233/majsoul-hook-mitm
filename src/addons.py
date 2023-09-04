@@ -42,7 +42,7 @@ class WebSocketAddon:
         # get the latest message
         message = flow.websocket.messages[-1]
 
-        # parse websock message
+        # parse websocket message
         try:
             parse_obj = self.proto.parse(message)
         except:
@@ -55,43 +55,43 @@ class WebSocketAddon:
         method = parse_obj["method"]
 
         # debug
-        logger.debug(f"[i][bold]Message Of[/bold] {flow.client_conn.id}[/i]")
+        logger.debug(f"[i][bold]Message Of[/bold] {flow.id}[/i]")
         logger.debug(parse_obj)
 
         # identify game websocket
         if msg_type == MsgType.Res and method in {
             ".lq.Lobby.oauth2Login",
-            ".lq.Lobby.login ",
+            ".lq.Lobby.login",
         }:
             account_id = parse_obj["data"]["account_id"]
             if account_id == 0:
                 return
             elif account_id in self.players:
-                self.players[account_id]["conn_ids"].append(flow.client_conn.id)
+                self.players[account_id]["conn_ids"].append(flow.id)
             else:
-                self.players[account_id] = init_player(flow.client_conn.id)
+                self.players[account_id] = init_player(flow.id)
         elif msg_type == MsgType.Req and method == ".lq.FastTest.authGame":
             account_id = parse_obj["data"]["account_id"]
             assert account_id in self.players
-            self.players[account_id]["conn_ids"].append(flow.client_conn.id)
+            self.players[account_id]["conn_ids"].append(flow.id)
 
         # client players
         # for account_id, value in self.players.items():
         #     logger.debug(f"[i][{account_id}] : {value['conn_ids']}[/i]")
 
         # invoke methods to modify websockt message
-        self.invoke(flow.client_conn.id, flow_msg=message, parse_obj=parse_obj)
+        self.invoke(flow.id, flow_msg=message, parse_obj=parse_obj)
 
     def websocket_start(self, flow: http.HTTPFlow):
-        logger.info(f"[i][green]Connected[/green] {flow.client_conn.id}[/i]")
+        logger.info(f"[i][green]Connected[/green] {flow.id}[/i]")
 
     def websocket_end(self, flow: http.HTTPFlow):
-        logger.info(f"[i][blue]Disconnected[/blue] {flow.client_conn.id}[/i]")
+        logger.info(f"[i][blue]Disconnected[/blue] {flow.id}[/i]")
 
         # remove end connection ids
         for player in self.players.values():
-            if flow.client_conn.id in player["conn_ids"]:
-                player["conn_ids"].remove(flow.client_conn.id)
+            if flow.id in player["conn_ids"]:
+                player["conn_ids"].remove(flow.id)
 
 
 addons = [WebSocketAddon()]

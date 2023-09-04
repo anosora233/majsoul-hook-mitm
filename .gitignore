@@ -161,12 +161,11 @@ cython_debug/
 
 config.json
 settings.json
-version.json
 
 log/
 runtime/
 bin/
 site-packages/
-profile/
+account/
 *.exe
 *.lnk
