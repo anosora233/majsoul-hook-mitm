@@ -70,8 +70,8 @@ settings = {
     "enable_skins": False,
     "enable_aider": False,
     "enable_chest": False,
-    "random_char": False,
     "upstream_proxy": None,
+    "random_star_char": False,
     "pure_python_protobuf": False,
 }
 
