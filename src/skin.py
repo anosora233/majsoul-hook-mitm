@@ -42,6 +42,8 @@ def update(dict_a: Dict, dict_b: Dict) -> None:
 class SkinHandler(Handler):
     MAX_CHARID: int = settings["server"]["max_charid"]
 
+    RANDOM_CHAR: int = settings["random_char"]
+
     POOL: Dict[int, Type["SkinHandler"]] = dict()
 
     GAME_POOL: Dict[str, Dict[str, Any]] = dict()
@@ -354,6 +356,11 @@ class SkinHandler(Handler):
                         if player["account_id"] in self.POOL:
                             object: SkinHandler = self.POOL[player["account_id"]]
                             update(player, object.player)
+
+                            if object.RANDOM_CHAR:
+                                random_char = object.random_character
+                                player["character"] = random_char
+                                player["avatar_id"] = random_char["skin"]
                         # 其他玩家报菜名，对机器人无效
                         else:
                             player["character"].update(
