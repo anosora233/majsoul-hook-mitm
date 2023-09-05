@@ -42,7 +42,7 @@ def update(dict_a: Dict, dict_b: Dict) -> None:
 class SkinHandler(Handler):
     MAX_CHARID: int = settings["server"]["max_charid"]
 
-    RANDOM_CHAR: int = settings["random_char"]
+    RANDOM_STAR_CHAR: int = settings["random_star_char"]
 
     POOL: Dict[int, Type["SkinHandler"]] = dict()
 
@@ -75,6 +75,14 @@ class SkinHandler(Handler):
             if slot["slot"] == 5:
                 return slot["item_id"]
         return 0
+
+    @property
+    def random_star_character(self) -> Dict[str, Any]:
+        return (
+            self.get_character(choice(self.characters["character_sort"]))
+            if self.characters["character_sort"]
+            else self.character
+        )
 
     @property
     def random_character(self) -> Dict[str, Any]:
@@ -357,8 +365,8 @@ class SkinHandler(Handler):
                             object: SkinHandler = self.POOL[player["account_id"]]
                             update(player, object.player)
 
-                            if object.RANDOM_CHAR:
-                                random_char = object.random_character
+                            if self.RANDOM_STAR_CHAR:
+                                random_char = object.random_star_character
                                 player["character"] = random_char
                                 player["avatar_id"] = random_char["skin"]
                         # 其他玩家报菜名，对机器人无效
