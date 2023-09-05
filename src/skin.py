@@ -365,6 +365,8 @@ class SkinHandler(Handler):
                 if data["account"]["account_id"] in self.POOL:
                     object: SkinHandler = self.POOL[data["account"]["account_id"]]
                     update(data["account"], object.account)
+                else:
+                    return False
             elif method == ".lq.Lobby.fetchCharacterInfo":
                 # 全角色数据替换
                 data.update(self.characters)

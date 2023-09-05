@@ -37,8 +37,10 @@ class ChestHandler(Handler):
             ".lq.Lobby.login",
             ".lq.Lobby.fetchAccountInfo",
         ]:
-            if data["account"]["platform_diamond"]:
-                data["account"]["platform_diamond"][0] = {"id": 100001, "count": 66666}
+            if data["account"]["account_id"] in SkinHandler.POOL:
+                data["account"]["platform_diamond"] = [{"id": 100001, "count": 66666}]
+            else:
+                return False
 
         elif method == ".lq.Lobby.openChest":
             if msg_type == MsgType.Res:
