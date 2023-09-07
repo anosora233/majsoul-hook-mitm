@@ -40,8 +40,6 @@ def init():
     # init settings.json
     if not exists("settings.json"):
         dump(settings, open("settings.json", "w"), indent=2)
-        console.rule("Initialize Configuration")
-        console.print_json(data=settings)
         console.print(
             Panel.fit(JSON.from_data(data=settings), title="Initialize Configuration"),
         )
