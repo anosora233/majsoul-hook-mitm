@@ -9,7 +9,7 @@ DEFAULT_CHEST = [
     # CHARACTERS
     (0.05, list(range(200003, SkinHandler.MAX_CHARID - 1))),
     # VIEWS
-    (0.2, list(set(range(305001, 305056)).difference({305047}))),
+    (0.2, list(set(range(305001, 305056)).difference({305043, 305047}))),
     # GIFTS
     (1, list(range(303012, 303090, 10))),
 ]
