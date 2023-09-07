@@ -6,11 +6,13 @@
 
 ## 用前须知
 
-> 魔改千万条，安全第一条。使用不规范，账号两行泪。
-
-> 本插件仅供学习参考交流，不得用于商业用途，否则后果自负。
+> _魔改千万条，安全第一条。_
 >
-> **目前封号及其严重，逢开必封！本脚本仅供体验**
+> _使用不规范，账号两行泪。_
+>
+> _本插件仅供学习参考交流，_
+>
+> _请使用者于下载 24 小时内自行删除，不得用于商业用途，否则后果自负。_
 
 ## 主要功能
 
@@ -18,6 +20,7 @@
 - [x] 本地全皮肤
 - [ ] 本地昵称
 - [ ] 本地寻觅
+- [x] 随机星标皮肤
 
 ### 支持平台
 
@@ -62,7 +65,7 @@ python richi-console.py
 
 1. 浏览器添加 _SwitchyOmega_ 插件，配置代理规则并应用
 
-   <img title="" src="./imgs/mitm.png" alt="mitm.png" data-align="inline" width = "800">
+   <img title="" src="./imgs/proxy.png" alt="proxy.png" data-align="inline" width = "800">
    <img title="" src="./imgs/switch.png" alt="switch.png" data-align="inline" width = "800">
 
 2. 在浏览器访问 [_mitm.it_](http://mitm.it) 并安装 _CA_ 证书
@@ -79,13 +82,14 @@ python richi-console.py
 
 **默认不启用任何功能**，请根据需求自行配置编辑 _settings.json_
 
-| 释义       | 键             | 可用值                |
-| ---------- | -------------- | --------------------- |
-| 启用小助手 | enable_aider   | true \| false         |
-| 启用全皮肤 | enable_skins   | true \| false         |
-| 前置代理   | upstream_proxy | null \| http://...    |
-| 监听端口   | listen_port    | 0 - 65535             |
-| 日志等级   | log_level      | debug \| info \| warn |
+| 释义         | 键               | 可用值                |
+| ------------ | ---------------- | --------------------- |
+| 日志等级     | log_level        | debug \| info \| warn |
+| 监听端口     | listen_port      | 0 - 65535             |
+| 前置代理     | upstream_proxy   | null \| http://...    |
+| 启用小助手   | enable_aider     | true \| false         |
+| 启用全皮肤   | enable_skins     | true \| false         |
+| 随机星标皮肤 | random_star_char | true \| false         |
 
 ## 特别感谢
 

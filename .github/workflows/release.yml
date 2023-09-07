@@ -53,7 +53,7 @@ jobs:
       - name: Uploading Artifact
         uses: actions/upload-artifact@master
         with:
-          name: deployment-${{ github.sha }}
+          name: richi-console-${{ github.sha }}
           path: richi-console-${{ github.ref_name }}-win64.7z
 
       - name: Release

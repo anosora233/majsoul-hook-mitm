@@ -159,13 +159,17 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 .idea/
 
+# Data
+log/
+account/
 config.json
 settings.json
 
-log/
+# Embed python
 runtime/
-bin/
 site-packages/
-account/
+
+# Exec and Lnk
+bin/
 *.exe
 *.lnk
