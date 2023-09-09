@@ -33,9 +33,9 @@ if not exists(PROFILE_PATH):
     mkdir(PROFILE_PATH)
 
 
-def update(dict_a: Dict, dict_b: Dict) -> None:
+def update(dict_a: Dict, dict_b: Dict, *exclude: str) -> None:
     for key, value in dict_b.items():
-        if key in dict_a:
+        if key not in exclude and key in dict_a:
             dict_a[key] = value
 
 
@@ -379,8 +379,7 @@ class SkinHandler(Handler):
                 # 修改状态面板立绘、头衔
                 if data["account"]["account_id"] in self.POOL:
                     object: SkinHandler = self.POOL[data["account"]["account_id"]]
-                    update(data["account"], object.account)
-                    data["account"]["loading_image"] = []
+                    update(data["account"], object.account, "loading_image")
                 else:
                     return False
             elif method == ".lq.Lobby.fetchCharacterInfo":
