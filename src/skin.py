@@ -380,6 +380,7 @@ class SkinHandler(Handler):
                 if data["account"]["account_id"] in self.POOL:
                     object: SkinHandler = self.POOL[data["account"]["account_id"]]
                     update(data["account"], object.account)
+                    data["account"]["loading_image"] = []
                 else:
                     return False
             elif method == ".lq.Lobby.fetchCharacterInfo":

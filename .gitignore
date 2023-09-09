@@ -162,8 +162,8 @@ cython_debug/
 # Data
 log/
 account/
-config.json
-settings.json
+/config.json
+/settings.json
 
 # Embed python
 runtime/
