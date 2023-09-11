@@ -17,6 +17,37 @@ def init_player(login_id: str) -> Dict:
     return {"conn_ids": [login_id], "handlers": handlers}
 
 
+def log_parse(parse_obj: Dict, flow_id: str) -> None:
+    logger.info(
+        "[i][gold1]{}[/gold1] [cyan3]{}[/cyan3] {} at {}[/i]".format(
+            parse_obj["type"].name,
+            parse_obj["method"],
+            parse_obj["id"],
+            flow_id[:13],
+        )
+    )
+
+    if parse_obj["type"] == MsgType.Req:
+        logger.debug("--> {}".format(parse_obj["data"]))
+    else:
+        logger.debug("<-- {}".format(parse_obj["data"]))
+
+
+def log_modify(parse_obj: Dict, flow_id: str, method_bef) -> None:
+    logger.info(
+        "[i][slate_blue1]Modify[/slate_blue1] [gold1]{}[/gold1] {} --> {} [/i]".format(
+            parse_obj["type"].name,
+            method_bef,
+            parse_obj["method"],
+        )
+    )
+
+    if parse_obj["type"] == MsgType.Req:
+        logger.debug("--> {}".format(parse_obj["data"]))
+    else:
+        logger.debug("<-- {}".format(parse_obj["data"]))
+
+
 class WebSocketAddon:
     def __init__(self) -> None:
         self.proto = LQPROTO()
@@ -24,17 +55,18 @@ class WebSocketAddon:
 
     def invoke(self, conn_id: str, flow_msg: WebSocketMessage, parse_obj: Dict):
         msg_type = parse_obj["type"]
-        method = parse_obj["method"]
+        method_bef = parse_obj["method"]
 
         for player in self.players.values():
+            modify = False
+
             if conn_id in player["conn_ids"]:
-                modify = False
                 for handler in player["handlers"]:
-                    if method in handler.methods(msg_type):
+                    if method_bef in handler.methods(msg_type):
                         modify = handler.handle(flow_msg=flow_msg, parse_obj=parse_obj)
-                if modify:
-                    logger.info(f"[i][red]Modified[/red] {conn_id}[/i]")
-                    logger.info(parse_obj)
+
+            if modify:
+                log_modify(parse_obj, conn_id, method_bef)
 
     def websocket_message(self, flow: http.HTTPFlow):
         # make type checker happy
@@ -46,52 +78,56 @@ class WebSocketAddon:
         try:
             parse_obj = self.proto.parse(message)
         except:
-            logger.warning("[red]Unsupported Message[/red]")
-            logger.warning(__import__("traceback").format_exc())
+            logger.warning(f"[i][red]Unsupported[/red] message at {flow.id[:13]}[/i]")
+            logger.debug(__import__("traceback").format_exc())
 
             return
 
         msg_type = parse_obj["type"]
         method = parse_obj["method"]
 
-        # debug
-        logger.debug(f"[i][bold]Message Of[/bold] {flow.id}[/i]")
-        logger.debug(parse_obj)
+        log_parse(parse_obj=parse_obj, flow_id=flow.id)
 
         # identify game websocket
         if msg_type == MsgType.Res and method in {
             ".lq.Lobby.oauth2Login",
             ".lq.Lobby.login",
         }:
-            account_id = parse_obj["data"]["account_id"]
-            if account_id == 0:
+            if (account_id := parse_obj["data"]["account_id"]) == 0:
                 return
             elif account_id in self.players:
                 self.players[account_id]["conn_ids"].append(flow.id)
             else:
                 self.players[account_id] = init_player(flow.id)
         elif msg_type == MsgType.Req and method == ".lq.FastTest.authGame":
-            account_id = parse_obj["data"]["account_id"]
-            assert account_id in self.players
+            assert (account_id := parse_obj["data"]["account_id"]) in self.players
             self.players[account_id]["conn_ids"].append(flow.id)
 
-        # client players
-        # for account_id, value in self.players.items():
-        #     logger.debug(f"[i][{account_id}] : {value['conn_ids']}[/i]")
+        # list players
+        for account_id, value in self.players.items():
+            logger.debug(f"{account_id} --> {value['conn_ids']}")
 
         # invoke methods to modify websockt message
         self.invoke(flow.id, flow_msg=message, parse_obj=parse_obj)
 
     def websocket_start(self, flow: http.HTTPFlow):
-        logger.info(f"[i][green]Connected[/green] {flow.id}[/i]")
+        logger.info(f"[i][green]Connected[/green] {flow.id[:13]}[/i]")
 
     def websocket_end(self, flow: http.HTTPFlow):
-        logger.info(f"[i][blue]Disconnected[/blue] {flow.id}[/i]")
+        logger.info(f"[i][blue]Disconnected[/blue] {flow.id[:13]}[/i]")
 
-        # remove end connection ids
-        for player in self.players.values():
-            if flow.id in player["conn_ids"]:
-                player["conn_ids"].remove(flow.id)
+        end_accounts = []
+        # clear end conn ids
+        for account, player in self.players.items():
+            if flow.id in player.get("conn_ids"):
+                player.get("conn_ids").remove(flow.id)
+
+                if not player.get("conn_ids"):
+                    end_accounts.append(account)
+
+        # clear player
+        for account in end_accounts:
+            self.players.pop(account)
 
 
 addons = [WebSocketAddon()]
