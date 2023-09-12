@@ -2,17 +2,19 @@ from mitmproxy.websocket import WebSocketMessage
 from typing import Dict, Set
 from os import system
 from requests import post
-from liqi import Handler, MsgType
 
 from urllib3 import disable_warnings
 from urllib3.exceptions import InsecureRequestWarning
 from socket import socket, AF_INET, SOCK_STREAM
 
+from liqi import Handler, MsgType
+from config import LOGIN_METHODS
+
 disable_warnings(InsecureRequestWarning)
 
 
 class AiderHandler(Handler):
-    PORT: int = 23330
+    PORT: int = 23440
 
     ACTIONS: Set[str] = {
         "ActionNewRound",
@@ -60,9 +62,7 @@ class AiderHandler(Handler):
                 ".lq.FastTest.syncGame",
                 ".lq.Lobby.fetchFriendList",
                 ".lq.Lobby.fetchGameRecordList",
-                ".lq.Lobby.oauth2Login",
-                ".lq.Lobby.login",
-            }
+            } | LOGIN_METHODS
 
     def handle(self, flow_msg: WebSocketMessage, parse_obj: Dict) -> bool:
         data = parse_obj["data"]

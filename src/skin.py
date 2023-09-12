@@ -6,7 +6,7 @@ from os import mkdir
 from random import choice, randint
 
 from liqi import Handler, MsgType
-from addons import settings
+from addons import settings, LOGIN_METHODS
 
 AVAILABLE_FRAMES = {305529, 305537, 305542, 305545, 305551, 305552} | set(
     range(305520, 305524)
@@ -252,10 +252,7 @@ class SkinHandler(Handler):
                 # 装扮
                 ".lq.Lobby.fetchBagInfo",
                 ".lq.Lobby.fetchAllCommonViews",
-                # 登录
-                ".lq.Lobby.oauth2Login",
-                ".lq.Lobby.login",
-            }
+            } | LOGIN_METHODS
 
     def handle(self, flow_msg: WebSocketMessage, parse_obj: Dict) -> bool:
         msg_type = parse_obj["type"]
@@ -333,7 +330,7 @@ class SkinHandler(Handler):
 
         # RESPONSE
         elif msg_type == MsgType.Res:
-            if method in [".lq.Lobby.oauth2Login", ".lq.Lobby.login"]:
+            if method in LOGIN_METHODS:
                 # 本地配置文件
                 self.profile = f"{PROFILE_PATH}/{data['account_id']}.json"
 

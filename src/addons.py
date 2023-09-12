@@ -3,7 +3,7 @@ from mitmproxy import http
 from mitmproxy.websocket import WebSocketMessage
 
 from liqi import LQPROTO, MsgType
-from config import settings, logger
+from config import settings, logger, LOGIN_METHODS
 
 
 def init_player(login_id: str) -> Dict:
@@ -89,10 +89,7 @@ class WebSocketAddon:
         log_parse(parse_obj=parse_obj, flow_id=flow.id)
 
         # identify game websocket
-        if msg_type == MsgType.Res and method in {
-            ".lq.Lobby.oauth2Login",
-            ".lq.Lobby.login",
-        }:
+        if msg_type == MsgType.Res and method in LOGIN_METHODS:
             if (account_id := parse_obj["data"]["account_id"]) == 0:
                 return
             elif account_id in self.players:
@@ -104,8 +101,8 @@ class WebSocketAddon:
             self.players[account_id]["conn_ids"].append(flow.id)
 
         # list players
-        for account_id, value in self.players.items():
-            logger.debug(f"{account_id} --> {value['conn_ids']}")
+        # for account_id, value in self.players.items():
+        #     logger.debug(f"{account_id} --> {value['conn_ids']}")
 
         # invoke methods to modify websockt message
         self.invoke(flow.id, flow_msg=message, parse_obj=parse_obj)

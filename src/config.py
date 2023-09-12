@@ -85,3 +85,10 @@ logger = logging.getLogger(__name__)
 logger.propagate = False
 logger.setLevel(settings["log_level"].upper())
 logger.addHandler(RichHandler(markup=True, rich_tracebacks=True))
+
+# login
+LOGIN_METHODS = {
+    ".lq.Lobby.oauth2Login",
+    ".lq.Lobby.emailLogin",
+    ".lq.Lobby.login",
+}
