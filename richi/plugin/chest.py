@@ -2,9 +2,9 @@ from mitmproxy.websocket import WebSocketMessage
 from typing import Dict, Set, List
 from random import random, randint, choice
 
-from skin import SkinHandler
-from liqi import Handler, MsgType
-from config import LOGIN_METHODS
+from .skin import SkinHandler
+from ..config import entrance
+from ..liqi import Handler, MsgType
 
 DEFAULT_CHEST = [
     # CHARACTERS
@@ -75,14 +75,14 @@ class ChestHandler(Handler):
             return {
                 ".lq.Lobby.fetchAccountInfo",
                 ".lq.Lobby.openChest",
-            } | LOGIN_METHODS
+            } | entrance
 
     def handle(self, flow_msg: WebSocketMessage, parse_obj: Dict) -> bool:
         msg_type = parse_obj["type"]
         data = parse_obj["data"]
         method = parse_obj["method"]
 
-        if method in LOGIN_METHODS | {".lq.Lobby.fetchAccountInfo"}:
+        if method in entrance | {".lq.Lobby.fetchAccountInfo"}:
             if data["account"]["account_id"] in SkinHandler.POOL:
                 data["account"]["platform_diamond"] = [{"id": 100001, "count": 66666}]
             else:
@@ -102,4 +102,4 @@ class ChestHandler(Handler):
 
                 super().drop(parse_obj=parse_obj)
 
-        return super().handle(flow_msg, parse_obj)
+        return True

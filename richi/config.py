@@ -86,8 +86,8 @@ logger.propagate = False
 logger.setLevel(settings["log_level"].upper())
 logger.addHandler(RichHandler(markup=True, rich_tracebacks=True))
 
-# login
-LOGIN_METHODS = {
+# login methods
+entrance = {
     ".lq.Lobby.oauth2Login",
     ".lq.Lobby.emailLogin",
     ".lq.Lobby.login",

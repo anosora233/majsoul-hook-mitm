@@ -1,6 +1,3 @@
-import os
-import sys
-from src import main
+from richi.main import main
 
-sys.path.append(os.path.join(os.path.dirname(__file__), "src"))
-main.main()
+main()

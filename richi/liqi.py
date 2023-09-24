@@ -1,12 +1,13 @@
 import json
 import base64
-import proto.liqi_pb2 as pb
 
 from struct import unpack
 from enum import Enum
 from typing import List, Dict, Set
 from google.protobuf.json_format import MessageToDict, ParseDict
 from mitmproxy.websocket import WebSocketMessage
+
+from .proto import liqi_pb2 as pb
 
 """ 
     # msg_block notify
@@ -17,7 +18,7 @@ from mitmproxy.websocket import WebSocketMessage
         {'id': 2, 'type': 'string','data': b'protobuf_bytes'}       ]
 """
 
-JSON_PROTO = json.load(open("./src/proto/liqi.json", "r"))
+JSON_PROTO = json.load(open("./richi/proto/liqi.json", "r"))
 
 
 class MsgType(Enum):
@@ -28,7 +29,7 @@ class MsgType(Enum):
 
 class Handler(object):
     def handle(self, flow_msg: WebSocketMessage, parse_obj: Dict) -> bool:
-        return modify(flow_msg=flow_msg, parse_obj=parse_obj)
+        raise NotImplementedError
 
     def methods(self, msg_type: MsgType) -> Set[str]:
         raise NotImplementedError
@@ -248,19 +249,3 @@ def decode(data: bytes):
         data[i] ^= u
     return bytes(data)
 
-
-"""
-'buf': b'\x02+\x00\n\x13.lq.Lobby.loginBeat\x12"\n DF2vkXCnfeXp4WoGSBGNcJBufZiMN3UP',
-'from_client': True,
-'result': {
-    'id': 43,
-    'type': <MsgType.Req: 2>,
-    'method': '.lq.Lobby.loginBeat',
-    'data': {'contract': 'DF2vkXCnfeXp4WoGSBGNcJBufZiMN3UP'}
-},
-'msg_type': <MsgType.Req: 2>,
-'msg_block': [
-    {'id': 1, 'type': 'string', 'data': b'.lq.Lobby.loginBeat', 'begin': 0},
-    {'id': 2, 'type': 'string', 'data': b'\n DF2vkXCnfeXp4WoGSBGNcJBufZiMN3UP', 'begin': 21}
-]
-"""

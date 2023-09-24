@@ -1,8 +1,8 @@
 async def start_proxy():
-    from config import settings
-    from addons import addons
     from mitmproxy.tools.dump import DumpMaster
     from mitmproxy import options
+    from .config import settings
+    from .addons import addons
 
     mode = (
         [f"upstream:{settings['upstream_proxy']}"]

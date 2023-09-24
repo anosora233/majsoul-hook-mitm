@@ -5,38 +5,49 @@ from os.path import exists
 from os import mkdir
 from random import choice, randint
 
-from liqi import Handler, MsgType
-from addons import settings, LOGIN_METHODS
-
-AVAILABLE_FRAMES = {305529, 305537, 305542, 305545, 305551, 305552} | set(
-    range(305520, 305524)
-)
-
-REMOVED_ITEMS = {305214, 305314, 305526, 305725} | set(
-    range(305501, 305556)
-).difference(AVAILABLE_FRAMES)
-
-REMOVED_TITLES = {
-    600030,
-    600043,
-    # 600017,
-    # 600024,
-    # 600025,
-    # 600029,
-    # 600041,
-    # 600044,
-} | set(range(600057, 600064))
-
-PROFILE_PATH = str("account")
-
-if not exists(PROFILE_PATH):
-    mkdir(PROFILE_PATH)
+from ..liqi import Handler, MsgType
+from ..addons import settings, entrance
 
 
-def update(dict_a: Dict, dict_b: Dict, *exclude: str) -> None:
+def _update(dict_a: Dict, dict_b: Dict, *exclude: str) -> None:
     for key, value in dict_b.items():
         if key not in exclude and key in dict_a:
             dict_a[key] = value
+
+
+class SkinInfo:
+    def __init__(self) -> None:
+        # 可用头像框「可能在未来被移除」
+        usable_frames = {305529, 305537, 305542, 305545, 305551, 305552} | set(
+            range(305520, 305524)
+        )
+
+        useless_items = {305214, 305314, 305526, 305725} | set(
+            range(305501, 305556)
+        ).difference(usable_frames)
+
+        useless_titles = {
+            600030,
+            600043,
+            # 600017,
+            # 600024,
+            # 600025,
+            # 600029,
+            # 600041,
+            # 600044,
+        } | set(range(600057, 600064))
+
+        # ============== #
+        self.titles = list(set(range(600002, 600082)).difference(useless_titles))
+        self.items = [
+            {"item_id": i, "stack": 1}
+            for i in set(range(305001, 309000)).difference(useless_items)
+        ]
+
+        self.path = "account"
+
+        if not exists(self.path):
+            mkdir(self.path)
 
 
 class SkinHandler(Handler):
@@ -48,12 +59,7 @@ class SkinHandler(Handler):
 
     GAME_POOL: Dict[str, Dict[str, Any]] = dict()
 
-    TITLES = list(set(range(600002, 600082)).difference(REMOVED_TITLES))
-
-    ITEMS = [
-        {"item_id": i, "stack": 1}
-        for i in set(range(305001, 309000)).difference(REMOVED_ITEMS)
-    ]
+    INFO = SkinInfo()
 
     @property
     def views(self) -> Dict[str, Any]:
@@ -252,7 +258,7 @@ class SkinHandler(Handler):
                 # 装扮
                 ".lq.Lobby.fetchBagInfo",
                 ".lq.Lobby.fetchAllCommonViews",
-            } | LOGIN_METHODS
+            } | entrance
 
     def handle(self, flow_msg: WebSocketMessage, parse_obj: Dict) -> bool:
         msg_type = parse_obj["type"]
@@ -266,7 +272,7 @@ class SkinHandler(Handler):
                 for player in data["player_list"]:
                     if player["account_id"] in SkinHandler.POOL:
                         object: SkinHandler = SkinHandler.POOL[player["account_id"]]
-                        update(player, object.account)
+                        _update(player, object.account)
             elif method == ".lq.NotifyGameFinishRewardV2":
                 # 终局结算时，不播放羁绊动画
                 data["main_character"] = {"exp": 1, "add": 0, "level": 5}
@@ -330,9 +336,9 @@ class SkinHandler(Handler):
 
         # RESPONSE
         elif msg_type == MsgType.Res:
-            if method in LOGIN_METHODS:
+            if method in entrance:
                 # 本地配置文件
-                self.profile = f"{PROFILE_PATH}/{data['account_id']}.json"
+                self.profile = f"{self.INFO.path}/{data['account_id']}.json"
 
                 # 保存原角色、皮肤、昵称
                 avatar_id = data["account"]["avatar_id"]
@@ -340,11 +346,11 @@ class SkinHandler(Handler):
                 self.original_char = (character_id, avatar_id)
 
                 # 保存原账户信息
-                update(self.account, data["account"])
+                _update(self.account, data["account"])
 
                 if exists(self.profile):
                     self.read()
-                    update(data["account"], self.account)
+                    _update(data["account"], self.account)
                 else:
                     self.init_characters()
                     self.init_commonviews()
@@ -360,7 +366,7 @@ class SkinHandler(Handler):
                         # 替换头像，角色、头衔
                         if player["account_id"] in self.POOL:
                             object: SkinHandler = self.POOL[player["account_id"]]
-                            update(player, object.player)
+                            _update(player, object.player)
 
                             if self.RANDOM_STAR_CHAR:
                                 random_char = object.random_star_character
@@ -376,7 +382,7 @@ class SkinHandler(Handler):
                 # 修改状态面板立绘、头衔
                 if data["account"]["account_id"] in self.POOL:
                     object: SkinHandler = self.POOL[data["account"]["account_id"]]
-                    update(data["account"], object.account, "loading_image")
+                    _update(data["account"], object.account, "loading_image")
                 else:
                     return False
             elif method == ".lq.Lobby.fetchCharacterInfo":
@@ -387,10 +393,10 @@ class SkinHandler(Handler):
                 data.update(self.commonviews)
             elif method == ".lq.Lobby.fetchBagInfo":
                 # 添加物品
-                data["bag"]["items"].extend(self.ITEMS)
+                data["bag"]["items"].extend(self.INFO.items)
             elif method == ".lq.Lobby.fetchTitleList":
                 # 添加头衔
-                data["title_list"] = self.TITLES
+                data["title_list"] = self.INFO.titles
             elif method in [
                 ".lq.Lobby.joinRoom",
                 ".lq.Lobby.fetchRoom",
@@ -402,6 +408,6 @@ class SkinHandler(Handler):
                 for person in data["room"]["persons"]:
                     if person["account_id"] in self.POOL:
                         object: SkinHandler = self.POOL[person["account_id"]]
-                        update(person, object.account)
+                        _update(person, object.account)
 
-        return super().handle(flow_msg, parse_obj)
+        return True

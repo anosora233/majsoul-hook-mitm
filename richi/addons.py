@@ -2,18 +2,24 @@ from typing import Dict
 from mitmproxy import http
 from mitmproxy.websocket import WebSocketMessage
 
-from liqi import LQPROTO, MsgType
-from config import settings, logger, LOGIN_METHODS
+from .liqi import LQPROTO, MsgType, modify
+from .config import settings, logger, entrance
 
 
 def init_player(login_id: str) -> Dict:
     handlers = []
     if settings["enable_skins"]:
-        handlers.append(__import__("skin").SkinHandler())
+        from .plugin.skin import SkinHandler
+
+        handlers.append(SkinHandler())
     if settings["enable_aider"]:
-        handlers.append(__import__("aider").AiderHandler())
+        from .plugin.aider import AiderHandler
+
+        handlers.append(AiderHandler())
     if settings["enable_chest"]:
-        handlers.append(__import__("chest").ChestHandler())
+        from .plugin.chest import ChestHandler
+
+        handlers.append(ChestHandler())
     return {"conn_ids": [login_id], "handlers": handlers}
 
 
@@ -58,15 +64,18 @@ class WebSocketAddon:
         method_bef = parse_obj["method"]
 
         for player in self.players.values():
-            modify = False
+            is_modified = 0
 
             if conn_id in player["conn_ids"]:
                 for handler in player["handlers"]:
                     if method_bef in handler.methods(msg_type):
-                        modify = handler.handle(flow_msg=flow_msg, parse_obj=parse_obj)
+                        is_modified += handler.handle(
+                            flow_msg=flow_msg, parse_obj=parse_obj
+                        )
 
-            if modify:
+            if is_modified:
                 log_modify(parse_obj, conn_id, method_bef)
+                modify(flow_msg, parse_obj)
 
     def websocket_message(self, flow: http.HTTPFlow):
         # make type checker happy
@@ -89,7 +98,7 @@ class WebSocketAddon:
         log_parse(parse_obj=parse_obj, flow_id=flow.id)
 
         # identify game websocket
-        if msg_type == MsgType.Res and method in LOGIN_METHODS:
+        if msg_type == MsgType.Res and method in entrance:
             if (account_id := parse_obj["data"]["account_id"]) == 0:
                 return
             elif account_id in self.players:
@@ -101,8 +110,8 @@ class WebSocketAddon:
             self.players[account_id]["conn_ids"].append(flow.id)
 
         # list players
-        # for account_id, value in self.players.items():
-        #     logger.debug(f"{account_id} --> {value['conn_ids']}")
+        for account_id, value in self.players.items():
+            logger.debug(f"{account_id} --> {value['conn_ids']}")
 
         # invoke methods to modify websockt message
         self.invoke(flow.id, flow_msg=message, parse_obj=parse_obj)
