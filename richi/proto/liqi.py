@@ -7,7 +7,7 @@ from typing import List, Dict, Set
 from google.protobuf.json_format import MessageToDict, ParseDict
 from mitmproxy.websocket import WebSocketMessage
 
-from .proto import liqi_pb2 as pb
+from . import liqi_pb2 as pb
 
 """ 
     # msg_block notify
@@ -17,8 +17,6 @@ from .proto import liqi_pb2 as pb
     [   {'id': 1, 'type': 'string','data': b'.lq.FastTest.authGame'},
         {'id': 2, 'type': 'string','data': b'protobuf_bytes'}       ]
 """
-
-JSON_PROTO = json.load(open("./richi/proto/liqi.json", "r"))
 
 
 class MsgType(Enum):
@@ -81,10 +79,10 @@ class LQPROTO:
                 assert msg_id not in self.res_type
                 method_name = msg_block[0]["data"].decode()
                 _, lq, service, rpc = method_name.split(".")
-                proto_domain = JSON_PROTO["nested"][lq]["nested"][service]["methods"][
+                method_desc = pb.DESCRIPTOR.services_by_name[service].methods_by_name[
                     rpc
                 ]
-                liqi_pb2_req = getattr(pb, proto_domain["requestType"])
+                liqi_pb2_req = getattr(pb, method_desc.input_type.name)
                 proto_obj = liqi_pb2_req.FromString(msg_block[1]["data"])
                 dict_obj = MessageToDict(
                     proto_obj,
@@ -94,7 +92,7 @@ class LQPROTO:
 
                 self.res_type[msg_id] = (
                     method_name,
-                    getattr(pb, proto_domain["responseType"]),
+                    getattr(pb, method_desc.output_type.name),
                 )
             elif msg_type == MsgType.Res:
                 assert len(msg_block[0]["data"]) == 0
@@ -152,8 +150,8 @@ def modify(flow_msg: WebSocketMessage, parse_obj: Dict) -> bool:
             assert len(msg_block) == 2
 
             _, lq, service, rpc = method_name.split(".")
-            proto_domain = JSON_PROTO["nested"][lq]["nested"][service]["methods"][rpc]
-            liqi_pb2_req = getattr(pb, proto_domain["requestType"])
+            method_desc = pb.DESCRIPTOR.services_by_name[service].methods_by_name[rpc]
+            liqi_pb2_req = getattr(pb, method_desc.input_type.name)
             proto_obj = ParseDict(js_dict=data, message=liqi_pb2_req())
             msg_block[0]["data"] = parse_obj["method"].encode()
             msg_block[1]["data"] = proto_obj.SerializeToString()
@@ -162,8 +160,8 @@ def modify(flow_msg: WebSocketMessage, parse_obj: Dict) -> bool:
             assert len(msg_block[0]["data"]) == 0
 
             _, lq, service, rpc = method_name.split(".")
-            proto_domain = JSON_PROTO["nested"][lq]["nested"][service]["methods"][rpc]
-            liqi_pb2_res = getattr(pb, proto_domain["responseType"])
+            method_desc = pb.DESCRIPTOR.services_by_name[service].methods_by_name[rpc]
+            liqi_pb2_res = getattr(pb, method_desc.output_type.name)
             proto_obj = ParseDict(js_dict=data, message=liqi_pb2_res())
             # msg_block[0]["data"] = parse_obj["method"].encode()
             msg_block[1]["data"] = proto_obj.SerializeToString()
@@ -248,4 +246,3 @@ def decode(data: bytes):
         u = (23 ^ d) + 5 * i + keys[i % k] & 255
         data[i] ^= u
     return bytes(data)
-

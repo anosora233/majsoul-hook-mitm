@@ -5,8 +5,8 @@ from os.path import exists
 from os import mkdir
 from random import choice, randint
 
-from ..liqi import Handler, MsgType
-from ..addons import settings, entrance
+from richi.proto.liqi import Handler, MsgType
+from richi.addons import settings, entrance
 
 
 def _update(dict_a: Dict, dict_b: Dict, *exclude: str) -> None:

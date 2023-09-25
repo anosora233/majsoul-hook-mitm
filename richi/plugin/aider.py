@@ -7,8 +7,8 @@ from urllib3 import disable_warnings
 from urllib3.exceptions import InsecureRequestWarning
 from socket import socket, AF_INET, SOCK_STREAM
 
-from ..liqi import Handler, MsgType
-from ..config import entrance
+from richi.proto.liqi import Handler, MsgType
+from richi.config import entrance
 
 disable_warnings(InsecureRequestWarning)
 

@@ -2,7 +2,7 @@ from typing import Dict
 from mitmproxy import http
 from mitmproxy.websocket import WebSocketMessage
 
-from .liqi import LQPROTO, MsgType, modify
+from .proto.liqi import LQPROTO, MsgType, modify
 from .config import settings, logger, entrance
 
 

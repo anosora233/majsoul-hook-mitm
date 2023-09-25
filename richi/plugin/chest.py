@@ -2,9 +2,10 @@ from mitmproxy.websocket import WebSocketMessage
 from typing import Dict, Set, List
 from random import random, randint, choice
 
+from richi.config import entrance
+from richi.proto.liqi import Handler, MsgType
+
 from .skin import SkinHandler
-from ..config import entrance
-from ..liqi import Handler, MsgType
 
 DEFAULT_CHEST = [
     # CHARACTERS
