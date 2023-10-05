@@ -1,11 +1,10 @@
-import json
 import base64
 
-from struct import unpack
+from struct import unpack, pack
 from enum import Enum
-from typing import List, Dict, Set
 from google.protobuf.json_format import MessageToDict, ParseDict
-from mitmproxy.websocket import WebSocketMessage
+from mitmproxy import http, ctx
+
 
 from . import liqi_pb2 as pb
 
@@ -26,14 +25,26 @@ class MsgType(Enum):
 
 
 class Handler(object):
-    def handle(self, flow_msg: WebSocketMessage, parse_obj: Dict) -> bool:
+    def handle(self, flow: http.HTTPFlow, parsed: dict) -> bool:
         raise NotImplementedError
 
-    def methods(self, msg_type: MsgType) -> Set[str]:
+    def methods(self, msg_type: MsgType) -> set[str]:
         raise NotImplementedError
 
-    def drop(self, parse_obj: Dict) -> None:
-        parse_obj["method"], parse_obj["data"] = ".lq.Lobby.heatbeat", {}
+    def drop(self, *args) -> bool:
+        raise NotImplementedError
+
+    def inject(
+        self, flow: http.HTTPFlow, parsed: dict, inject_data: dict, *notifys: dict
+    ) -> bool:
+        assert parsed["type"] is MsgType.Req
+
+        flow.websocket.messages[-1].drop()
+        inject_parsed = parsed.copy()
+        inject_parsed["type"] = MsgType.Res
+        inject_parsed["data"] = inject_data
+
+        return inject(flow, inject_parsed, *notifys)
 
 
 class LQPROTO:
@@ -41,10 +52,9 @@ class LQPROTO:
         self.tot = 0
         self.res_type = {}
 
-    def parse(self, flow_msg: WebSocketMessage) -> Dict:
+    def parse(self, flow: http.HTTPFlow) -> dict:
+        flow_msg = flow.websocket.messages[-1]
         buf = flow_msg.content
-        from_client = flow_msg.from_client
-        parse_obj = {}
         msg_type = MsgType(buf[0])
 
         if msg_type == MsgType.Notify:
@@ -115,62 +125,76 @@ class LQPROTO:
                             including_default_value_fields=True,
                         )
                         action["data"] = action_dict_obj
-        parse_obj = {
+        parsed = {
             "id": msg_id,
             "type": msg_type,
             "method": method_name,
             "data": dict_obj,
         }
         self.tot += 1
-        return parse_obj
+        return parsed
 
 
-def modify(flow_msg: WebSocketMessage, parse_obj: Dict) -> bool:
-    buf = flow_msg.content
+def compose(parsed) -> bytes:
+    data = parsed["data"]
+    msg_type = parsed["type"]
+    method_name = parsed["method"]
 
-    data = parse_obj["data"]
-    msg_type = parse_obj["type"]
-    method_name = parse_obj["method"]
+    head = msg_type.value.to_bytes(length=1, byteorder="little")
+    msg_block = [{"id": 1, "type": "string"}, {"id": 2, "type": "string"}]
 
     if msg_type == MsgType.Notify:
         if str("data") in data:
             """Not yet supported"""
-            return False
+            raise NotImplementedError
 
-        msg_block = fromProtobuf(buf[1:])
         _, lq, message_name = method_name.split(".")
         liqi_pb2_notify = getattr(pb, message_name)
-        proto_obj = ParseDict(js_dict=data, message=liqi_pb2_notify())
-        msg_block[0]["data"] = parse_obj["method"].encode()
-        msg_block[1]["data"] = proto_obj.SerializeToString()
-        flow_msg.content = buf[:1] + toProtobuf(msg_block)
-    else:
-        msg_block = fromProtobuf(buf[3:])
-        if msg_type == MsgType.Req:
-            assert len(msg_block) == 2
+        protod = ParseDict(js_dict=data, message=liqi_pb2_notify())
+        msg_block[0]["data"] = method_name.encode()
+        msg_block[1]["data"] = protod.SerializeToString()
+        return head + toProtobuf(msg_block)
 
+    else:
+        msg_id = parsed["id"]
+        if msg_type == MsgType.Req:
             _, lq, service, rpc = method_name.split(".")
             method_desc = pb.DESCRIPTOR.services_by_name[service].methods_by_name[rpc]
             liqi_pb2_req = getattr(pb, method_desc.input_type.name)
-            proto_obj = ParseDict(js_dict=data, message=liqi_pb2_req())
-            msg_block[0]["data"] = parse_obj["method"].encode()
-            msg_block[1]["data"] = proto_obj.SerializeToString()
-            flow_msg.content = buf[:3] + toProtobuf(msg_block)
-        elif msg_type == MsgType.Res:
-            assert len(msg_block[0]["data"]) == 0
+            protod = ParseDict(js_dict=data, message=liqi_pb2_req())
+            msg_block[0]["data"] = method_name.encode()
+            msg_block[1]["data"] = protod.SerializeToString()
+            return head + pack("<H", msg_id) + toProtobuf(msg_block)
 
+        elif msg_type == MsgType.Res:
             _, lq, service, rpc = method_name.split(".")
             method_desc = pb.DESCRIPTOR.services_by_name[service].methods_by_name[rpc]
             liqi_pb2_res = getattr(pb, method_desc.output_type.name)
-            proto_obj = ParseDict(js_dict=data, message=liqi_pb2_res())
-            # msg_block[0]["data"] = parse_obj["method"].encode()
-            msg_block[1]["data"] = proto_obj.SerializeToString()
-            flow_msg.content = buf[:3] + toProtobuf(msg_block)
-
-    return True
+            protod = ParseDict(js_dict=data, message=liqi_pb2_res())
+            msg_block[0]["data"] = b""
+            msg_block[1]["data"] = protod.SerializeToString()
+            return head + pack("<H", msg_id) + toProtobuf(msg_block)
 
 
-def fromProtobuf(buf) -> List[Dict]:
+def manipulate(flow: http.HTTPFlow, parsed: dict) -> None:
+    last_message = flow.websocket.messages[-1]
+    last_message.content = compose(parsed=parsed)
+
+
+def inject(flow: http.HTTPFlow, parsed: dict, *notifys: dict) -> bool:
+    """inject.websocket flow to_client message is_text"""
+
+    assert parsed["type"] is MsgType.Res
+    ctx.master.commands.call("inject.websocket", flow, True, compose(parsed), False)
+
+    for notify in notifys:
+        assert notify["type"] is MsgType.Notify
+        ctx.master.commands.call("inject.websocket", flow, True, compose(notify), False)
+
+    return False
+
+
+def fromProtobuf(buf) -> list[dict]:
     p = 0
     result = []
     while p < len(buf):
@@ -187,14 +211,14 @@ def fromProtobuf(buf) -> List[Dict]:
             data = buf[p : p + s_len]
             p += s_len
         else:
-            raise Exception("unknow type:", block_type, " at", p)
+            raise Exception("unknow type:", block_type, "at", p)
         result.append(
             {"id": block_id, "type": block_type, "data": data, "begin": block_begin}
         )
     return result
 
 
-def toProtobuf(data: List[Dict]) -> bytes:
+def toProtobuf(data: list[dict]) -> bytes:
     result = b""
     for d in data:
         if d["type"] == "varint":
@@ -240,9 +264,7 @@ def toVarint(x: int) -> bytes:
 def decode(data: bytes):
     keys = [0x84, 0x5E, 0x4E, 0x42, 0x39, 0xA2, 0x1F, 0x60, 0x1C]
     data = bytearray(data)
-    k = len(keys)
-    d = len(data)
-    for i, j in enumerate(data):
-        u = (23 ^ d) + 5 * i + keys[i % k] & 255
+    for i in range(len(data)):
+        u = (23 ^ len(data)) + 5 * i + keys[i % len(keys)] & 255
         data[i] ^= u
     return bytes(data)

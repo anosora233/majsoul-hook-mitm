@@ -1,5 +1,4 @@
-from mitmproxy.websocket import WebSocketMessage
-from typing import Dict, Set, List
+from mitmproxy import http
 from random import random, randint, choice
 
 from richi.config import entrance
@@ -42,6 +41,13 @@ class ChestHandler(Handler):
         self.chest_id: int = -999
 
     @property
+    def inject_data(self):
+        return {
+            "results": self.results,
+            "total_open_count": self.count,
+        }
+
+    @property
     def results(self):
         return [{"reward": {"id": id, "count": 1}} for id in self.rewards]
 
@@ -65,42 +71,28 @@ class ChestHandler(Handler):
 
         return rewards
 
-    def methods(self, msg_type: MsgType) -> Set[str]:
+    def methods(self, msg_type: MsgType) -> set[str]:
         if msg_type == MsgType.Notify:
             return set()
         if msg_type == MsgType.Req:
-            return {
-                ".lq.Lobby.openChest",
-            }
+            return {".lq.Lobby.openChest"}
         if msg_type == MsgType.Res:
-            return {
-                ".lq.Lobby.fetchAccountInfo",
-                ".lq.Lobby.openChest",
-            } | entrance
+            return {".lq.Lobby.fetchAccountInfo"} | entrance
 
-    def handle(self, flow_msg: WebSocketMessage, parse_obj: Dict) -> bool:
-        msg_type = parse_obj["type"]
-        data = parse_obj["data"]
-        method = parse_obj["method"]
+    def handle(self, flow: http.HTTPFlow, parsed: dict) -> bool:
+        data = parsed["data"]
+        method = parsed["method"]
+        msg_type = parsed["type"]
 
         if method in entrance | {".lq.Lobby.fetchAccountInfo"}:
-            if data["account"]["account_id"] in SkinHandler.POOL:
-                data["account"]["platform_diamond"] = [{"id": 100001, "count": 66666}]
-            else:
+            if data["account"]["account_id"] not in SkinHandler.POOL:
                 return False
+            data["account"]["platform_diamond"] = [{"id": 100001, "count": 66666}]
 
         elif method == ".lq.Lobby.openChest":
-            if msg_type == MsgType.Res:
-                data.update(
-                    {
-                        "results": self.results,
-                        "total_open_count": self.count,
-                    }
-                )
-            elif msg_type == MsgType.Req:
-                self.count = data["count"]
-                self.chest_id = data["chest_id"] if data["chest_id"] in CHESTS else -999
+            self.count = data["count"]
+            self.chest_id = data["chest_id"] if data["chest_id"] in CHESTS else -999
 
-                super().drop(parse_obj=parse_obj)
+            return super().inject(flow, parsed, self.inject_data)
 
         return True

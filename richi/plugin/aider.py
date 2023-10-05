@@ -1,14 +1,13 @@
-from mitmproxy.websocket import WebSocketMessage
-from typing import Dict, Set
 from os import system
 from requests import post
 
 from urllib3 import disable_warnings
 from urllib3.exceptions import InsecureRequestWarning
 from socket import socket, AF_INET, SOCK_STREAM
+from mitmproxy import http
 
-from richi.proto.liqi import Handler, MsgType
 from richi.config import entrance
+from richi.proto.liqi import Handler, MsgType
 
 disable_warnings(InsecureRequestWarning)
 
@@ -16,7 +15,7 @@ disable_warnings(InsecureRequestWarning)
 class AiderHandler(Handler):
     PORT: int = 23415
 
-    ACTIONS: Set[str] = {
+    ACTIONS: set[str] = {
         "ActionNewRound",
         "ActionDealTile",
         "ActionAnGangAddGang",
@@ -48,7 +47,7 @@ class AiderHandler(Handler):
         self.api = f"https://127.0.0.1:{self.PORT}"
         self.__class__.PORT += 1
 
-    def methods(self, msg_type: MsgType) -> Set[str]:
+    def methods(self, msg_type: MsgType) -> set[str]:
         if msg_type == MsgType.Notify:
             return {
                 ".lq.NotifyPlayerLoadGameReady",
@@ -64,9 +63,9 @@ class AiderHandler(Handler):
                 ".lq.Lobby.fetchGameRecordList",
             } | entrance
 
-    def handle(self, flow_msg: WebSocketMessage, parse_obj: Dict) -> bool:
-        data = parse_obj["data"]
-        method = parse_obj["method"]
+    def handle(self, flow: http.HTTPFlow, parsed: dict) -> bool:
+        data = parsed["data"]
+        method = parsed["method"]
 
         # Thanks to Avenshy
         if method == ".lq.ActionPrototype":

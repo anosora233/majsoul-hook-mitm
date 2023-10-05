@@ -1,15 +1,14 @@
-from mitmproxy.websocket import WebSocketMessage
-from typing import Dict, List, Any, Set, Type, Tuple
 from json import load, dump
 from os.path import exists
 from os import mkdir
 from random import choice, randint
+from mitmproxy import http
 
-from richi.proto.liqi import Handler, MsgType
 from richi.addons import settings, entrance
+from richi.proto.liqi import Handler, MsgType
 
 
-def _update(dict_a: Dict, dict_b: Dict, *exclude: str) -> None:
+def _update(dict_a: dict, dict_b: dict, *exclude: str) -> None:
     for key, value in dict_b.items():
         if key not in exclude and key in dict_a:
             dict_a[key] = value
@@ -17,7 +16,7 @@ def _update(dict_a: Dict, dict_b: Dict, *exclude: str) -> None:
 
 class SkinInfo:
     def __init__(self) -> None:
-        # 可用头像框「可能在未来被移除」
+        # 可用头像框
         usable_frames = {305529, 305537, 305542, 305545, 305551, 305552} | set(
             range(305520, 305524)
         )
@@ -55,14 +54,14 @@ class SkinHandler(Handler):
 
     RANDOM_STAR_CHAR: int = settings["random_star_char"]
 
-    POOL: Dict[int, Type["SkinHandler"]] = dict()
+    POOL: dict[int, type["SkinHandler"]] = dict()
 
-    GAME_POOL: Dict[str, Dict[str, Any]] = dict()
+    GAME_POOL: dict[str, dict[str, any]] = dict()
 
     INFO = SkinInfo()
 
     @property
-    def views(self) -> Dict[str, Any]:
+    def views(self) -> dict[str, any]:
         return [
             {
                 "type": 0,
@@ -83,7 +82,7 @@ class SkinHandler(Handler):
         return 0
 
     @property
-    def random_star_character(self) -> Dict[str, Any]:
+    def random_star_character(self) -> dict[str, any]:
         return (
             self.get_character(choice(self.characters["character_sort"]))
             if self.characters["character_sort"]
@@ -91,15 +90,15 @@ class SkinHandler(Handler):
         )
 
     @property
-    def random_character(self) -> Dict[str, Any]:
+    def random_character(self) -> dict[str, any]:
         return self.get_character(randint(200001, self.MAX_CHARID - 1))
 
     @property
-    def character(self) -> Dict[str, Any]:
+    def character(self) -> dict[str, any]:
         return self.get_character(self.characters["main_character_id"])
 
     @property
-    def player(self) -> Dict[str, Any]:
+    def player(self) -> dict[str, any]:
         (
             player := {
                 "views": self.views,
@@ -113,14 +112,13 @@ class SkinHandler(Handler):
     def __init__(self) -> None:
         self.profile: str = str()
         self.game_uuid: str = str()
-        self.last_charid: int = 200001
-        self.original_char: Tuple[int, int] = (200001, 400101)
+        self.original_char: tuple[int, int] = (200001, 400101)
 
-        self.characters: Dict[str, Any] = {}
-        self.commonviews: Dict[str, Any] = {}
+        self.characters: dict[str, any] = {}
+        self.commonviews: dict[str, any] = {}
 
         # default account structure
-        self.account: Dict[str, Any] = {
+        self.account: dict[str, any] = {
             "title": 0,
             "nickname": 0,
             "avatar_id": 0,
@@ -152,7 +150,7 @@ class SkinHandler(Handler):
 
             self.update_characters()
 
-    def get_character(self, charid: int) -> Dict:
+    def get_character(self, charid: int) -> dict:
         assert 200000 < charid < self.MAX_CHARID
         return self.characters["characters"][charid - 200001]
 
@@ -224,12 +222,20 @@ class SkinHandler(Handler):
 
         self.save()
 
-    def methods(self, msg_type: MsgType) -> Set[str]:
+    def notify_skin(self, charid: int) -> dict:
+        return {
+            "type": MsgType.Notify,
+            "method": ".lq.NotifyAccountUpdate",
+            "data": {
+                "update": {"character": {"characters": [self.get_character(charid)]}}
+            },
+        }
+
+    def methods(self, msg_type: MsgType) -> set[str]:
         if msg_type == MsgType.Notify:
             return {
                 ".lq.NotifyRoomPlayerUpdate",
                 ".lq.NotifyGameFinishRewardV2",
-                ".lq.NotifyAccountUpdate",
             }
         elif msg_type == MsgType.Req:
             return {
@@ -260,10 +266,10 @@ class SkinHandler(Handler):
                 ".lq.Lobby.fetchAllCommonViews",
             } | entrance
 
-    def handle(self, flow_msg: WebSocketMessage, parse_obj: Dict) -> bool:
-        msg_type = parse_obj["type"]
-        data = parse_obj["data"]
-        method = parse_obj["method"]
+    def handle(self, flow: http.HTTPFlow, parsed: dict) -> bool:
+        data = parsed["data"]
+        method = parsed["method"]
+        msg_type = parsed["type"]
 
         # NOTIFY
         if msg_type == MsgType.Notify:
@@ -276,12 +282,6 @@ class SkinHandler(Handler):
             elif method == ".lq.NotifyGameFinishRewardV2":
                 # 终局结算时，不播放羁绊动画
                 data["main_character"] = {"exp": 1, "add": 0, "level": 5}
-            elif method == ".lq.NotifyAccountUpdate":
-                # 修改角色皮肤时
-                if str("character") not in data["update"]:
-                    return False
-                for character in data["update"]["character"]["characters"]:
-                    character.update(self.get_character(self.last_charid))
 
         # REQUEST
         elif msg_type == MsgType.Req:
@@ -289,50 +289,50 @@ class SkinHandler(Handler):
                 # 避免多人随机装扮不一致
                 self.game_uuid = data["game_uuid"]
             elif method == ".lq.Lobby.changeMainCharacter":
-                # 修改主角色时存储，并替换原数据
+                # 修改主角色时
                 self.characters["main_character_id"] = data["character_id"]
                 self.account["avatar_id"] = self.character["skin"]
                 self.save()
 
-                super().drop(parse_obj=parse_obj)
+                return super().inject(flow, parsed, {})
             elif method == ".lq.Lobby.changeCharacterSkin":
-                # 修改角色皮肤时存储，并替换原数据
+                # 修改角色皮肤时
                 self.get_character(data["character_id"])["skin"] = data["skin"]
                 self.account["avatar_id"] = self.character["skin"]
-                self.last_charid = data["character_id"]
                 self.save()
 
-                data["character_id"], data["skin"] = self.original_char
+                inject_notify = self.notify_skin(data["character_id"])
+                return super().inject(flow, parsed, {}, inject_notify)
             elif method == ".lq.Lobby.updateCharacterSort":
-                # 修改星标角色时存储，并替换原数据
+                # 修改星标角色时
                 self.characters["character_sort"] = data["sort"]
                 self.save()
 
-                super().drop(parse_obj=parse_obj)
+                return super().inject(flow, parsed, {})
             elif method == ".lq.Lobby.saveCommonViews":
-                # 修改装扮时存储，并替换原数据
+                # 修改装扮时
                 self.commonviews["views"][data["save_index"]]["values"] = data["views"]
                 self.save()
 
-                super().drop(parse_obj=parse_obj)
+                return super().inject(flow, parsed, {})
             elif method == ".lq.Lobby.useCommonView":
-                # 选择装扮时存储，并替换原数据
+                # 选择装扮时
                 self.commonviews["use"] = data["index"]
                 self.save()
 
-                super().drop(parse_obj=parse_obj)
+                return super().inject(flow, parsed, {})
             elif method == ".lq.Lobby.useTitle":
-                # 选择头衔时存储，并替换原数据
+                # 选择头衔时
                 self.account["title"] = data["title"]
                 self.save()
 
-                super().drop(parse_obj=parse_obj)
+                return super().inject(flow, parsed, {})
             elif method == ".lq.Lobby.setLoadingImage":
-                # 选择加载图时存储，并替换原数据
+                # 选择加载图时
                 self.account["loading_image"] = data["images"]
                 self.save()
 
-                super().drop(parse_obj=parse_obj)
+                return super().inject(flow, parsed, {})
 
         # RESPONSE
         elif msg_type == MsgType.Res:
