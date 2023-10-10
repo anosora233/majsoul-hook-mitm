@@ -36,9 +36,8 @@ jobs:
 
       - name: Copy executable files
         run: |
-          mkdir bin
-          mv mahjong-helper.exe bin\console.exe
-          mv PyStand-x64-CLI\PyStand.exe richi-console.exe
+          mv mahjong-helper.exe aider.exe
+          mv PyStand-x64-CLI\PyStand.exe mhm-console.exe
 
       - name: Install dependencies
         run: |
@@ -48,16 +47,16 @@ jobs:
           pip install -r requirements.txt -t site-packages
 
       - name: Create archives
-        run: 7z a richi-console-${{ github.ref_name }}-win64.7z bin richi runtime site-packages richi-console*
+        run: 7z a majsoul-hook-mitm-${{ github.ref_name }}-win64.7z runtime site-packages mhm mhm-console*
 
       - name: Uploading Artifact
         uses: actions/upload-artifact@master
         with:
-          name: richi-console-${{ github.sha }}
-          path: richi-console-${{ github.ref_name }}-win64.7z
+          name: majsoul-hook-mitm-${{ github.sha }}
+          path: majsoul-hook-mitm-${{ github.ref_name }}-win64.7z
 
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
           token: ${{ secrets.CUSTOM_GITHUB_TOKEN }}
-          files: richi-console-${{ github.ref_name }}-win64.7z
+          files: majsoul-hook-mitm-${{ github.ref_name }}-win64.7z

@@ -1,4 +1,4 @@
-# _richi-console_
+# _majsoul-hook-mitm_
 
 本项目以**中间人攻击**的形式抓取经过代理服务器的网络通信
 
@@ -28,22 +28,21 @@
 
 ## 使用方法
 
-安装配置 _Mitmproxy_（_Python_ >= 3.10）| 或使用[携带版](https://github.com/anosora233/richi-console/releases)（可能不含最新功能）
+安装配置 _Mitmproxy_（_Python_ >= 3.10）| 或使用[携带版](https://github.com/anosora233/majsoul-hook-mitm/releases)（可能不含最新功能）
 
 ```bash
 # 同步仓库 | 或者 Download ZIP 并解压
-git clone https://github.com/anosora233/richi-console.git
-cd richi-console
+git clone https://github.com/anosora233/majsoul-hook-mitm.git
+cd majsoul-hook-mitm
 # 配置国内镜像源 (可选)
 python -m pip install --upgrade pip
 pip config set global.index-url https://mirror.nju.edu.cn/pypi/web/simple
 # 添加小助手 (可选)
-mkdir bin
-cp path/to/mahjong-helper.exe bin/console.exe
+cp path/to/mahjong-helper.exe aider.exe
 # 安装依赖
 python -m pip install -r requirements.txt
 # 启动 Mitmproxy 代理服务器
-python richi-console.py
+python mhm-console.py
 ```
 
 ### 客户端

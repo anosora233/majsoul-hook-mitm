@@ -170,6 +170,5 @@ runtime/
 site-packages/
 
 # Exec and Lnk
-bin/
 *.exe
 *.lnk
