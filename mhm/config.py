@@ -65,6 +65,7 @@ settings = {
     "dumper": False,
     "log_level": "info",
     "listen_port": 23410,
+    "socks5_port": 23412,
     "enable_skins": False,
     "enable_aider": False,
     "enable_chest": False,

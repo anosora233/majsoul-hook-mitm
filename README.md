@@ -45,36 +45,6 @@ python -m pip install -r requirements.txt
 python mhm-console.py
 ```
 
-### 客户端
-
-1. 配置 _Proxifier_ 添加代理服务器
-
-   <img title="" src="./imgs/proxyserver.png" alt="proxyserver.png" data-align="inline" width = "600">
-
-2. 配置代理规则（建议将 _Default_ 规则改为直连）
-
-   <img title="" src="./imgs/rule.png" alt="rule.png" data-align="inline" width = "600">
-   <img title="" src="./imgs/rules.png" alt="rules.png" data-align="inline" width = "600">
-
-3. 在 _Steam_ 启动游戏即可
-
-4. 不使用本插件时关闭 _Proxifier_ 即可
-
-### 网页版
-
-1. 浏览器添加 _SwitchyOmega_ 插件，配置代理规则并应用
-
-   <img title="" src="./imgs/proxy.png" alt="proxy.png" data-align="inline" width = "800">
-   <img title="" src="./imgs/switch.png" alt="switch.png" data-align="inline" width = "800">
-
-2. 在浏览器访问 [_mitm.it_](http://mitm.it) 并安装 _CA_ 证书
-
-   <img title="" src="./imgs/cert.png" alt="cert.png" data-align="inline" width = "400">
-
-3. 在浏览器启动游戏即可
-
-4. 不使用本插件时切换 _SwitchyOmega_ 代理规则即可
-
 ## 配置文件
 
 首次启动 _Mitmproxy_ 代理服务器后会自动生成配置文件 _settings.json_
@@ -93,6 +63,6 @@ python mhm-console.py
 ## 特别感谢
 
 - [Avenshy](https://github.com/Avenshy/mahjong-helper-majsoul-mitmproxy)
-- [skywind3000](https://github.com/skywind3000/PyStand)
+- [PragmaTwice](https://github.com/PragmaTwice/proxinject)
 - [747929791](https://github.com/747929791/majsoul_wrapper)
 - [EndlessCheng](https://github.com/EndlessCheng/mahjong-helper)

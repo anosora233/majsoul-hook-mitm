@@ -1,4 +1,4 @@
-from os import system
+from os import system, path
 from requests import post
 
 from urllib3 import disable_warnings
@@ -41,7 +41,7 @@ class AiderHandler(Handler):
         with socket(AF_INET, SOCK_STREAM) as s:
             s.settimeout(0.02)
             if s.connect_ex(("127.0.0.1", self.PORT)) != 0:
-                cmd = f'start cmd /c "title Console · 🀄 && aider.exe -majsoul -p {self.PORT}"'
+                cmd = f'start cmd /c "title Console · 🀄 && {path.join("utils","endless","helper")} -majsoul -p {self.PORT}"'
                 system(cmd)
 
         self.api = f"https://127.0.0.1:{self.PORT}"
