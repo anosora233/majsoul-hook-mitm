@@ -16,7 +16,7 @@ def fetch_maxid():
         rand_b: int = random.randint(0, 1e9)
 
         ver_url = f"https://game.maj-soul.com/1/version.json?randv={rand_a}{rand_b}"
-        response = requests.get(ver_url, proxies={"https": settings["upstream_proxy"]})
+        response = requests.get(ver_url, proxies={"https": None})
         response.raise_for_status()
         ver_data = response.json()
 
@@ -25,7 +25,7 @@ def fetch_maxid():
             return
 
         res_url = f"https://game.maj-soul.com/1/resversion{ver_data['version']}.json"
-        response = requests.get(res_url, proxies={"https": settings["upstream_proxy"]})
+        response = requests.get(res_url, proxies={"https": None})
         response.raise_for_status()
         res_data = response.json()
 
@@ -41,7 +41,7 @@ def init():
     if not exists("settings.json"):
         dump(settings, open("settings.json", "w"), indent=2)
         console.print(
-            Panel.fit(JSON.from_data(data=settings), title="Initialize Configuration"),
+            Panel(JSON.from_data(data=settings), title="Initialize Configuration")
         )
         console.input("Press [red]Enter[/red] to exit ... :smiley: ")
         raise SystemExit
@@ -62,16 +62,16 @@ def init():
 
 
 settings = {
-    "dumper": False,
-    "log_level": "info",
-    "listen_port": 23410,
-    "socks5_port": 23412,
+    "with_dumper": False,
+    "with_termlog": True,
     "enable_skins": False,
     "enable_aider": False,
     "enable_chest": False,
-    "upstream_proxy": None,
     "random_star_char": False,
     "pure_python_protobuf": False,
+    "log_level": "info",
+    "proxinject_proxy": "127.0.0.1:23412",
+    "mode": ["regular@23410", "socks5@23412"],
 }
 
 console = Console()

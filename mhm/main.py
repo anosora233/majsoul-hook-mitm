@@ -8,21 +8,17 @@ from .addons import addons
 
 
 async def start_proxy():
-    mode = [
-        f"socks5@{settings['socks5_port']}",
-        f"upstream:{settings['upstream_proxy']}"
-        if settings["upstream_proxy"]
-        else "regular",
-    ]
+    if not settings["mode"]:
+        return
+
     opts = options.Options(
-        listen_port=settings["listen_port"],
+        mode=settings["mode"],
         http2=False,
-        mode=mode,
     )
     master = DumpMaster(
         opts,
-        with_termlog=True,
-        with_dumper=settings["dumper"],
+        with_termlog=settings["with_termlog"],
+        with_dumper=settings["with_dumper"],
     )
 
     master.addons.add(*addons)
@@ -31,12 +27,15 @@ async def start_proxy():
 
 
 async def start_inject():
+    if not settings["proxinject_proxy"]:
+        return
+
     cmd = [
         os.path.join("utils", "proxinject", "proxinjector-cli"),
         "--name",
         "*mahjongsoul*",
         "--set-proxy",
-        f"127.0.0.1:{settings['socks5_port']}",
+        settings["proxinject_proxy"],
     ]
 
     await (
@@ -45,7 +44,7 @@ async def start_inject():
         )
     ).communicate()
 
-    await asyncio.sleep(0.5)
+    await asyncio.sleep(0.8)
 
     asyncio.create_task(start_inject())
 

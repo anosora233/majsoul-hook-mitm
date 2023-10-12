@@ -24,7 +24,7 @@
 
 ### 支持平台
 
-- 雀魂网页版、客户端
+- 雀魂客户端
 
 ## 使用方法
 
@@ -37,12 +37,10 @@ cd majsoul-hook-mitm
 # 配置国内镜像源 (可选)
 python -m pip install --upgrade pip
 pip config set global.index-url https://mirror.nju.edu.cn/pypi/web/simple
-# 添加小助手 (可选)
-cp path/to/mahjong-helper.exe aider.exe
 # 安装依赖
 python -m pip install -r requirements.txt
 # 启动 Mitmproxy 代理服务器
-python mhm-console.py
+python -m mhm.main
 ```
 
 ## 配置文件
