@@ -12,8 +12,8 @@ def fetch_maxid():
     import random
 
     with console.status("[magenta]Fetch the latest server version") as status:
-        rand_a: int = random.randint(0, 1e9)
-        rand_b: int = random.randint(0, 1e9)
+        rand_a: int = random.randint(0, int(1e9))
+        rand_b: int = random.randint(0, int(1e9))
 
         ver_url = f"https://game.maj-soul.com/1/version.json?randv={rand_a}{rand_b}"
         response = requests.get(ver_url, proxies={"https": None})
