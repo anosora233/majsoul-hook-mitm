@@ -64,7 +64,7 @@ def init():
 settings = {
     "with_dumper": False,
     "with_termlog": True,
-    "enable_skins": False,
+    "enable_skins": True,
     "enable_aider": False,
     "enable_chest": False,
     "random_star_char": False,
