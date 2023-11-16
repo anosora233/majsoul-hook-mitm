@@ -4,9 +4,28 @@ from mhm import conf
 from mhm.events import listen
 from mhm.proto.liqi import Msg, MsgType
 
+EXCLUDED_CHARACTERS = [
+    # DEFAULTS
+    200001, 200002, # Ichihime & Nikaidou Miki
+    # COLLABS
+    200015, # Linovel
+    200034, 200035, 200036, 200037, # Saki 1st
+    200040, 200041, 200042, 200043, # Kakegurui
+    200050, 200051, # Akagi
+    200055, 200056, 200057, 200058, # Kaguya-sama
+    200062, 200063, 200064, 200065, # Saki 2nd
+    200070, 200071, 200072, 200073, # Geass
+    # 200079, 200080, 200081, 200082, # Princess Illya
+    # EXCLUSIVE
+    200052, 200061, 200076
+]
+
 DEFAULT_CHEST = [
     # CHARACTERS
-    (0.05, list(range(200003, conf["server"]["max_charid"] - 1))),
+    (0.05, list(
+        set(range(200003, conf["server"]["max_charid"]))
+        .difference(EXCLUDED_CHARACTERS)
+    )),
     # VIEWS
     (0.2, list(set(range(305001, 305056)).difference({305043, 305047}))),
     # GIFTS
