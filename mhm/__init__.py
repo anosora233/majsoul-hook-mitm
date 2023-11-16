@@ -72,10 +72,10 @@ def fetch_maxid(conf: ConfigDict):
     import requests
     import random
 
-    rand_a: int = random.randint(0, int(1e9))
-    rand_b: int = random.randint(0, int(1e9))
+    RANDV_LENGTH = 16
+    randv = random.randint(10 ** (RANDV_LENGTH - 1), 10 ** RANDV_LENGTH - 1)
 
-    ver_url = f"https://game.maj-soul.com/1/version.json?randv={rand_a}{rand_b}"
+    ver_url = f"https://game.maj-soul.com/1/version.json?randv={randv}"
     response = requests.get(ver_url, proxies={"https": None})
     response.raise_for_status()
     ver_data = response.json()
