@@ -24,8 +24,24 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: mahjong-helper-${{ github.sha }}
+          name: endless
           path: mahjong-helper.exe
+
+  build-cpp:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          repository: PragmaTwice/proxinject
+
+      - run: |
+          ./build.ps1 -mode Release -arch x64 # build the project via CMake and msbuild
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: proxinject
+          path: release
 
   build-python:
     runs-on: windows-latest
@@ -47,31 +63,29 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: mhmp-pre-${{ github.sha }}
+          name: mhmp-pre
           path: dist/mhmp
 
   pack:
     runs-on: ubuntu-latest
     needs:
       - build-go
+      - build-cpp
       - build-python
     steps:
       - uses: actions/download-artifact@v4
         with:
-          path: mhmp
-          merge-multiple: true
+          path: artifacts
 
       - run: |
-          mkdir -p mhmp/common/endless
-          mv mhmp/mahjong-helper.exe mhmp/common/endless/
-          ####
-          curl -Lo proxinject.zip https://github.com/PragmaTwice/proxinject/releases/download/v0.5.0-pre/proxinject-v0.5.0-pre-x64.zip
-          unzip proxinject.zip -d proxinject
-          mv proxinject/release mhmp/common/proxinject
+          mv artifacts/mhmp-pre mhmp
+          mkdir -p mhmp/common
+          mv artifacts/endless mhmp/common/
+          mv artifacts/proxinject mhmp/common/
 
       - uses: actions/upload-artifact@v4
         with:
-          name: mhmp-${{ github.sha }}
+          name: develop
           path: mhmp
 
       - if: github.ref_type == 'tag'
