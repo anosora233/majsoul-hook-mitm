@@ -5,10 +5,18 @@ on:
     tags:
       - "*"
   workflow_dispatch:
+    inputs:
+      skip-go:
+        required: false
+      skip-cpp:
+        required: false
+      skip-python:
+        required: false
 
 jobs:
   build-go:
     runs-on: windows-latest
+    if: github.event.inputs.skip-go != 'y'
     steps:
       - uses: actions/checkout@v4
         with:
@@ -28,6 +36,7 @@ jobs:
 
   build-cpp:
     runs-on: windows-latest
+    if: github.event.inputs.skip-cpp != 'y'
     steps:
       - uses: actions/checkout@v4
         with:
@@ -43,6 +52,7 @@ jobs:
 
   build-python:
     runs-on: windows-latest
+    if: github.event.inputs.skip-python != 'y'
     steps:
       - uses: actions/checkout@v4
 
