@@ -37,7 +37,6 @@ async def start_inject():
 def main():
     async def start():
         logger.info(f"[i]log level: {conf.mhm.log_level}")
-        logger.info(f"[i]pure python protobuf: {conf.mhm.pure_python_protobuf}")
 
         logger.info(f"[i]version: {resver.version}")
         logger.info(f"[i]characters: {len(resver.emotes)}")

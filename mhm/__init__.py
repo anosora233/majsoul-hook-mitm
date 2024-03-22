@@ -1,12 +1,16 @@
 from rich.console import Console
 from rich.logging import RichHandler
 from collections import defaultdict
-from dataclasses import dataclass, asdict, field
+from dataclasses import dataclass, asdict
 from os.path import exists
 from os import environ
 from json import load, dump
 from logging import getLogger
 from pathlib import Path
+from google.protobuf import __version__
+
+if __version__.split(".") > ["3", "18", "0"]:
+    environ["PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION"] = "python"
 
 pRoot = Path(".")
 
@@ -63,8 +67,10 @@ class Conf:
     @classmethod
     def fromdict(cls, data: dict):
         # purge
+        if "mhm" in data:
+            del data["mhm"]["pure_python_protobuf"]
         if "server" in data:
-            data.pop("server")
+            del data["server"]
         if "plugin" in data:
             data["hook"] = data.pop("plugin")
         # to dataclass
@@ -108,7 +114,7 @@ def fetch_resver():
     res_data: dict = response.json()
 
     emotes: defaultdict[str, list[int]] = defaultdict(list)
-    pattern = rf"en\/extendRes\/emo\/e(\d+)\/(\d+)\.png"
+    pattern = r"en\/extendRes\/emo\/e(\d+)\/(\d+)\.png"
 
     for text in res_data.get("res"):
         matches = re.search(pattern, text)
@@ -137,12 +143,10 @@ def no_cheering_emotes():
 
 
 def init():
-    with console.status("[magenta]Fetch the latest server version") as status:
+    with console.status("[magenta]Fetch the latest server version"):
         fetch_resver()
     if conf.hook.no_cheering_emotes:
         no_cheering_emotes()
-    if conf.mhm.pure_python_protobuf:
-        environ["PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION"] = "python"
 
     with open(pathConf, "w") as f:
         dump(asdict(conf), f, indent=2)
