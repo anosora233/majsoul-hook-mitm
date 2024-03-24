@@ -1,26 +1,47 @@
 from mitmproxy import http
 
-
-from . import logger
-from .hook import hooks
+from . import console
+from .config import config
+from .hook import Hook
 from .proto import MsgManager
 
 
-def log(mger: MsgManager):
-    msg = mger.m
-    logger.info(f"[i][gold1]& {mger.tag} {msg.type.name} {msg.method} {msg.id}")
-    logger.debug(f"[cyan3]# {msg.amended} {msg.data}")
+def log(debug: bool, mger: MsgManager):
+    match mger.m.status:
+        case "Md" | "ToMd":
+            head = "red"
+        case "Dp":
+            head = "green4"
+        case "Og":
+            head = "grey85"
+
+    console.log(
+        " ".join(
+            [
+                f"[{head}]{mger.m.status}[/{head}]",
+                f"[grey50]{mger.tag}[/grey50]",
+                f"[cyan2]{mger.m.type.name}[/cyan2]",
+                f"[gold1]{mger.m.method}[/gold1]",
+                f"[cyan3]{mger.m.id}[/cyan3]",
+            ]
+        )
+    )
+
+    if debug:
+        console.log(f"-->> {mger.m.data}")
 
 
 class WebSocketAddon:
-    def __init__(self):
+    def __init__(self, hooks: list[Hook]):
+        self.hooks = hooks
+        self.debug = config.base.debug
         self.manager = MsgManager()
 
     def websocket_start(self, flow: http.HTTPFlow):
-        logger.info(" ".join(["[i][green]Connected", flow.id[:13]]))
+        console.log(" ".join(["[i][green]Connected", flow.id[:13]]))
 
     def websocket_end(self, flow: http.HTTPFlow):
-        logger.info(" ".join(["[i][blue]Disconnected", flow.id[:13]]))
+        console.log(" ".join(["[i][blue]Disconnected", flow.id[:13]]))
 
     def websocket_message(self, flow: http.HTTPFlow):
         # make type checker happy
@@ -28,24 +49,14 @@ class WebSocketAddon:
 
         try:
             self.manager.parse(flow)
-        except:
-            logger.warning(" ".join(["[i][red]Unsupported Message @", flow.id[:13]]))
-            logger.debug(__import__("traceback").format_exc())
-
-            return
+        except Exception:
+            console.log(f"[red]Unsupported Message @ {flow.id[:13]}")
 
         if self.manager.member:
-            for hook in hooks:
+            for hook in self.hooks:
                 try:
-                    hook.hook(self.manager)
-                except:
-                    logger.warning(" ".join(["[i][red]Error", self.manager.m.method]))
-                    logger.debug(__import__("traceback").format_exc())
+                    self.manager.apply(hook.apply)
+                except Exception:
+                    console.print_exception()
 
-            if self.manager.m.amended:
-                self.manager.apply()
-
-        log(self.manager)
-
-
-addons = [WebSocketAddon()]
+        log(self.debug, self.manager)
