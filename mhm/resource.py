@@ -14,6 +14,8 @@ SheetNames = Literal[
     "item_definition_item",
     "character_emoji",
 ]
+# NOTE: Message names in `SheetNames` will be resolved,
+# while unspecified messages will not be resolved to achieve optimal compatibility
 
 
 class ResourceManager:
@@ -28,8 +30,8 @@ class ResourceManager:
         config_table.ParseFromString(lqbin)
 
         for data in config_table.datas:
-            klass_words = f"{data.table}_{data.sheet}".split("_")
-            klass_key = "_".join(klass_words)
+            klass_key = f"{data.table}_{data.sheet}"
+            klass_words = klass_key.split("_")
 
             if klass_key in SheetNames.__args__:
                 klass_name = "".join(n.capitalize() for n in klass_words)
@@ -43,7 +45,7 @@ class ResourceManager:
                         message,
                         including_default_value_fields=True,
                         preserving_proto_field_name=True,
-                    )
+                    )  # IDEA: It seems that there is no need to convert msg into a dict
 
                     self.sheets_table[klass_key].append(message_dict)
 

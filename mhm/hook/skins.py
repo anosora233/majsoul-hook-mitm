@@ -1,11 +1,13 @@
+# TODO: This part needs to be refactored
 import json
 import os
 import random
 from pathlib import Path
 
+from mhm.addon import MessageProcessor
 from mhm.config import config
 from mhm.hook import Hook
-from mhm.proto import MsgManager, MsgType
+from mhm.protocol import GameMessageType
 from mhm.resource import ResourceManager
 
 
@@ -23,81 +25,81 @@ class KinHook(Hook):
 
         # Response
 
-        @self.bind(MsgType.Res, ".lq.Lobby.login")
-        @self.bind(MsgType.Res, ".lq.Lobby.emailLogin")
-        @self.bind(MsgType.Res, ".lq.Lobby.oauth2Login")  # login
-        def _(mger: MsgManager):
-            self.mapSkin[mger.member] = Skin(self.path, mger, resger)
-            self.mapSkin[mger.member].update_player(mger.data.get("account"))
-            mger.amend()
+        @self.bind(GameMessageType.Response, ".lq.Lobby.login")
+        @self.bind(GameMessageType.Response, ".lq.Lobby.emailLogin")
+        @self.bind(GameMessageType.Response, ".lq.Lobby.oauth2Login")  # login
+        def _(mp: MessageProcessor):
+            self.mapSkin[mp.member] = Skin(self.path, mp.member, mp.data, resger)
+            self.mapSkin[mp.member].update_player(mp.data.get("account"))
+            mp.amend()
 
-        @self.bind(MsgType.Res, ".lq.Lobby.joinRoom")
-        @self.bind(MsgType.Res, ".lq.Lobby.fetchRoom")
-        @self.bind(MsgType.Res, ".lq.Lobby.createRoom")  # room
-        def _(mger: MsgManager):
+        @self.bind(GameMessageType.Response, ".lq.Lobby.joinRoom")
+        @self.bind(GameMessageType.Response, ".lq.Lobby.fetchRoom")
+        @self.bind(GameMessageType.Response, ".lq.Lobby.createRoom")  # room
+        def _(mp: MessageProcessor):
             # 在加入、获取、创建房间时修改己方头衔、立绘、角色
-            if "room" not in mger.data:
+            if "room" not in mp.data:
                 return True
-            for person in mger.data["room"]["persons"]:
+            for person in mp.data["room"]["persons"]:
                 if mSkin := self.mapSkin.get(person["account_id"]):
                     mSkin.update_player(person)
-                    mger.amend()
+                    mp.amend()
 
-        @self.bind(MsgType.Res, ".lq.Lobby.fetchInfo")
-        def _(mger: MsgManager):
+        @self.bind(GameMessageType.Response, ".lq.Lobby.fetchInfo")
+        def _(mp: MessageProcessor):
             # 替换信息
-            if mSkin := self.mapSkin.get(mger.member):
-                mger.data["bag_info"]["bag"]["items"].extend(resger.bag_rows)
-                mger.data["title_list"]["title_list"] = resger.title_rows
-                mger.data["all_common_views"] = mSkin.commonviews
-                mger.data["character_info"] = mSkin.characterinfo
-                mger.amend()
+            if mSkin := self.mapSkin.get(mp.member):
+                mp.data["bag_info"]["bag"]["items"].extend(resger.bag_rows)
+                mp.data["title_list"]["title_list"] = resger.title_rows
+                mp.data["all_common_views"] = mSkin.commonviews
+                mp.data["character_info"] = mSkin.characterinfo
+                mp.amend()
 
-        @self.bind(MsgType.Res, ".lq.Lobby.fetchBagInfo")
-        def _(mger: MsgManager):
+        @self.bind(GameMessageType.Response, ".lq.Lobby.fetchBagInfo")
+        def _(mp: MessageProcessor):
             # 添加物品
-            if self.mapSkin.get(mger.member):
-                mger.data["bag"]["items"].extend(resger.bag_rows)
-                mger.amend()
+            if self.mapSkin.get(mp.member):
+                mp.data["bag"]["items"].extend(resger.bag_rows)
+                mp.amend()
 
-        @self.bind(MsgType.Res, ".lq.Lobby.fetchTitleList")
-        def _(mger: MsgManager):
+        @self.bind(GameMessageType.Response, ".lq.Lobby.fetchTitleList")
+        def _(mp: MessageProcessor):
             # 添加头衔
-            if self.mapSkin.get(mger.member):
-                mger.data["title_list"] = resger.title_rows
-                mger.amend()
+            if self.mapSkin.get(mp.member):
+                mp.data["title_list"] = resger.title_rows
+                mp.amend()
 
-        @self.bind(MsgType.Res, ".lq.Lobby.fetchAllCommonViews")
-        def _(mger: MsgManager):
+        @self.bind(GameMessageType.Response, ".lq.Lobby.fetchAllCommonViews")
+        def _(mp: MessageProcessor):
             # 装扮本地数据替换
-            if mSkin := self.mapSkin.get(mger.member):
-                mger.data = mSkin.commonviews
-                mger.amend()
+            if mSkin := self.mapSkin.get(mp.member):
+                mp.data = mSkin.commonviews
+                mp.amend()
 
-        @self.bind(MsgType.Res, ".lq.Lobby.fetchCharacterInfo")
-        def _(mger: MsgManager):
+        @self.bind(GameMessageType.Response, ".lq.Lobby.fetchCharacterInfo")
+        def _(mp: MessageProcessor):
             # 全角色数据替换
-            if mSkin := self.mapSkin.get(mger.member):
-                mger.data = mSkin.characterinfo
-                mger.amend()
+            if mSkin := self.mapSkin.get(mp.member):
+                mp.data = mSkin.characterinfo
+                mp.amend()
 
-        @self.bind(MsgType.Res, ".lq.Lobby.fetchAccountInfo")
-        def _(mger: MsgManager):
+        @self.bind(GameMessageType.Response, ".lq.Lobby.fetchAccountInfo")
+        def _(mp: MessageProcessor):
             # 修改状态面板立绘、头衔
-            if mSkin := self.mapSkin.get(mger.data["account"]["account_id"]):
-                mSkin.update_player(mger.data["account"], "loading_image")
-                mger.amend()
+            if mSkin := self.mapSkin.get(mp.data["account"]["account_id"]):
+                mSkin.update_player(mp.data["account"], "loading_image")
+                mp.amend()
 
-        @self.bind(MsgType.Res, ".lq.FastTest.authGame")
-        def _(mger: MsgManager):
+        @self.bind(GameMessageType.Response, ".lq.FastTest.authGame")
+        def _(mp: MessageProcessor):
             # 进入对局时
-            if mSkin := self.mapSkin.get(mger.member):
-                mSkin.seat_list = mger.data["seat_list"]
+            if mSkin := self.mapSkin.get(mp.member):
+                mSkin.seat_list = mp.data["seat_list"]
 
                 if mGame := self.mapGame.get(mSkin.game_uuid):
-                    mger.data["players"] = mGame
+                    mp.data["players"] = mGame
                 else:
-                    for player in mger.data["players"]:
+                    for player in mp.data["players"]:
                         if pSkin := self.mapSkin.get(player["account_id"]):
                             # 替换对局头像，角色、头衔
                             pSkin.update_player(player)
@@ -109,142 +111,143 @@ class KinHook(Hook):
                             player["character"].update(
                                 {"level": 5, "exp": 1, "is_upgraded": True}
                             )
-                    self.mapGame[mSkin.game_uuid] = mger.data["players"]
-                mger.amend()
+                    self.mapGame[mSkin.game_uuid] = mp.data["players"]
+                mp.amend()
 
         # Request
 
-        @self.bind(MsgType.Req, ".lq.FastTest.authGame")
-        def _(mger: MsgManager):
+        @self.bind(GameMessageType.Request, ".lq.FastTest.authGame")
+        def _(mp: MessageProcessor):
             # 记录当前对局 UUID
-            if mSkin := self.mapSkin.get(mger.member):
-                mSkin.game_uuid = mger.data["game_uuid"]
+            if mSkin := self.mapSkin.get(mp.member):
+                mSkin.game_uuid = mp.data["game_uuid"]
 
-        @self.bind(MsgType.Req, ".lq.FastTest.broadcastInGame")
-        def _(mger: MsgManager):
+        @self.bind(GameMessageType.Request, ".lq.FastTest.broadcastInGame")
+        def _(mp: MessageProcessor):
             # 发送未持有的表情时
-            emo = json.loads(mger.data["content"])["emo"]
-            if emo > 8 and (mSkin := self.mapSkin.get(mger.member)):
-                seat = mSkin.seat_list.index(mger.member)
-                mger.notify_match(
-                    ids=mSkin.seat_list,
-                    method=".lq.NotifyGameBroadcast",
+            emo = json.loads(mp.data["content"])["emo"]
+            if emo > 8 and (mSkin := self.mapSkin.get(mp.member)):
+                seat = mSkin.seat_list.index(mp.member)
+                mp.broadcast(
+                    channel="MaTCH",
+                    members=mSkin.seat_list,
+                    name=".lq.NotifyGameBroadcast",
                     data={"seat": seat, "content": json.dumps({"emo": emo})},
                 )
-                mger.respond()
+                mp.response()
 
-        @self.bind(MsgType.Req, ".lq.Lobby.changeMainCharacter")
-        def _(mger: MsgManager):
+        @self.bind(GameMessageType.Request, ".lq.Lobby.changeMainCharacter")
+        def _(mp: MessageProcessor):
             # 修改主角色时
-            if mSkin := self.mapSkin.get(mger.member):
-                mSkin.main_character_id = mger.data["character_id"]
+            if mSkin := self.mapSkin.get(mp.member):
+                mSkin.main_character_id = mp.data["character_id"]
                 mSkin.save()
-                mger.respond()
+                mp.response()
 
-        @self.bind(MsgType.Req, ".lq.Lobby.changeCharacterSkin")
-        def _(mger: MsgManager):
+        @self.bind(GameMessageType.Request, ".lq.Lobby.changeCharacterSkin")
+        def _(mp: MessageProcessor):
             # 修改角色皮肤时
-            if mSkin := self.mapSkin.get(mger.member):
-                character = mSkin.character_of(mger.data["character_id"])
-                character["skin"] = mger.data["skin"]
+            if mSkin := self.mapSkin.get(mp.member):
+                character = mSkin.character_of(mp.data["character_id"])
+                character["skin"] = mp.data["skin"]
                 mSkin.save()
-                mger.notify(
-                    method=".lq.NotifyAccountUpdate",
+                mp.notify(
+                    name=".lq.NotifyAccountUpdate",
                     data={"update": {"character": {"characters": [character]}}},
                 )
-                mger.respond()
+                mp.response()
 
-        @self.bind(MsgType.Req, ".lq.Lobby.updateCharacterSort")
-        def _(mger: MsgManager):
+        @self.bind(GameMessageType.Request, ".lq.Lobby.updateCharacterSort")
+        def _(mp: MessageProcessor):
             # 修改星标角色时
-            if mSkin := self.mapSkin.get(mger.member):
-                mSkin.characterinfo["character_sort"] = mger.data["sort"]
+            if mSkin := self.mapSkin.get(mp.member):
+                mSkin.characterinfo["character_sort"] = mp.data["sort"]
                 mSkin.save()
-                mger.respond()
+                mp.response()
 
-        @self.bind(MsgType.Req, ".lq.Lobby.useTitle")
-        def _(mger: MsgManager):
+        @self.bind(GameMessageType.Request, ".lq.Lobby.useTitle")
+        def _(mp: MessageProcessor):
             # 选择头衔时
-            if mSkin := self.mapSkin.get(mger.member):
-                mSkin.title = mger.data["title"]
+            if mSkin := self.mapSkin.get(mp.member):
+                mSkin.title = mp.data["title"]
                 mSkin.save()
-                mger.respond()
+                mp.response()
 
-        @self.bind(MsgType.Req, ".lq.Lobby.modifyNickname")
-        def _(mger: MsgManager):
+        @self.bind(GameMessageType.Request, ".lq.Lobby.modifyNickname")
+        def _(mp: MessageProcessor):
             # 修改昵称时
-            if mSkin := self.mapSkin.get(mger.member):
-                mSkin.nickname = mger.data["nickname"]
+            if mSkin := self.mapSkin.get(mp.member):
+                mSkin.nickname = mp.data["nickname"]
                 mSkin.save()
-                mger.respond()
+                mp.response()
 
-        @self.bind(MsgType.Req, ".lq.Lobby.setLoadingImage")
-        def _(mger: MsgManager):
+        @self.bind(GameMessageType.Request, ".lq.Lobby.setLoadingImage")
+        def _(mp: MessageProcessor):
             # 选择加载图时
-            if mSkin := self.mapSkin.get(mger.member):
-                mSkin.loading_image = mger.data["images"]
+            if mSkin := self.mapSkin.get(mp.member):
+                mSkin.loading_image = mp.data["images"]
                 mSkin.save()
-                mger.respond()
+                mp.response()
 
-        @self.bind(MsgType.Req, ".lq.Lobby.useCommonView")
-        def _(mger: MsgManager):
+        @self.bind(GameMessageType.Request, ".lq.Lobby.useCommonView")
+        def _(mp: MessageProcessor):
             # 选择装扮时
-            if mSkin := self.mapSkin.get(mger.member):
-                mSkin.use = mger.data["index"]
+            if mSkin := self.mapSkin.get(mp.member):
+                mSkin.use = mp.data["index"]
                 mSkin.save()
-                mger.respond()
+                mp.response()
 
-        @self.bind(MsgType.Req, ".lq.Lobby.saveCommonViews")
-        def _(mger: MsgManager):
+        @self.bind(GameMessageType.Request, ".lq.Lobby.saveCommonViews")
+        def _(mp: MessageProcessor):
             # 修改装扮时
-            if mSkin := self.mapSkin.get(mger.member):
-                sIndex = mger.data["save_index"]
-                mSkin.commonviews["views"][sIndex]["values"] = mger.data["views"]
+            if mSkin := self.mapSkin.get(mp.member):
+                sIndex = mp.data["save_index"]
+                mSkin.commonviews["views"][sIndex]["values"] = mp.data["views"]
                 mSkin.save()
-                mger.respond()
+                mp.response()
 
-        @self.bind(MsgType.Req, ".lq.Lobby.setHiddenCharacter")
-        def _(mger: MsgManager):
+        @self.bind(GameMessageType.Request, ".lq.Lobby.setHiddenCharacter")
+        def _(mp: MessageProcessor):
             # 隐藏角色时
-            if mSkin := self.mapSkin.get(mger.member):
-                mSkin.characterinfo["hidden_characters"] = mger.data["chara_list"]
+            if mSkin := self.mapSkin.get(mp.member):
+                mSkin.characterinfo["hidden_characters"] = mp.data["chara_list"]
                 mSkin.save()
-                mger.respond({"hidden_characters": mger.data["chara_list"]})
+                mp.response({"hidden_characters": mp.data["chara_list"]})
 
-        @self.bind(MsgType.Req, ".lq.Lobby.addFinishedEnding")
-        def _(mger: MsgManager):
+        @self.bind(GameMessageType.Request, ".lq.Lobby.addFinishedEnding")
+        def _(mp: MessageProcessor):
             # 屏蔽传记完成请求
-            if self.mapSkin.get(mger.member):
-                mger.respond()
+            if self.mapSkin.get(mp.member):
+                mp.response()
 
-        @self.bind(MsgType.Req, ".lq.Lobby.receiveEndingReward")
-        def _(mger: MsgManager):
+        @self.bind(GameMessageType.Request, ".lq.Lobby.receiveEndingReward")
+        def _(mp: MessageProcessor):
             # 屏蔽传记奖励请求
-            if self.mapSkin.get(mger.member):
-                mger.respond()
+            if self.mapSkin.get(mp.member):
+                mp.response()
 
-        @self.bind(MsgType.Req, ".lq.Lobby.receiveCharacterRewards")
-        def _(mger: MsgManager):
+        @self.bind(GameMessageType.Request, ".lq.Lobby.receiveCharacterRewards")
+        def _(mp: MessageProcessor):
             # 屏蔽角色奖励请求
-            if self.mapSkin.get(mger.member):
-                mger.respond()
+            if self.mapSkin.get(mp.member):
+                mp.response()
 
         # Notify
 
-        @self.bind(MsgType.Notify, ".lq.NotifyRoomPlayerUpdate")
-        def _(mger: MsgManager):
+        @self.bind(GameMessageType.Notify, ".lq.NotifyRoomPlayerUpdate")
+        def _(mp: MessageProcessor):
             # 房间中添加、减少玩家时修改立绘、头衔
-            for player in mger.data["player_list"]:
+            for player in mp.data["player_list"]:
                 if mSkin := self.mapSkin.get(player["account_id"]):
                     mSkin.update_player(player)
-                    mger.amend()
+                    mp.amend()
 
-        @self.bind(MsgType.Notify, ".lq.NotifyGameFinishRewardV2")
-        def _(mger: MsgManager):
+        @self.bind(GameMessageType.Notify, ".lq.NotifyGameFinishRewardV2")
+        def _(mp: MessageProcessor):
             # 终局结算时，不播放羁绊动画
-            if self.mapSkin.get(mger.member):
-                mger.data["main_character"] = {"exp": 1, "add": 0, "level": 5}
-                mger.amend()
+            if self.mapSkin.get(mp.member):
+                mp.data["main_character"] = {"exp": 1, "add": 0, "level": 5}
+                mp.amend()
 
 
 class Skin:
@@ -306,8 +309,10 @@ class Skin:
     def avatar_id(self) -> int:
         return self.character["skin"]
 
-    def __init__(self, root: str, mger: MsgManager, resger: ResourceManager) -> None:
-        self.path = root / f"{mger.member}.json"
+    def __init__(
+        self, root: str, member: int, data: dict, resger: ResourceManager
+    ) -> None:
+        self.path = root / f"{member}.json"
 
         # base attributes
         self.keys = ["title", "nickname", "loading_image"]
@@ -319,7 +324,7 @@ class Skin:
         self.seat_list: list = None
         self.game_uuid: str = None
 
-        self.update_self(mger.data.get("account"))
+        self.update_self(data.get("account"))
 
         if os.path.exists(self.path):
             self.load(resger)

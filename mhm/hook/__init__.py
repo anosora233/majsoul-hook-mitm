@@ -1,19 +1,21 @@
-from mhm.proto import MsgManager, MsgType
+# TODO: Consider compatibility with extensions from the majsoul-plus.
+
+from mhm.addon import MessageProcessor
+from mhm.protocol import GameMessageType
 
 
 class Hook:
     def __init__(self) -> None:
-        self.mapHook = {}
+        self.mapping = {}
 
-    def apply(self, mger: MsgManager):
-        mKey = (mger.m.type, mger.m.method)
-        if mKey in self.mapHook:
-            self.mapHook[mKey](mger)
+    def run(self, mp: MessageProcessor):
+        if mp.key in self.mapping:
+            self.mapping[mp.key](mp)
 
-    def bind(self, mType: MsgType, mMethod: str):
+    def bind(self, kind: GameMessageType, name: str):
         def decorator(func):
-            mKey = (mType, mMethod)
-            self.mapHook[mKey] = func
+            key = (kind, name)
+            self.mapping[key] = func
             return func
 
         return decorator

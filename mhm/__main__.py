@@ -7,6 +7,7 @@ from .hook import Hook
 from .resource import ResourceManager
 
 
+# TODO: Plugins should be independent of this project and should be loaded from a folder
 def create_hooks(resger: ResourceManager) -> list[Hook]:
     hooks = []
     if config.base.aider:
@@ -42,7 +43,7 @@ def main():
     async def start():
         tasks = set()
         if config.mitmdump.args:
-            tasks.add(start_proxy(hooks))
+            tasks.add(start_proxy([h.run for h in hooks]))
             console.log(f"Start mitmdump @ {config.mitmdump.args.get('mode')}")
         if config.proxinject.path:
             tasks.add(start_inject())
