@@ -76,7 +76,7 @@ class ResourceManager:
             }
             for m in self.sheets_table["item_definition_character"]
         }
-        self.character_rows = self.character_map.values()
+        self.character_rows = list(self.character_map.values())
 
         self.item_rows = [ResourceManager.RENAME_SCROLL]
         for row in self.sheets_table["item_definition_item"]:
