@@ -42,7 +42,7 @@ def broadcast(
     members: list[int],
 ) -> None:
     for f in flows:
-        if f.marked in members:
+        if f.live and f.marked in members:
             if f.metadata.get(ChannelType) == channel:
                 inject(f, content)
 
@@ -220,4 +220,4 @@ class MessageProcessor:
             compose(notify),
             channel,
             members,
-        )  # HACK: Flow is not from a live connection (Warning)
+        )  # HACK: Marked flow includes non-live flows
