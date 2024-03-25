@@ -1,4 +1,4 @@
-﻿protobuf==3.16.0
-mitmproxy>=9.0.1
+﻿mitmproxy>=9.0.1
+protobuf
 requests
 rich
