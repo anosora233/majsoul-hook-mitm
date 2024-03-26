@@ -11,6 +11,7 @@ HOST = "https://game.maj-soul.com/1"
 ROOT = Path(".")
 
 CONFIG_PATH = ROOT / "mhmp.json"
+PROXIN_PATH = ROOT / "proxinject/proxinjector-cli.exe"
 
 LQBIN_RKEY = "res/config/lqc.lqbin"
 LQBIN_VTXT = ROOT / "lqc.txt"
@@ -39,7 +40,9 @@ class Config:
 
     @dataclass
     class Proxinject:
-        path: str = str(Path("./proxinject/proxinjector-cli"))
+        path: str = field(
+            default_factory=lambda: str(PROXIN_PATH) if PROXIN_PATH.exists() else None
+        )
         args: dict = field(
             default_factory=lambda: {
                 "name": "jantama_mahjongsoul",
