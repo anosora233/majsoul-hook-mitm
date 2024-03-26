@@ -1,3 +1,4 @@
+import base64
 import struct
 from dataclasses import asdict, dataclass
 from enum import Enum
@@ -50,6 +51,15 @@ class GameMessage:
 _names_by_flow_idx: dict[tuple[str, int], str] = {}
 
 
+def _parsedict(parser: Message, serialized: bytes):
+    parser.ParseFromString(serialized)
+    return MessageToDict(
+        parser,
+        including_default_value_fields=True,
+        preserving_proto_field_name=True,
+    )
+
+
 def parse(id4flow: str, content: bytes) -> GameMessage:
     kind = GameMessageType(content[0])
 
@@ -58,7 +68,16 @@ def parse(id4flow: str, content: bytes) -> GameMessage:
             idx = 0
             name, data = unwrap(content[1:])
 
-            parser = _MESSAGE_TYPE_MAP[name]()
+            base = _MESSAGE_TYPE_MAP[name]()
+            data = _parsedict(base, data)
+
+            # NOTE: Further parsing in the message parsing
+            # HACK: Further parsing messages cannot call `compose(message)`
+            match name:
+                case ".lq.ActionPrototype":
+                    _base = _MESSAGE_TYPE_MAP[f".lq.{data['name']}"]()  # HACK
+                    _data = _parsedict(_base, decode(base64.b64decode(data["data"])))
+                    data["data"] = _data
 
         case GameMessageType.Request:
             idx = struct.unpack("<H", content[1:3])[0]
@@ -66,24 +85,27 @@ def parse(id4flow: str, content: bytes) -> GameMessage:
             name, data = unwrap(content[3:])
 
             _names_by_flow_idx[key] = name
-            parser = _MESSAGE_TYPE_MAP[name][0]()
+            base = _MESSAGE_TYPE_MAP[name][0]()
+            data = _parsedict(base, data)
+
         case GameMessageType.Response:
             idx = struct.unpack("<H", content[1:3])[0]
             key = (id4flow, idx)
             name, data = unwrap(content[3:])
 
             name = _names_by_flow_idx.pop(key)
-            parser = _MESSAGE_TYPE_MAP[name][1]()
+            base = _MESSAGE_TYPE_MAP[name][1]()
+            data = _parsedict(base, data)
 
-    parser.ParseFromString(data)
+            match name:
+                # TODO: _MESSAGE_TYPE_MAP support multiple name matching
+                case ".lq.FastTest.syncGame":
+                    for action in data["game_restore"]["actions"]:
+                        _base = _MESSAGE_TYPE_MAP[f".lq.{action['name']}"]()  # HACK
+                        _data = _parsedict(_base, base64.b64decode(action["data"]))
+                        action["data"] = _data
 
-    data = MessageToDict(
-        parser,
-        including_default_value_fields=True,
-        preserving_proto_field_name=True,
-    )
-
-    return GameMessage(idx=idx, name=name, data=data, base=parser, kind=kind)
+    return GameMessage(idx=idx, name=name, data=data, base=base, kind=kind)
 
 
 def compose(message: GameMessage) -> bytes:
@@ -124,3 +146,13 @@ def wrap(name: str, data: bytes) -> bytes:
     wrapper: Message = liqi_pb2.Wrapper()
     wrapper.name, wrapper.data = name, data
     return wrapper.SerializeToString()
+
+
+# NOTE: This code is from the web-side `view.DesktopMgr.EnDecode()`
+def decode(data: bytes) -> bytes:
+    keys = [0x84, 0x5E, 0x4E, 0x42, 0x39, 0xA2, 0x1F, 0x60, 0x1C]
+    data = bytearray(data)
+    for i in range(len(data)):
+        u = (23 ^ len(data)) + 5 * i + keys[i % len(keys)] & 255
+        data[i] ^= u
+    return bytes(data)
