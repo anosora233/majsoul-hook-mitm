@@ -20,12 +20,13 @@ _MATCH_INFO_MESSAGES = [
 ]
 
 ChannelType = Literal["LoBBY", "MaTCH"]
-# O: ORIGINAL | INJECTED, TM: TO MODIFY, M: MODIFIED, D: DROPPED
-MessageStatus = Literal["O", "TM", "M", "D"]
+# O: ORIGINAL, I: INJECTED, M: MODIFIED, D: DROPPED
+# NOTE: The status `to modify` is unnecessary, as message are dropped directly if fails
+MessageStatus = Literal["O", "I", "M", "D"]
 # HACK: Define Message status's colors
 StatusColor: dict[MessageStatus, str] = {
     "O": "grey85",
-    "TM": "red3",  # SECURITY: this indicates that the msg was not successfully modified
+    "I": "cyan1",  # NOTE: This indicates that this message is injected
     "M": "magenta3",  # SECURITY: Whether the modification can be viewed by the server?
     "D": "orange3",  # SECURITY: Dropping will result in non-sequential request msg idx
 }
@@ -128,8 +129,18 @@ class MessageProcessor:
 
     gam_msg: GameMessage
 
-    # TODO: It would be best to display the status of the injected message
-    status: MessageStatus = "O"
+    modified: bool = False
+
+    @property
+    def status(self) -> MessageStatus:
+        if self.wss_msg.dropped:
+            return "D"
+        elif self.wss_msg.injected:
+            return "I"
+        elif self.modified:
+            return "M"
+        else:
+            return "O"
 
     @property  # NOTE: Flow internal `NotifyRoomPlayer***` message sequence id
     def sequence(self) -> int:  # HACK
@@ -166,18 +177,16 @@ class MessageProcessor:
 
     def amend(self):
         # NOTE: After calling `amend`, method `apply` should be called.
-        self.status = "TM"
+        self.modified = True
 
     def drop(self):
-        if self.status != "D":
-            self.wss_msg.drop()
-            self.status = "D"
+        # NOTE: Now the 'dropped' status is determined by the original websocket message
+        self.wss_msg.drop()
 
     def apply(self):
         # NOTE: It's best to `compose(message)` after all hooks are completed
-        if self.status == "TM":
+        if self.modified:
             self.wss_msg.content = compose(self.gam_msg)
-            self.status = "M"
 
     def request(self, data: dict, id: int):
         # SECURITY: Currently uncertain about the security of injecting into the server
