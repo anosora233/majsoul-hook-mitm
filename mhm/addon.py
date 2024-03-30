@@ -131,6 +131,15 @@ class MessageProcessor:
     # TODO: It would be best to display the status of the injected message
     status: MessageStatus = "O"
 
+    @property  # NOTE: Flow internal `NotifyRoomPlayer***` message sequence id
+    def sequence(self) -> int:  # HACK
+        self.flow.metadata["sequence"] += 1
+        return self.flow.metadata["sequence"]
+
+    @sequence.setter  # NOTE: Call when creating or joining a room
+    def sequence(self, value: int):  # HACK: Regularly the value should be zero
+        self.flow.metadata["sequence"] = value
+
     @property
     def data(self) -> dict:
         return self.gam_msg.data
