@@ -55,7 +55,7 @@ def output(status: MessageStatus, tag: int | str, message: GameMessage):
         f"[grey50]{tag}[/grey50]",
         f"[cyan2]{message.kind.name}[/cyan2]",
         f"[gold1]{message.name}[/gold1]",
-        f"[cyan3]{message.idx}[/cyan3]",
+        f"[cyan3]{message.idx}[/cyan3]" if message.idx else "",
     ]
 
     console.log(" ".join(output))
@@ -86,8 +86,8 @@ class GameAddon(view.View):
             wss_msg = flow.websocket.messages[-1]
             gam_msg = parse(flow.id, wss_msg.content)
             msg_key = (gam_msg.kind, gam_msg.name)
-        except Exception:
-            console.log(f"[i][red]Unsupported Message @ {flow.id[:13]}")
+        except Exception as e:
+            console.log(f"[i][red]{repr(e)} @ {flow.id[:13]}")
             return
 
         # HACK: Temporarily mark the LoBBY message
