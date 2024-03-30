@@ -99,7 +99,7 @@ def parse(id4flow: str, content: bytes) -> GameMessage:
 
             match name:
                 # TODO: _MESSAGE_TYPE_MAP support multiple name matching
-                case ".lq.FastTest.syncGame" | '.lq.FastTest.enterGame':
+                case ".lq.FastTest.syncGame" | ".lq.FastTest.enterGame":
                     for action in data["game_restore"]["actions"]:
                         _base = _MESSAGE_TYPE_MAP[f".lq.{action['name']}"]()  # HACK
                         _data = _parsedict(_base, base64.b64decode(action["data"]))
