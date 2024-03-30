@@ -137,7 +137,7 @@ class MessageProcessor:
 
     @data.setter
     def data(self, value: dict):
-        self.data = value
+        self.gam_msg.data = value
 
     @property
     def name(self) -> str:
