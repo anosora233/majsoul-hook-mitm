@@ -49,6 +49,7 @@ class KinHook(Hook):
                     mp.amend()
 
         @self.bind(GameMessageType.Response, ".lq.Lobby.leaveRoom")
+        @self.bind(GameMessageType.Response, ".lq.FastTest.terminateGame")
         def _(mp: MessageProcessor):
             if skin := self.skin_map.get(mp.member):
                 skin.room_data = None  # NOTE: Purge room_data
