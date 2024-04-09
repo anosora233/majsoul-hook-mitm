@@ -70,36 +70,38 @@ def load_resource() -> tuple[str, ResourceManager]:
     rand_a: int = random.randint(0, int(1e9))
     rand_b: int = random.randint(0, int(1e9))
 
-    ver_url = f"{HOST}/version.json?randv={rand_a}{rand_b}"
-    response = requests.get(ver_url, proxies={"https": None})
-    response.raise_for_status()
-    version: str = response.json()["version"]
+    # use requests.Session() instead of open/close the connection multiple times.
+    with requests.Session() as s:
+        ver_url = f"{HOST}/version.json?randv={rand_a}{rand_b}"
+        response = s.get(ver_url, proxies={"https": None})
+        response.raise_for_status()
+        version: str = response.json()["version"]
 
-    res_url = f"{HOST}/resversion{version}.json"
-    response = requests.get(res_url, proxies={"https": None})
-    response.raise_for_status()
-    lqbin_version: dict = response.json()["res"][LQBIN_RKEY]["prefix"]
+        res_url = f"{HOST}/resversion{version}.json"
+        response = s.get(res_url, proxies={"https": None})
+        response.raise_for_status()
+        lqbin_version: dict = response.json()["res"][LQBIN_RKEY]["prefix"]
 
-    # Using Cache
-    if LQBIN_VTXT.exists():
-        with LQBIN_VTXT.open("r") as txt:
-            if txt.read() == lqbin_version:
-                with LQBIN_PATH.open("rb") as qbin:
-                    return lqbin_version, ResourceManager(
-                        qbin.read(), config.base.no_cheering_emotes
-                    ).build()
+        # Using Cache
+        if LQBIN_VTXT.exists():
+            with LQBIN_VTXT.open("r") as txt:
+                if txt.read() == lqbin_version:
+                    with LQBIN_PATH.open("rb") as qbin:
+                        return lqbin_version, ResourceManager(
+                            qbin.read(), config.base.no_cheering_emotes
+                        ).build()
 
-    qbin_url = f"{HOST}/{lqbin_version}/{LQBIN_RKEY}"
-    response = requests.get(qbin_url, proxies={"https": None})
-    response.raise_for_status()
+        qbin_url = f"{HOST}/{lqbin_version}/{LQBIN_RKEY}"
+        response = s.get(qbin_url, proxies={"https": None})
+        response.raise_for_status()
 
-    with LQBIN_PATH.open("wb") as qbin:
-        qbin.write(response.content)
-    with LQBIN_VTXT.open("w") as txt:
-        txt.write(lqbin_version)
-    return lqbin_version, ResourceManager(
-        response.content, config.base.no_cheering_emotes
-    ).build()
+        with LQBIN_PATH.open("wb") as qbin:
+            qbin.write(response.content)
+        with LQBIN_VTXT.open("w") as txt:
+            txt.write(lqbin_version)
+        return lqbin_version, ResourceManager(
+            response.content, config.base.no_cheering_emotes
+        ).build()
 
 
 if CONFIG_PATH.exists():
