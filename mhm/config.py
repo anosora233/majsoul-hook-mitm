@@ -1,21 +1,11 @@
 import json
-import random
 from dataclasses import asdict, dataclass, field, fields, is_dataclass
 from pathlib import Path
 
-import requests
-
-from .resource import ResourceManager
-
-HOST = "https://game.maj-soul.com/1"
 ROOT = Path(".")
 
 CONFIG_PATH = ROOT / "mhmp.json"
 PROXIN_PATH = ROOT / "proxinject/proxinjector-cli.exe"
-
-LQBIN_RKEY = "res/config/lqc.lqbin"
-LQBIN_VTXT = ROOT / "lqc.txt"
-LQBIN_PATH = ROOT / "lqc.lqbin"
 
 
 @dataclass
@@ -64,48 +54,6 @@ class Config:
         except (TypeError, KeyError):
             print("Configuration file is outdated, please delete it manually")
             raise
-
-
-def load_resource() -> tuple[str, ResourceManager]:
-    rand_a: int = random.randint(0, int(1e9))
-    rand_b: int = random.randint(0, int(1e9))
-
-    # use requests.Session() instead of open/close the connection multiple times.
-    with requests.Session() as s:
-        ver_url = f"{HOST}/version.json?randv={rand_a}{rand_b}"
-        response = s.get(ver_url, proxies={"https": None})
-        response.raise_for_status()
-        version: str = response.json()["version"]
-
-        res_url = f"{HOST}/resversion{version}.json"
-        response = s.get(res_url, proxies={"https": None}, stream=True)
-        response.raise_for_status()
-        lqbin_version: dict = response.json()["res"][LQBIN_RKEY]["prefix"]
-
-        # Using Cache
-        if LQBIN_VTXT.exists():
-            with LQBIN_VTXT.open("r") as txt:
-                if txt.read() == lqbin_version:
-                    with LQBIN_PATH.open("rb") as qbin:
-                        return lqbin_version, ResourceManager(
-                            qbin.read(), config.base.no_cheering_emotes
-                        ).build()
-
-        qbin_url = f"{HOST}/{lqbin_version}/{LQBIN_RKEY}"
-        response = s.get(qbin_url, proxies={"https": None}, stream=True)
-        response.raise_for_status()
-
-        with LQBIN_PATH.open("wb") as qbin:
-            for chunk in response.iter_content(chunk_size=8192):
-                qbin.write(chunk)
-        with LQBIN_VTXT.open("w") as txt:
-            txt.write(lqbin_version)
-        
-        # read the content from the file instead of using response.content
-        with LQBIN_PATH.open("rb") as qbin_file:
-            return lqbin_version, ResourceManager(
-                qbin_file.read(), config.base.no_cheering_emotes
-            ).build()
 
 
 if CONFIG_PATH.exists():
