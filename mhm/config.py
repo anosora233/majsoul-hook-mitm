@@ -100,9 +100,12 @@ def load_resource() -> tuple[str, ResourceManager]:
                 qbin.write(chunk)
         with LQBIN_VTXT.open("w") as txt:
             txt.write(lqbin_version)
-        return lqbin_version, ResourceManager(
-            response.content, config.base.no_cheering_emotes
-        ).build()
+        
+        # read the content from the file instead of using response.content
+        with LQBIN_PATH.open("rb") as qbin_file:
+            return lqbin_version, ResourceManager(
+                qbin_file.read(), config.base.no_cheering_emotes
+            ).build()
 
 
 if CONFIG_PATH.exists():
