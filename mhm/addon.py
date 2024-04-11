@@ -4,10 +4,10 @@ from typing import Literal
 
 from mitmproxy import ctx, http, websocket
 from mitmproxy.addons import view
+from rich.traceback import Traceback
 
-from . import console
-from .config import config
 from .protocol import GameMessage, GameMessageType, compose, parse
+from .tui import app
 
 _LOGIN_INFO_MESSAGES = [
     (GameMessageType.Response, ".lq.Lobby.login"),
@@ -48,22 +48,6 @@ def broadcast(
                 inject(f, content)
 
 
-# NOTE: previous `log` method
-def output(status: MessageStatus, tag: int | str, message: GameMessage):
-    output = [
-        f"[i][{StatusColor[status]}]{status}[/{StatusColor[status]}]",
-        f"[grey50]{tag}[/grey50]",
-        f"[cyan2]{message.kind.name}[/cyan2]",
-        f"[gold1]{message.name}[/gold1]",
-        f"[cyan3]{message.idx}[/cyan3]" if message.idx else "",
-    ]
-
-    console.log(" ".join(output))
-
-    if config.base.debug:  # HACK
-        console.log(f"-->> {message.data}")
-
-
 class GameAddon(view.View):
     def __init__(self, methods) -> None:
         super().__init__()
@@ -72,10 +56,10 @@ class GameAddon(view.View):
         self.methods = methods
 
     def websocket_start(self, flow: http.HTTPFlow):
-        console.log(" ".join(["[i][green]Connected", flow.id[:13]]))
+        app.add_note(" ".join(["[i][green]Connected", flow.id[:8]]))
 
     def websocket_end(self, flow: http.HTTPFlow):
-        console.log(" ".join(["[i][blue]Disconnected", flow.id[:13]]))
+        app.add_note(" ".join(["[i][blue]Disconnected", flow.id[:8]]))
 
     def websocket_message(self, flow: http.HTTPFlow):
         # NOTE: make type checker happy
@@ -85,40 +69,53 @@ class GameAddon(view.View):
             # NOTE: Flows are no longer saved into a dictionary
             wss_msg = flow.websocket.messages[-1]
             gam_msg = parse(flow.id, wss_msg.content)
-            msg_key = (gam_msg.kind, gam_msg.name)
+            mp = MessageProcessor(flow=flow, wss_msg=wss_msg, gam_msg=gam_msg)
         except Exception as e:
-            console.log(f"[i][red]{repr(e)} @ {flow.id[:13]}")
+            app.add_note(f"[i][red]{repr(e)} @ {flow.id[:8]}")
             return
 
         # HACK: Temporarily mark the LoBBY message
-        if msg_key in _LOGIN_INFO_MESSAGES:
+        if mp.key in _LOGIN_INFO_MESSAGES:
             channel: ChannelType = "LoBBY"
             account_id = gam_msg.data.get("account_id")
             flow.marked = account_id
             flow.metadata[ChannelType] = channel
         # HACK: Temporarily mark the MaTCH message
-        elif msg_key in _MATCH_INFO_MESSAGES:
+        elif mp.key in _MATCH_INFO_MESSAGES:
             channel: ChannelType = "MaTCH"
             account_id = gam_msg.data.get("account_id")
             flow.marked = account_id
             flow.metadata[ChannelType] = channel
 
-        mu = MessageProcessor(flow=flow, wss_msg=wss_msg, gam_msg=gam_msg)
+        # NOTE: Previous `log` method
+        def _pure(mp: MessageProcessor, tag: int | str):
+            subname = f"[{mp.data['name']}]" if mp.name == ".lq.ActionPrototype" else ""
+            idx = mp.idx if mp.idx else ""
+            status = mp.status
+            text = (
+                f"[i][{StatusColor[status]}]{status}[/{StatusColor[status]}]"
+                f" [grey50]{tag:<9}[/grey50]"
+                f" [cyan2]{mp.kind.name:<8}[/cyan2]"
+                f" [gold1]{mp.name}[/gold1]"
+                f" [cyan3]{idx}[/cyan3]"
+                f"[gold3]{subname}[/gold3]"
+            )
+            return text, mp.data
 
         # NOTE: Messages are only modified once the account_id is determined
-        if not mu.member:
-            output(mu.status, flow.id[:13], gam_msg)
+        if not mp.member:
+            app.add_message(*_pure(flow.id[:8], mp))
             return
 
         try:
-            for m in self.methods:
-                m(mu)
-            mu.apply()
+            for fn in self.methods:
+                fn(mp)
+            mp.apply()
         except Exception:
-            console.print_exception()
-            mu.drop()  # NOTE: Discard the message if fails
+            app.add_note(Traceback())
+            mp.drop()  # NOTE: Discard the message if fails
         finally:
-            output(mu.status, mu.member, gam_msg)
+            app.add_message(*_pure(mp, mp.member))
 
 
 @dataclass
@@ -166,6 +163,10 @@ class MessageProcessor:
     @property
     def kind(self) -> GameMessageType:
         return self.gam_msg.kind
+
+    @property
+    def idx(self) -> int:
+        return self.gam_msg.idx
 
     @property
     def key(self) -> tuple[GameMessageType, str]:

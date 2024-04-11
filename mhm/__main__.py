@@ -1,10 +1,8 @@
-import asyncio
-
-from . import console
 from .common import start_inject, start_proxy
 from .config import config, load_resource
 from .hook import Hook
 from .resource import ResourceManager
+from .tui import app
 
 
 # TODO: Plugins should be independent of this project and should be loaded from a folder
@@ -26,35 +24,23 @@ def create_hooks(resger: ResourceManager) -> list[Hook]:
 
 
 def main():
-    console.log(f"Debug: {config.base.debug}")
-    console.log("Load Resource")
-    with console.status("[magenta]Fetch LQC.LQBIN"):
-        qbin_version, resger = load_resource()
-    console.log(f"LQBin Version: [cyan3]{qbin_version}")
-    console.log(f"> {len(resger.item_rows):0>3} items")
-    console.log(f"> {len(resger.title_rows):0>3} titles")
-    console.log(f"> {len(resger.character_rows):0>3} characters")
+    app.add_note(f"Debug: {config.base.debug}")
+    app.add_note("Load Resource")
+    app.add_note("[magenta]Fetch LQC.LQBIN")
+    qbin_version, resger = load_resource()
+    app.add_note(f"LQBin Version: [cyan3]{qbin_version}")
+    app.add_note(f"> {len(resger.item_rows):0>3} items")
+    app.add_note(f"> {len(resger.title_rows):0>3} titles")
+    app.add_note(f"> {len(resger.character_rows):0>3} characters")
 
-    console.log("Init Hooks")
+    app.add_note("Init Hooks")
     hooks = create_hooks(resger)
     for h in hooks:
-        console.log(f"> [cyan3]{h.__class__.__name__}")
+        app.add_note(f"> [cyan3]{h.__class__.__name__}")
 
-    async def start():
-        tasks = set()
-        if config.mitmdump.args:
-            tasks.add(start_proxy([h.run for h in hooks]))
-            console.log(f"Start mitmdump @ {config.mitmdump.args.get('mode')}")
-        if config.proxinject.path:
-            tasks.add(start_inject())
-            console.log(f"Start proxinject @ {config.proxinject.args.get('set-proxy')}")
-        await asyncio.gather(*tasks)
-
-    try:
-        asyncio.run(start())
-    except KeyboardInterrupt:
-        pass
-
-
-if __name__ == "__main__":
-    main()
+    if config.mitmdump.args:
+        app.run_worker(start_proxy([h.run for h in hooks]))
+        app.add_note(f"[i]Start mitmdump @ {config.mitmdump.args.get('mode')}")
+    if config.proxinject.path:
+        app.run_worker(start_inject())
+        app.add_note(f"[i]Start proxinject @ {config.proxinject.args.get('set-proxy')}")

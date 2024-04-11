@@ -4,7 +4,7 @@ import requests
 from urllib3 import disable_warnings
 from urllib3.exceptions import InsecureRequestWarning
 
-from mhm import console
+from mhm.tui import app
 from mhm.addon import MessageProcessor
 from mhm.hook import Hook
 from mhm.protocol import GameMessageType
@@ -18,10 +18,10 @@ class DerHook(Hook):
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.settimeout(1)
         if sock.connect_ex(("127.0.0.1", 12121)) == 0:  # HACK
-            console.log("[green]Aider Detected")
+            app.add_note("[green]Aider Detected")
             self.open = True
         else:
-            console.log("[red]No Aider Detected")
+            app.add_note("[red]No Aider Detected")
             self.open = False
 
     def run(self, mp: MessageProcessor):
