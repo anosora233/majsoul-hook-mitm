@@ -1,10 +1,19 @@
+import random
 from collections import defaultdict
 from typing import Literal
 
+import requests
 from google.protobuf.json_format import MessageToDict
 from google.protobuf.message import Message
 
+from .config import ROOT, config
 from .proto import config_pb2, sheets_pb2
+
+HOST = "https://game.maj-soul.com/1"
+
+LQBIN_RKEY = "res/config/lqc.lqbin"
+LQBIN_VTXT = ROOT / "lqc.txt"
+LQBIN_PATH = ROOT / "lqc.lqbin"
 
 SheetNames = Literal[
     "item_definition_loading_image",
@@ -23,9 +32,8 @@ class ResourceManager:
     RENAME_SCROLL = 302013
     VIEW_CATEGORY = 5
 
-    def __init__(self, lqbin: bytes, no_cheering_emotes: bool) -> None:
-        self.no_cheering_emotes = no_cheering_emotes
-        self.sheets_table: dict[SheetNames, list] = defaultdict(list)
+    def __init__(self, lqbin: bytes, version: str) -> None:
+        sheets_table: dict[SheetNames, list] = defaultdict(list)
 
         config_table = config_pb2.ConfigTables()
         config_table.ParseFromString(lqbin)
@@ -48,9 +56,12 @@ class ResourceManager:
                         preserving_proto_field_name=True,
                     )  # IDEA: It seems that there is no need to convert msg into a dict
 
-                    self.sheets_table[klass_key].append(message_dict)
+                    sheets_table[klass_key].append(message_dict)
 
-    def build(self):
+        self.sheets_table = sheets_table
+        self.version = version
+
+    def build(self) -> "ResourceManager":
         self.skin_map = defaultdict(list)
         for row in self.sheets_table["item_definition_skin"]:
             self.skin_map[row["character_id"]].append(row["id"])
@@ -59,7 +70,7 @@ class ResourceManager:
         self.extra_emoji_map = defaultdict(list)
         for row in self.sheets_table["character_emoji"]:
             self.extra_emoji_map[row["charid"]].append(row["sub_id"])
-        if self.no_cheering_emotes:
+        if config.base.no_cheering_emotes:
             exclude = set(range(13, 19))
             for emotes in self.extra_emoji_map.values():
                 emotes[:] = sorted(set(emotes) - exclude)
@@ -93,3 +104,37 @@ class ResourceManager:
 
         self.title_rows = [m["id"] for m in self.sheets_table["item_definition_title"]]
         return self
+
+
+def load_resource() -> ResourceManager:
+    rand_a: int = random.randint(0, int(1e9))
+    rand_b: int = random.randint(0, int(1e9))
+
+    # use requests.Session() instead of open/close the connection multiple times.
+    with requests.Session() as s:
+        ver_url = f"{HOST}/version.json?randv={rand_a}{rand_b}"
+        response = s.get(ver_url, proxies={"https": None})
+        response.raise_for_status()
+        version: str = response.json()["version"]
+
+        res_url = f"{HOST}/resversion{version}.json"
+        response = s.get(res_url, proxies={"https": None}, stream=True)
+        response.raise_for_status()
+        bin_version: str = response.json()["res"][LQBIN_RKEY]["prefix"]
+
+        # Using Cache
+        if LQBIN_VTXT.exists():
+            with LQBIN_VTXT.open("r") as txt:
+                if txt.read() == bin_version:
+                    with LQBIN_PATH.open("rb") as bin:
+                        return ResourceManager(bin.read(), bin_version).build()
+
+        bin_url = f"{HOST}/{bin_version}/{LQBIN_RKEY}"
+        response = s.get(bin_url, proxies={"https": None}, stream=True)
+        response.raise_for_status()
+
+        content = b"".join(response.iter_content(chunk_size=8192))
+        with LQBIN_PATH.open("wb") as bin, LQBIN_VTXT.open("w") as txt:
+            bin.write(content)
+            txt.write(bin_version)
+        return ResourceManager(content, bin_version).build()

@@ -2,9 +2,9 @@ import asyncio
 
 from . import console
 from .common import start_inject, start_proxy
-from .config import config, load_resource
+from .config import config
 from .hook import Hook
-from .resource import ResourceManager
+from .resource import ResourceManager, load_resource
 
 
 # TODO: Plugins should be independent of this project and should be loaded from a folder
@@ -29,8 +29,8 @@ def main():
     console.log(f"Debug: {config.base.debug}")
     console.log("Load Resource")
     with console.status("[magenta]Fetch LQC.LQBIN"):
-        qbin_version, resger = load_resource()
-    console.log(f"LQBin Version: [cyan3]{qbin_version}")
+        resger = load_resource()
+    console.log(f"LQBin Version: [cyan3]{resger.version}")
     console.log(f"> {len(resger.item_rows):0>3} items")
     console.log(f"> {len(resger.title_rows):0>3} titles")
     console.log(f"> {len(resger.character_rows):0>3} characters")
