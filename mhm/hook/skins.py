@@ -103,6 +103,9 @@ class KinHook(Hook):
         def _(mp: MessageProcessor):
             # 进入对局时
             if skin := self.skin_map.get(mp.member):
+                if config.base.yongchang_mode:
+                    mp.data["game_config"]["mode"]["detail_rule"]["yongchang_mode"] = 1
+
                 skin.seat_list = mp.data["seat_list"]
 
                 if game := self.gamp_map.get(skin.game_uuid):

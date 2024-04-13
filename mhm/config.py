@@ -16,6 +16,7 @@ class Config:
         aider: bool = False
         chest: bool = False
         debug: bool = False
+        yongchang_mode: bool = False
         random_star_char: bool = False
         no_cheering_emotes: bool = True
 
