@@ -25,22 +25,22 @@ class DerHook(Hook):
             self.open = False
 
     def run(self, mp: MessageProcessor):
-        if self.open and mp.kind != GameMessageType.Request:
+        if self.open and mp.msg.kind != GameMessageType.Request:
             self.send(mp)
 
     def send(self, mp: MessageProcessor):
         # TODO: modify the helper source code to be compatible with SHA256
-        if mp.name == ".lq.ActionPrototype":
-            if mp.data["name"] == "ActionNewRound":
-                mp.data["data"]["md5"] = mp.data["data"]["sha256"][:32]
-            send_msg = mp.data["data"]
-        elif mp.name == ".lq.FastTest.syncGame":
-            for action in mp.data["game_restore"]["actions"]:
+        if mp.msg.name == ".lq.ActionPrototype":
+            if mp.msg.data["name"] == "ActionNewRound":
+                mp.msg.data["data"]["md5"] = mp.msg.data["data"]["sha256"][:32]
+            send_msg = mp.msg.data["data"]
+        elif mp.msg.name == ".lq.FastTest.syncGame":
+            for action in mp.msg.data["game_restore"]["actions"]:
                 if action["name"] == "ActionNewRound":
                     action["data"]["md5"] = action["data"]["sha256"][:32]
-            send_msg = {"sync_game_actions": mp.data["game_restore"]["actions"]}
+            send_msg = {"sync_game_actions": mp.msg.data["game_restore"]["actions"]}
         else:
-            send_msg = mp.data
+            send_msg = mp.msg.data
         # TODO: This URL should be included in the configuration file
         # TODO: It's preferable to perform POST requests asynchronously
         #       to avoid blocking and unnecessary checks

@@ -9,8 +9,8 @@ class Hook:
         self.mapping = {}
 
     def run(self, mp: MessageProcessor):
-        if mp.key in self.mapping:
-            self.mapping[mp.key](mp)
+        if mp.msg.key in self.mapping:
+            self.mapping[mp.msg.key](mp)
 
     def bind(self, kind: GameMessageType, name: str):
         def decorator(func):

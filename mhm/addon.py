@@ -67,45 +67,46 @@ class GameAddon(view.View):
 
         try:
             # NOTE: Flows are no longer saved into a dictionary
-            wss_msg = flow.websocket.messages[-1]
-            gam_msg = parse(flow.id, wss_msg.content)
-            mp = MessageProcessor(flow=flow, wss_msg=wss_msg, gam_msg=gam_msg)
+            wss = flow.websocket.messages[-1]
+            msg = parse(flow.id, wss.content)
+            mp = MessageProcessor(flow=flow, wss=wss, msg=msg)
         except Exception as e:
-            console.log(f"[i][red]{repr(e)} @ {flow.id[:8]}")
+            console.log(f"[i][orange1]! {flow.id[:8]:>9} {repr(e)}")
             return
 
         # HACK: Temporarily mark the LoBBY message
-        if mp.key in _LOGIN_INFO_MESSAGES:
+        if msg.key in _LOGIN_INFO_MESSAGES:
             channel: ChannelType = "LoBBY"
-            account_id = gam_msg.data.get("account_id")
+            account_id = msg.data.get("account_id")
             flow.marked = account_id
             flow.metadata[ChannelType] = channel
         # HACK: Temporarily mark the MaTCH message
-        elif mp.key in _MATCH_INFO_MESSAGES:
+        elif msg.key in _MATCH_INFO_MESSAGES:
             channel: ChannelType = "MaTCH"
-            account_id = gam_msg.data.get("account_id")
+            account_id = msg.data.get("account_id")
             flow.marked = account_id
             flow.metadata[ChannelType] = channel
 
         # NOTE: previous `log` method
         def summary(mp: MessageProcessor):
-            subname = f"[{mp.data['name']}]" if mp.name == ".lq.ActionPrototype" else ""
-            tag = mp.member if mp.member else mp.flow.id[:8]
-            idx = mp.idx if mp.idx else ""
-            status = mp.status
+            msg = mp.msg
+            snm = f"[{msg.data['name']}]" if msg.name == ".lq.ActionPrototype" else ""
+            tag = mp.member
+            idx = msg.idx if msg.idx else ""
+            sts = mp.status
             console.log(
-                f"[i][{StatusColor[status]}]{status}[/{StatusColor[status]}]"
+                f"[i][{StatusColor[sts]}]{sts}[/{StatusColor[sts]}]"
                 f" [grey50]{tag:>9}[/grey50]"
-                f" [cyan2]{mp.kind.name:<8}[/cyan2]"
-                f" [gold1]{mp.name}[/gold1]"
+                f" [cyan2]{msg.kind.name:<8}[/cyan2]"
+                f" [gold1]{msg.name}[/gold1]"
                 f" [cyan3]{idx}[/cyan3]"
-                f"[gold3]{subname}[/gold3]"
+                f"[gold3]{snm}[/gold3]"
             )
             if config.base.debug:  # HACK
-                console.log(f"-->> {mp.data}")
+                console.log(f"-->> {msg.data}")
 
         # NOTE: Messages are only modified once the account_id is determined
-        if not mp.member:
+        if not isinstance(mp.member, int):
             summary(mp)
             return
 
@@ -124,17 +125,17 @@ class GameAddon(view.View):
 class MessageProcessor:
     flow: http.HTTPFlow
 
-    wss_msg: websocket.WebSocketMessage
+    wss: websocket.WebSocketMessage
 
-    gam_msg: GameMessage
+    msg: GameMessage
 
     modified: bool = False
 
     @property
     def status(self) -> MessageStatus:
-        if self.wss_msg.dropped:
+        if self.wss.dropped:
             return "D"
-        elif self.wss_msg.injected:
+        elif self.wss.injected:
             return "I"
         elif self.modified:
             return "M"
@@ -150,33 +151,12 @@ class MessageProcessor:
     def sequence(self, value: int):  # HACK: Regularly the value should be zero
         self.flow.metadata["sequence"] = value
 
-    @property
-    def data(self) -> dict:
-        return self.gam_msg.data
-
-    @data.setter
-    def data(self, value: dict):
-        self.gam_msg.data = value
-
-    @property
-    def name(self) -> str:
-        return self.gam_msg.name
-
-    @property
-    def kind(self) -> GameMessageType:
-        return self.gam_msg.kind
-
-    @property
-    def idx(self) -> int:
-        return self.gam_msg.idx
-
-    @property
-    def key(self) -> tuple[GameMessageType, str]:
-        return self.kind, self.name
-
-    @property  # NOTE: the alias of account_id
-    def member(self) -> int:
-        return self.flow.marked
+    @property  # NOTE: the alias of account_id | the short id of flow
+    def member(self) -> int | str:
+        if self.flow.marked:
+            return self.flow.marked
+        else:
+            return self.flow.id[:8]
 
     def amend(self):
         # NOTE: After calling `amend`, method `apply` should be called.
@@ -184,12 +164,12 @@ class MessageProcessor:
 
     def drop(self):
         # NOTE: Now the 'dropped' status is determined by the original websocket message
-        self.wss_msg.drop()
+        self.wss.drop()
 
     def apply(self):
         # NOTE: It's best to `compose(message)` after all hooks are completed
         if self.modified:
-            self.wss_msg.content = compose(self.gam_msg)
+            self.wss.content = compose(self.msg)
 
     def request(self, data: dict, id: int):
         # SECURITY: Currently uncertain about the security of injecting into the server
@@ -205,8 +185,8 @@ class MessageProcessor:
 
         response = GameMessage(
             data=data,
-            idx=self.gam_msg.idx,
-            name=self.gam_msg.name,
+            idx=self.msg.idx,
+            name=self.msg.name,
             kind=GameMessageType.Response,
         )
 

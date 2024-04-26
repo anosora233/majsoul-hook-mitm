@@ -19,13 +19,13 @@ class EstHook(Hook):
         @self.bind(GameMessageType.Response, ".lq.Lobby.oauth2Login")
         @self.bind(GameMessageType.Response, ".lq.Lobby.fetchAccountInfo")
         def _(mp: MessageProcessor):
-            mp.data["account"]["platform_diamond"] = [{"id": 100001, "count": 66666}]
+            mp.msg.data["account"]["platform_diamond"] = [{"id": 100001, "count": 66666}]  # fmt: skip # noqa
             mp.amend()
 
         @self.bind(GameMessageType.Request, ".lq.Lobby.openChest")
         def _(mp: MessageProcessor):
-            chest = resger.chest_map[mp.data["chest_id"]]
-            count = mp.data["count"]
+            chest = resger.chest_map[mp.msg.data["chest_id"]]
+            count = mp.msg.data["count"]
             # HACK: Currently UP and NORMAL chests are mixed
             mp.response(
                 {

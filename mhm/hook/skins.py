@@ -29,8 +29,8 @@ class KinHook(Hook):
         @self.bind(GameMessageType.Response, ".lq.Lobby.emailLogin")
         @self.bind(GameMessageType.Response, ".lq.Lobby.oauth2Login")  # login
         def _(mp: MessageProcessor):
-            self.skin_map[mp.member] = Skin(self.path, mp.member, mp.data, resger)
-            self.skin_map[mp.member].update_player(mp.data.get("account"))
+            self.skin_map[mp.member] = Skin(self.path, mp.member, mp.msg.data, resger)
+            self.skin_map[mp.member].update_player(mp.msg.data.get("account"))
             mp.amend()
 
         @self.bind(GameMessageType.Response, ".lq.Lobby.joinRoom")
@@ -38,12 +38,12 @@ class KinHook(Hook):
         @self.bind(GameMessageType.Response, ".lq.Lobby.createRoom")  # room
         def _(mp: MessageProcessor):
             # 在加入、获取、创建房间时修改己方头衔、立绘、角色
-            if "room" not in mp.data:
+            if "room" not in mp.msg.data:
                 return True
-            if mp.name != ".lq.Lobby.fetchRoom":  # NOTE: Exclude `fetchRoom`
+            if mp.msg.name != ".lq.Lobby.fetchRoom":  # NOTE: Exclude `fetchRoom`
                 # NOTE: Init `NotifyRoomPlayer***` notify sequence id
-                mp.sequence = mp.data["room"]["seq"]
-            for person in mp.data["room"]["persons"]:
+                mp.sequence = mp.msg.data["room"]["seq"]
+            for person in mp.msg.data["room"]["persons"]:
                 if skin := self.skin_map.get(person["account_id"]):
                     skin.update_player(person)
                     mp.amend()
@@ -58,45 +58,45 @@ class KinHook(Hook):
         def _(mp: MessageProcessor):
             # 替换信息
             if skin := self.skin_map.get(mp.member):
-                mp.data["bag_info"]["bag"]["items"].extend(resger.bag_rows)
-                mp.data["title_list"]["title_list"] = resger.title_rows
-                mp.data["all_common_views"] = skin.commonviews
-                mp.data["character_info"] = skin.characterinfo
+                mp.msg.data["bag_info"]["bag"]["items"].extend(resger.bag_rows)
+                mp.msg.data["title_list"]["title_list"] = resger.title_rows
+                mp.msg.data["all_common_views"] = skin.commonviews
+                mp.msg.data["character_info"] = skin.characterinfo
                 mp.amend()
 
         @self.bind(GameMessageType.Response, ".lq.Lobby.fetchBagInfo")
         def _(mp: MessageProcessor):
             # 添加物品
             if self.skin_map.get(mp.member):
-                mp.data["bag"]["items"].extend(resger.bag_rows)
+                mp.msg.data["bag"]["items"].extend(resger.bag_rows)
                 mp.amend()
 
         @self.bind(GameMessageType.Response, ".lq.Lobby.fetchTitleList")
         def _(mp: MessageProcessor):
             # 添加头衔
             if self.skin_map.get(mp.member):
-                mp.data["title_list"] = resger.title_rows
+                mp.msg.data["title_list"] = resger.title_rows
                 mp.amend()
 
         @self.bind(GameMessageType.Response, ".lq.Lobby.fetchAllCommonViews")
         def _(mp: MessageProcessor):
             # 装扮本地数据替换
             if skin := self.skin_map.get(mp.member):
-                mp.data = skin.commonviews
+                mp.msg.data = skin.commonviews
                 mp.amend()
 
         @self.bind(GameMessageType.Response, ".lq.Lobby.fetchCharacterInfo")
         def _(mp: MessageProcessor):
             # 全角色数据替换
             if skin := self.skin_map.get(mp.member):
-                mp.data = skin.characterinfo
+                mp.msg.data = skin.characterinfo
                 mp.amend()
 
         @self.bind(GameMessageType.Response, ".lq.Lobby.fetchAccountInfo")
         def _(mp: MessageProcessor):
             # 修改状态面板立绘、头衔
-            if skin := self.skin_map.get(mp.data["account"]["account_id"]):
-                skin.update_player(mp.data["account"], "loading_image")
+            if skin := self.skin_map.get(mp.msg.data["account"]["account_id"]):
+                skin.update_player(mp.msg.data["account"], "loading_image")
                 mp.amend()
 
         @self.bind(GameMessageType.Response, ".lq.FastTest.authGame")
@@ -104,14 +104,16 @@ class KinHook(Hook):
             # 进入对局时
             if skin := self.skin_map.get(mp.member):
                 if config.base.yongchang_mode:
-                    mp.data["game_config"]["mode"]["detail_rule"]["yongchang_mode"] = 1
+                    mp.msg.data["game_config"]["mode"]["detail_rule"][
+                        "yongchang_mode"
+                    ] = 1
 
-                skin.seat_list = mp.data["seat_list"]
+                skin.seat_list = mp.msg.data["seat_list"]
 
                 if game := self.gamp_map.get(skin.game_uuid):
-                    mp.data["players"] = game
+                    mp.msg.data["players"] = game
                 else:
-                    for player in mp.data["players"]:
+                    for player in mp.msg.data["players"]:
                         if _skin := self.skin_map.get(player["account_id"]):
                             # 替换对局头像，角色、头衔
                             _skin.update_player(player)
@@ -122,7 +124,7 @@ class KinHook(Hook):
                             player["character"].update(
                                 {"level": 5, "exp": 1, "is_upgraded": True}
                             )
-                    self.gamp_map[skin.game_uuid] = mp.data["players"]
+                    self.gamp_map[skin.game_uuid] = mp.msg.data["players"]
                 mp.amend()
 
         # Request
@@ -131,12 +133,12 @@ class KinHook(Hook):
         def _(mp: MessageProcessor):
             # 记录当前对局 UUID
             if skin := self.skin_map.get(mp.member):
-                skin.game_uuid = mp.data["game_uuid"]
+                skin.game_uuid = mp.msg.data["game_uuid"]
 
         @self.bind(GameMessageType.Request, ".lq.FastTest.broadcastInGame")
         def _(mp: MessageProcessor):
             # 发送未持有的表情时
-            emo = json.loads(mp.data["content"])["emo"]
+            emo = json.loads(mp.msg.data["content"])["emo"]
             if emo > 8 and (skin := self.skin_map.get(mp.member)):
                 seat = skin.seat_list.index(mp.member)
                 mp.broadcast(
@@ -151,7 +153,7 @@ class KinHook(Hook):
         def _(mp: MessageProcessor):
             # 修改主角色时
             if skin := self.skin_map.get(mp.member):
-                skin.main_character_id = mp.data["character_id"]
+                skin.main_character_id = mp.msg.data["character_id"]
                 skin.save()
                 mp.response()
 
@@ -159,8 +161,8 @@ class KinHook(Hook):
         def _(mp: MessageProcessor):
             # 修改角色皮肤时
             if skin := self.skin_map.get(mp.member):
-                character = skin.character_of(mp.data["character_id"])
-                character["skin"] = mp.data["skin"]
+                character = skin.character_of(mp.msg.data["character_id"])
+                character["skin"] = mp.msg.data["skin"]
                 skin.save()
                 mp.notify(
                     name=".lq.NotifyAccountUpdate",
@@ -180,7 +182,7 @@ class KinHook(Hook):
         def _(mp: MessageProcessor):
             # 修改星标角色时
             if skin := self.skin_map.get(mp.member):
-                skin.characterinfo["character_sort"] = mp.data["sort"]
+                skin.characterinfo["character_sort"] = mp.msg.data["sort"]
                 skin.save()
                 mp.response()
 
@@ -188,7 +190,7 @@ class KinHook(Hook):
         def _(mp: MessageProcessor):
             # 选择头衔时
             if skin := self.skin_map.get(mp.member):
-                skin.title = mp.data["title"]
+                skin.title = mp.msg.data["title"]
                 skin.save()
                 mp.response()
 
@@ -196,7 +198,7 @@ class KinHook(Hook):
         def _(mp: MessageProcessor):
             # 修改昵称时
             if skin := self.skin_map.get(mp.member):
-                skin.nickname = mp.data["nickname"]
+                skin.nickname = mp.msg.data["nickname"]
                 skin.save()
                 mp.response()
 
@@ -204,7 +206,7 @@ class KinHook(Hook):
         def _(mp: MessageProcessor):
             # 选择加载图时
             if skin := self.skin_map.get(mp.member):
-                skin.loading_image = mp.data["images"]
+                skin.loading_image = mp.msg.data["images"]
                 skin.save()
                 mp.response()
 
@@ -212,7 +214,7 @@ class KinHook(Hook):
         def _(mp: MessageProcessor):
             # 选择装扮时
             if skin := self.skin_map.get(mp.member):
-                skin.use = mp.data["index"]
+                skin.use = mp.msg.data["index"]
                 skin.save()
                 mp.response()
 
@@ -220,8 +222,8 @@ class KinHook(Hook):
         def _(mp: MessageProcessor):
             # 修改装扮时
             if skin := self.skin_map.get(mp.member):
-                sIndex = mp.data["save_index"]
-                skin.commonviews["views"][sIndex]["values"] = mp.data["views"]
+                sIndex = mp.msg.data["save_index"]
+                skin.commonviews["views"][sIndex]["values"] = mp.msg.data["views"]
                 skin.save()
                 mp.response()
 
@@ -229,9 +231,9 @@ class KinHook(Hook):
         def _(mp: MessageProcessor):
             # 隐藏角色时
             if skin := self.skin_map.get(mp.member):
-                skin.characterinfo["hidden_characters"] = mp.data["chara_list"]
+                skin.characterinfo["hidden_characters"] = mp.msg.data["chara_list"]
                 skin.save()
-                mp.response({"hidden_characters": mp.data["chara_list"]})
+                mp.response({"hidden_characters": mp.msg.data["chara_list"]})
 
         @self.bind(GameMessageType.Request, ".lq.Lobby.addFinishedEnding")
         def _(mp: MessageProcessor):
@@ -257,26 +259,26 @@ class KinHook(Hook):
         @self.bind(GameMessageType.Notify, ".lq.NotifyRoomPlayerDressing")
         def _(mp: MessageProcessor):  # HACK: Replace room message sequence id
             if self.skin_map.get(mp.member):
-                mp.data["seq"] = mp.sequence
+                mp.msg.data["seq"] = mp.sequence
                 mp.amend()
 
         @self.bind(GameMessageType.Notify, ".lq.NotifyRoomPlayerUpdate")
         def _(mp: MessageProcessor):
-            if mp.data["player_list"]:  # HACK: Replace message sequence idF
-                mp.data["seq"] = mp.sequence
+            if mp.msg.data["player_list"]:  # HACK: Replace message sequence idF
+                mp.msg.data["seq"] = mp.sequence
                 mp.amend()
             # 房间中添加、减少玩家时修改立绘、头衔
-            for player in mp.data["player_list"]:
+            for player in mp.msg.data["player_list"]:
                 if skin := self.skin_map.get(player["account_id"]):
                     skin.update_player(player)
-                    skin.room_data = mp.data
+                    skin.room_data = mp.msg.data
                     mp.amend()
 
         @self.bind(GameMessageType.Notify, ".lq.NotifyGameFinishRewardV2")
         def _(mp: MessageProcessor):
             # 终局结算时，不播放羁绊动画
             if self.skin_map.get(mp.member):
-                mp.data["main_character"] = {"exp": 1, "add": 0, "level": 5}
+                mp.msg.data["main_character"] = {"exp": 1, "add": 0, "level": 5}
                 mp.amend()
 
 
@@ -329,8 +331,8 @@ class Skin:
     @property
     def random_star_character_and_skin(self) -> tuple[dict, int]:
         if self.characterinfo["character_sort"]:
-            cIndex = random.choice(self.characterinfo["character_sort"])
-            character = self.character_of(cIndex)
+            index = random.choice(self.characterinfo["character_sort"])
+            character = self.character_of(index)
         else:
             character = self.character
         return character, character.get("skin")

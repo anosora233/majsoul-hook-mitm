@@ -42,6 +42,10 @@ class GameMessage:
     kind: GameMessageType
     base: Message | None = None
 
+    @property
+    def key(self) -> tuple[GameMessageType, str]:
+        return self.kind, self.name
+
     def asdict(self) -> dict:
         return asdict(self)
 
