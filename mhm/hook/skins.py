@@ -40,13 +40,16 @@ class KinHook(Hook):
             # 在加入、获取、创建房间时修改己方头衔、立绘、角色
             if "room" not in mp.msg.data:
                 return True
-            if mp.msg.name != ".lq.Lobby.fetchRoom":  # NOTE: Exclude `fetchRoom`
-                # NOTE: Init `NotifyRoomPlayer***` notify sequence id
-                mp.sequence = mp.msg.data["room"]["seq"]
             for person in mp.msg.data["room"]["persons"]:
                 if skin := self.skin_map.get(person["account_id"]):
                     skin.update_player(person)
                     mp.amend()
+
+        @self.bind(GameMessageType.Response, ".lq.Lobby.joinRoom")
+        @self.bind(GameMessageType.Response, ".lq.Lobby.createRoom")
+        def _(mp: MessageProcessor):  # NOTE: Init `NotifyRoomPlayer?` sequence id
+            if skin := self.skin_map.get(mp.member):
+                skin.reset_sequence(mp.msg.data["room"]["seq"])
 
         @self.bind(GameMessageType.Response, ".lq.Lobby.leaveRoom")
         @self.bind(GameMessageType.Response, ".lq.FastTest.terminateGame")
@@ -120,6 +123,7 @@ class KinHook(Hook):
                             if config.base.random_star_char:
                                 char_and_skin = skin.random_star_character_and_skin
                                 player["character"], player["avatar_id"] = char_and_skin
+                        else:
                             # 其他玩家报菜名，对机器人无效
                             player["character"].update(
                                 {"level": 5, "exp": 1, "is_upgraded": True}
@@ -256,17 +260,15 @@ class KinHook(Hook):
         # Notify
 
         @self.bind(GameMessageType.Notify, ".lq.NotifyRoomPlayerReady")
+        @self.bind(GameMessageType.Notify, ".lq.NotifyRoomPlayerUpdate")
         @self.bind(GameMessageType.Notify, ".lq.NotifyRoomPlayerDressing")
         def _(mp: MessageProcessor):  # HACK: Replace room message sequence id
-            if self.skin_map.get(mp.member):
-                mp.msg.data["seq"] = mp.sequence
+            if skin := self.skin_map.get(mp.member):
+                mp.msg.data["seq"] = skin.query_sequence()
                 mp.amend()
 
         @self.bind(GameMessageType.Notify, ".lq.NotifyRoomPlayerUpdate")
         def _(mp: MessageProcessor):
-            if mp.msg.data["player_list"]:  # HACK: Replace message sequence idF
-                mp.msg.data["seq"] = mp.sequence
-                mp.amend()
             # 房间中添加、减少玩家时修改立绘、头衔
             for player in mp.msg.data["player_list"]:
                 if skin := self.skin_map.get(player["account_id"]):
@@ -353,6 +355,7 @@ class Skin:
         self.loading_image: list = None
 
         # temp attributes
+        self.sequence: int = 0
         self.room_data: dict = None
         self.seat_list: list = None
         self.game_uuid: str = None
@@ -363,6 +366,13 @@ class Skin:
             self.load(resger)
         else:
             self.init(resger)
+
+    def query_sequence(self) -> int:
+        self.sequence += 1  # NOTE:  `NotifyRoomPlayer?` message sequence id
+        return self.sequence
+
+    def reset_sequence(self, value=0):  # NOTE: Call when creating or joining a room
+        self.sequence = value  # HACK: Regularly the value should be zero
 
     def character_of(self, charid: int) -> dict:
         for character in self.characterinfo["characters"]:

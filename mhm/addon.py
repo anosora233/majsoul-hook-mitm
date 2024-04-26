@@ -111,8 +111,7 @@ class GameAddon(view.View):
             return
 
         try:
-            for fn in self.methods:
-                fn(mp)
+            [fn(mp) for fn in self.methods]
             mp.apply()
         except Exception:
             console.print_exception()
@@ -141,15 +140,6 @@ class MessageProcessor:
             return "M"
         else:
             return "O"
-
-    @property  # NOTE: Flow internal `NotifyRoomPlayer***` message sequence id
-    def sequence(self) -> int:  # HACK
-        self.flow.metadata["sequence"] += 1
-        return self.flow.metadata["sequence"]
-
-    @sequence.setter  # NOTE: Call when creating or joining a room
-    def sequence(self, value: int):  # HACK: Regularly the value should be zero
-        self.flow.metadata["sequence"] = value
 
     @property  # NOTE: the alias of account_id | the short id of flow
     def member(self) -> int | str:
