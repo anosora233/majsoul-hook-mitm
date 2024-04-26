@@ -15,6 +15,7 @@ exe = EXE(
     pyz,
     a.scripts,
     [],
+    exclude_binaries=True,
     name=tool,
     console=True,
     icon="mhmp.ico",
