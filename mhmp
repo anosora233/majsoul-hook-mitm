@@ -1,3 +1,10 @@
-from mhm.__main__ import main
+try:
+    from mhm.__main__ import main
 
-main()
+    main()
+except Exception:
+    from rich.console import Console
+
+    Console().print_exception(), input()
+except KeyboardInterrupt:
+    pass
