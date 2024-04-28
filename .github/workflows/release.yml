@@ -18,6 +18,11 @@ jobs:
         with:
           python-version: 3.12
 
+      - name: Install UPX
+        uses: crazy-max/ghaction-upx@v3
+        with:
+          install-only: true
+
       - name: Pack mhmp
         run: |
           python -m pip install .[pack]

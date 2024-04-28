@@ -16,6 +16,7 @@ exe = EXE(
     a.scripts,
     [],
     exclude_binaries=True,
+    upx=True,
     name=tool,
     console=True,
     icon="mhmp.ico",
@@ -25,5 +26,6 @@ coll = COLLECT(
     a.binaries,
     a.zipfiles,
     a.datas,
+    upx=True,
     name=tool,
 )
