@@ -1,4 +1,0 @@
-﻿mitmproxy>=9.0.1
-protobuf
-requests
-rich

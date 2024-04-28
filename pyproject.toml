@@ -1,3 +1,28 @@
 [tool.ruff]
 exclude = ['*_pb2.py']
 select = ["E", "F", "I", "W", "C", "B", "UP"]
+
+[tool.poetry]
+name = "mhm"
+version = "0.3.7"
+description = "A majsoul message hook based on mitmproxy."
+authors = ["anosora233 <86921203+anosora233@users.noreply.github.com>"]
+license = "{file=\"LICENSE\"}"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+rich = "^13.7.1"
+protobuf = "^5.26.1"
+requests = "^2.31.0"
+mitmproxy = "^10.3.0"
+
+# optional dependencies
+pyinstaller = { version = "^6.6.0", optional = true }
+
+[tool.poetry.extras]
+pack = ["pyinstaller"]
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

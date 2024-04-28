@@ -42,7 +42,7 @@ python -m pip config set global.index-url https://mirror.nju.edu.cn/pypi/web/sim
 安装依赖
 
 ```bash
-python -m pip install -r requirements.txt
+python -m pip install .
 ```
 
 启动 mhm
