@@ -1,10 +1,11 @@
-import json
 from dataclasses import asdict, dataclass, field, fields, is_dataclass
 from pathlib import Path
 
+import toml
+
 ROOT = Path(".")
 
-CONFIG_PATH = ROOT / "mhmp.json"
+CONFIG_PATH = ROOT / "mhmp.toml"
 PROXIN_PATH = ROOT / "proxinject/proxinjector-cli.exe"
 
 
@@ -59,8 +60,8 @@ class Config:
 
 if CONFIG_PATH.exists():
     with CONFIG_PATH.open("r", encoding="utf-8") as f:
-        config = Config.fromdict(json.load(f))
+        config = Config.fromdict(toml.load(f))
 else:
     config = Config()
 with CONFIG_PATH.open("w", encoding="utf-8") as f:
-    json.dump(asdict(config), f, indent=2, ensure_ascii=False)
+    toml.dump(asdict(config), f)

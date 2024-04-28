@@ -17,6 +17,7 @@ __pycache__
 .idea/
 .eggs/
 log/
+venv/
 embed/
 common/
 account/
@@ -24,4 +25,5 @@ proxinject/
 /*.lnk
 /*.txt
 /*.json
+/*.toml
 /*.lqbin
