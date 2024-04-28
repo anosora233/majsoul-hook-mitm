@@ -52,7 +52,7 @@ class ResourceManager:
 
                     message_dict = MessageToDict(
                         message,
-                        including_default_value_fields=True,
+                        always_print_fields_with_no_presence=True,
                         preserving_proto_field_name=True,
                     )  # IDEA: It seems that there is no need to convert msg into a dict
 
