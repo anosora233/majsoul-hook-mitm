@@ -23,6 +23,7 @@ SheetNames = Literal[
     "item_definition_item",
     "character_emoji",
     "chest_preview",
+    "spot_rewards",
 ]
 # NOTE: Message names in `SheetNames` will be resolved,
 # while unspecified messages will not be resolved to achieve optimal compatibility
@@ -83,7 +84,7 @@ class ResourceManager:
                 "level": 5,
                 "exp": 1,
                 "is_upgraded": True,
-                "rewarded_level": [],
+                "rewarded_level": [1, 2, 3, 4, 5],
                 "views": [],
             }
             for m in self.sheets_table["item_definition_character"]
@@ -103,6 +104,7 @@ class ResourceManager:
             self.chest_map[row["chest_id"]][row["type"]].append(row["item_id"])
 
         self.title_rows = [m["id"] for m in self.sheets_table["item_definition_title"]]
+        self.spot_rewards = [m["id"] for m in self.sheets_table["spot_rewards"]]
         return self
 
 

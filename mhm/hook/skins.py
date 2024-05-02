@@ -426,9 +426,9 @@ class Skin:
             "main_character_id": 200001,
             "send_gift_limit": 2,
             "character_sort": [],
-            "finished_endings": [],
+            "finished_endings": resger.spot_rewards,
             "hidden_characters": [],
-            "rewarded_endings": [],
+            "rewarded_endings": resger.spot_rewards,
             "send_gift_count": 0,
         }
 
@@ -443,6 +443,7 @@ class Skin:
 
         for m in characters:
             m["extra_emoji"] = resger.extra_emoji_map[m["charid"]]
+            m["rewarded_level"] = [1, 2, 3, 4, 5]
 
         if remove_chars := sorted(now_charid_set - res_charid_set):
             characters[:] = {m for m in characters if m["charid"] not in remove_chars}
@@ -451,3 +452,5 @@ class Skin:
             characters.extend([resger.character_map[c] for c in extend_chars])
 
         self.characterinfo["skins"] = resger.skin_rows
+        self.characterinfo["finished_endings"] = resger.spot_rewards
+        self.characterinfo["rewarded_endings"] = resger.spot_rewards
