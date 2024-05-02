@@ -438,18 +438,18 @@ class Skin:
     def update_characterinfo(self, resger: ResourceManager):
         characters: list[dict] = self.characterinfo["characters"]
 
-        now_charid_set = {m["charid"] for m in characters}
-        res_charid_set = {m["charid"] for m in resger.character_rows}
+        ancient_charid_set = {m["charid"] for m in characters}
+        current_charid_set = {m["charid"] for m in resger.character_rows}
 
         for m in characters:
             m["extra_emoji"] = resger.extra_emoji_map[m["charid"]]
             m["rewarded_level"] = [1, 2, 3, 4, 5]
 
-        if remove_chars := sorted(now_charid_set - res_charid_set):
-            characters[:] = {m for m in characters if m["charid"] not in remove_chars}
+        if remove_char := sorted(ancient_charid_set - current_charid_set):
+            characters[:] = {m for m in characters if m["charid"] not in remove_char}
 
-        if extend_chars := sorted(res_charid_set - now_charid_set):
-            characters.extend([resger.character_map[c] for c in extend_chars])
+        if extend_char := sorted(current_charid_set - ancient_charid_set):
+            characters.extend([resger.character_map[c] for c in extend_char])
 
         self.characterinfo["skins"] = resger.skin_rows
         self.characterinfo["finished_endings"] = resger.spot_rewards
