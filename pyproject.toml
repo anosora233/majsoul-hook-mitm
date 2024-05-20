@@ -13,7 +13,6 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = ">=3.11,<3.13"
 rich = "^13.7.1"
-toml = "^0.10.2"
 protobuf = "^5.26.1"
 requests = "^2.31.0"
 mitmproxy = "^10.3.0"

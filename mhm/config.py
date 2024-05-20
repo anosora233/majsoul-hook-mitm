@@ -1,11 +1,10 @@
+import json
 from dataclasses import asdict, dataclass, field, fields, is_dataclass
 from pathlib import Path
 
-import toml
-
 ROOT = Path(".")
 
-CONFIG_PATH = ROOT / "mhmp.toml"
+CONFIG_PATH = ROOT / "mhmp.json"
 PROXIN_PATH = ROOT / "proxinject/proxinjector-cli.exe"
 
 
@@ -16,7 +15,6 @@ class Config:
         skins: bool = True
         aider: bool = False
         chest: bool = False
-        debug: bool = False
         yongchang_mode: bool = False
         random_star_char: bool = False
         no_cheering_emotes: bool = True
@@ -60,8 +58,8 @@ class Config:
 
 if CONFIG_PATH.exists():
     with CONFIG_PATH.open("r", encoding="utf-8") as f:
-        config = Config.fromdict(toml.load(f))
+        config = Config.fromdict(json.load(f))
 else:
     config = Config()
 with CONFIG_PATH.open("w", encoding="utf-8") as f:
-    toml.dump(asdict(config), f)
+    json.dump(asdict(config), f, indent=2)

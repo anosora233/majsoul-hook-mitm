@@ -6,7 +6,6 @@ from mitmproxy import ctx, http, websocket
 from mitmproxy.addons import view
 
 from . import console
-from .config import config
 from .protocol import GameMessage, GameMessageType, compose, parse
 
 _LOGIN_INFO_MESSAGES = [
@@ -49,11 +48,12 @@ def broadcast(
 
 
 class GameAddon(view.View):
-    def __init__(self, methods) -> None:
+    def __init__(self, methods, verbose: bool) -> None:
         super().__init__()
         # HACK: `methods` refers to the
         # `run(mp: `MessageProcessor`)` method of `Hook` instances.
         self.methods = methods
+        self.verbose = verbose
 
     def websocket_start(self, flow: http.HTTPFlow):
         console.log(f"[i][green]Connected {flow.id[:8]}")
@@ -102,7 +102,7 @@ class GameAddon(view.View):
                 f" [cyan3]{idx}[/cyan3]"
                 f"[gold3]{snm}[/gold3]"
             )
-            if config.base.debug:  # HACK
+            if self.verbose:  # HACK
                 console.log(f"-->> {msg.data}")
 
         # NOTE: Messages are only modified once the account_id is determined

@@ -1,3 +1,4 @@
+import argparse
 import asyncio
 
 from . import console
@@ -26,7 +27,10 @@ def create_hooks(resger: ResourceManager) -> list[Hook]:
 
 
 def main():
-    console.log(f"Debug: {config.base.debug}")
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--verbose", action="store_true")
+    args = parser.parse_args()
+
     console.log("Load Resource")
     with console.status("[magenta]Fetch LQC.LQBIN"):
         resger = load_resource()
@@ -43,7 +47,7 @@ def main():
     async def start():
         tasks = set()
         if config.mitmdump.args:
-            tasks.add(start_proxy([h.run for h in hooks]))
+            tasks.add(start_proxy([h.run for h in hooks], args.verbose))
             console.log(f"Start mitmdump @ {config.mitmdump.args.get('mode')}")
         if config.proxinject.path:
             tasks.add(start_inject())

@@ -12,9 +12,9 @@ def _cmd(dikt):
     return [obj for key, value in dikt.items() for obj in (f"--{key}", value)]
 
 
-async def start_proxy(methods: list):
+async def start_proxy(methods: list, verbose: bool):
     master = DumpMaster(Options(**config.mitmdump.args), **config.mitmdump.dump)
-    master.addons.add(GameAddon(methods))
+    master.addons.add(GameAddon(methods, verbose))
     await master.run()
     return master
 
