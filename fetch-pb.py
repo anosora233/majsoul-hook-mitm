@@ -2,6 +2,7 @@
 
 import argparse
 import importlib
+import json
 import os
 import random
 import subprocess
@@ -15,6 +16,14 @@ def response(url: str):
     resp = httpx.get(url)
     resp.raise_for_status()
     return resp
+
+
+def patch(content: bytes):
+    data = json.loads(content.decode())
+    # HACK: Fixed an issue where room robots could not be removed
+    name, prop, rule = "NotifyRoomPlayerUpdate", "robot_count", "optional"
+    data["nested"]["lq"]["nested"][name]["fields"][prop]["rule"] = rule
+    return json.dumps(data)
 
 
 def generate_sheets_proto(config_table):
@@ -102,6 +111,7 @@ if __name__ == "__main__":
         resp = response(url)
         print("riichi prefix:", pre)
 
+        pdump = patch(resp.content)
         proto = root / "liqi.proto"
         with proto.open("w") as f:
             proc = subprocess.Popen(
@@ -110,11 +120,7 @@ if __name__ == "__main__":
                 stdout=subprocess.PIPE,
                 encoding="utf-8",
             )
-            text = proc.communicate(input=resp.content.decode())[0].replace(
-                "uint32 robot_count = 4;",
-                "optional uint32 robot_count = 4;",
-            )  # HACK: Fixed an issue where room robots could not be removed
-            f.write(text)
+            f.write(proc.communicate(input=pdump)[0])
         generate_pb2_py(proto)
 
     build_sheets()

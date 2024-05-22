@@ -34,7 +34,7 @@ _SERVICE_SCHEMA = {
 _FIELD_SCHEMA = {
     "type": "object",
     "properties": {
-        "rule": {"constant": "repeated"},
+        "rule": {"enum": ["repeated", "optional"]},
         "type": {
             "anyOf": [
                 {"enum": ["uint32", "bool", "string"]},
@@ -135,8 +135,8 @@ def _parse_message(
     for field_name, field_spec in message_spec["fields"].items():
         line = " " * (indent + 2)
         if "rule" in field_spec:
-            assert field_spec["rule"] == "repeated"
-            line += "repeated "
+            assert field_spec["rule"] in ["repeated", "optional"]
+            line += field_spec["rule"] + " "
         _type = field_spec["type"]
         _type = re.sub("^lq\\.", "", _type)
         _id = field_spec["id"]
