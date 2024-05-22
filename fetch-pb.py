@@ -57,11 +57,11 @@ if __name__ == "__main__":
         url = f"{host}/version.json?randv={rand_a}{rand_b}"
         return response(url).json().get("version")
 
-    def query_prefix(path: str):
-        return resdict["res"][path]["prefix"]
-
     version = server_version()
     resdict = response(f"{host}/resversion{version}.json").json()
+
+    def query_prefix(path: str):
+        return resdict["res"][path]["prefix"]
 
     def build_config():
         path = "res/proto/config.proto"
@@ -108,9 +108,9 @@ if __name__ == "__main__":
                 [sys.executable, parse],
                 stdin=subprocess.PIPE,
                 stdout=subprocess.PIPE,
+                encoding="utf-8",
             )
-            buf, _ = proc.communicate(input=resp.content)
-            text = buf.decode().replace(
+            text = proc.communicate(input=resp.content.decode())[0].replace(
                 "uint32 robot_count = 4;",
                 "optional uint32 robot_count = 4;",
             )  # HACK: Fixed an issue where room robots could not be removed
