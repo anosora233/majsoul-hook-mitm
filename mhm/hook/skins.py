@@ -38,18 +38,18 @@ class KinHook(Hook):
         @self.bind(GameMessageType.Response, ".lq.Lobby.createRoom")  # room
         def _(mp: MessageProcessor):
             # 在加入、获取、创建房间时修改己方头衔、立绘、角色
-            if "room" not in mp.msg.data:
-                return True
-            for person in mp.msg.data["room"]["persons"]:
-                if skin := self.skin_map.get(person["account_id"]):
-                    skin.update_player(person)
-                    mp.amend()
+            if room := mp.msg.data.get("room"):
+                for person in room["persons"]:
+                    if skin := self.skin_map.get(person["account_id"]):
+                        skin.update_player(person)
+                        mp.amend()
 
         @self.bind(GameMessageType.Response, ".lq.Lobby.joinRoom")
         @self.bind(GameMessageType.Response, ".lq.Lobby.createRoom")
         def _(mp: MessageProcessor):  # NOTE: Init `NotifyRoomPlayer?` sequence id
-            if skin := self.skin_map.get(mp.member):
-                skin.reset_sequence(mp.msg.data["room"]["seq"])
+            if room := mp.msg.data.get("room"):
+                if skin := self.skin_map.get(mp.member):
+                    skin.reset_sequence(room["seq"])
 
         @self.bind(GameMessageType.Response, ".lq.Lobby.leaveRoom")
         @self.bind(GameMessageType.Response, ".lq.FastTest.terminateGame")
