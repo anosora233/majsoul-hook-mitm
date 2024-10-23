@@ -97,7 +97,7 @@ _SCHEMA = {
                     "type": "object",
                     "properties": {"nested": _LQ_SCHEMA},
                     "required": ["nested"],
-                    "additionalProperties": False,
+                    "additionalProperties": True,
                 }
             },
             "required": ["lq"],
