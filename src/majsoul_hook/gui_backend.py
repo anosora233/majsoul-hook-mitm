@@ -13,15 +13,16 @@ from urllib.request import Request, urlopen
 
 from google.protobuf.message import DecodeError
 
+from .gui_i18n import N_
 from .resources import DEFAULT_BASE_URL, INDEX, normalize_base_url
 from .schema import Schema
 
 ACTION_LABELS = {
-    "pass": "Pass",
-    "modified": "Modified",
-    "intercepted": "Intercepted",
-    "local": "Injected",
-    "error": "Error",
+    "pass": N_("Pass"),
+    "modified": N_("Modified"),
+    "intercepted": N_("Intercepted"),
+    "local": N_("Injected"),
+    "error": N_("Error"),
 }
 
 
@@ -176,8 +177,7 @@ class BackendProcess:
         except Exception:
             process.kill()
             process.wait()
-            for stream in (process.stdin, process.stdout, process.stderr):
-                stream.close()
+            self._close_pipes(process)
             self.process, self.task = None, None
             raise
 
@@ -203,12 +203,21 @@ class BackendProcess:
             code = process.wait()
             for thread in readers:
                 thread.join()
-            process.stdin.close()
-            process.stdout.close()
-            process.stderr.close()
-            self.inbox.put({"event": "finished", "task": task, "code": code})
+            try:
+                self._close_pipes(process)
+            finally:
+                self.inbox.put({"event": "finished", "task": task, "code": code})
 
         threading.Thread(target=wait, daemon=True).start()
+
+    @staticmethod
+    def _close_pipes(process):
+        for stream in (process.stdin, process.stdout, process.stderr):
+            try:
+                stream.close()
+            except (OSError, ValueError):
+                # Closing stdin may flush buffered commands after the worker exits.
+                pass
 
     def acknowledge_finished(self):
         self.process, self.task = None, None

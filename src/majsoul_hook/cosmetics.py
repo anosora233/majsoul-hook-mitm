@@ -9,8 +9,8 @@ from pathlib import Path
 from time import monotonic
 
 from .resources import atomic_write
-from .schema import Schema
-from .wire import Codec, Frame, dictionary
+from .schema import Schema, dictionary
+from .wire import Codec, Frame
 
 LOCAL_METHODS = frozenset(
     {

@@ -1,0 +1,340 @@
+# Chinese translations for majsoul-hook-mitm.
+# Copyright (C) 2026 majsoul-hook-mitm contributors
+# This file is distributed under the same license as the majsoul-hook-mitm
+# project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: majsoul-hook-mitm 0.1.0\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2026-10-24 22:54+0800\n"
+"PO-Revision-Date: 2026-10-24 14:53+0000\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: zh\n"
+"Language-Team: zh <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: src/majsoul_hook/gui.py:53
+msgid "Idle"
+msgstr "空闲"
+
+#: src/majsoul_hook/gui.py:54
+msgid "Reading local resources..."
+msgstr "正在读取本地资源..."
+
+#: src/majsoul_hook/gui.py:55 src/majsoul_hook/gui.py:577
+msgid "0 messages"
+msgstr "0 条消息"
+
+#: src/majsoul_hook/gui.py:56 src/majsoul_hook/gui.py:100
+msgid "Mahjong Soul | Traffic Inspector"
+msgstr "雀魂 | 流量检查器"
+
+#: src/majsoul_hook/gui.py:121
+#, python-brace-format
+msgid "Cannot save language preference: {error}"
+msgstr "无法保存语言设置：{error}"
+
+#: src/majsoul_hook/gui.py:134
+msgid "Mahjong Soul Traffic Inspector"
+msgstr "雀魂流量检查器"
+
+#: src/majsoul_hook/gui.py:139
+msgid "Language"
+msgstr "语言"
+
+#: src/majsoul_hook/gui.py:147
+msgid "Local capture | Protocol decoding | Local cosmetics | Message inspection"
+msgstr "本地捕获 | 协议解析 | 本地装扮 | 消息检查"
+
+#: src/majsoul_hook/gui.py:150
+msgid "Capture"
+msgstr "捕获"
+
+#: src/majsoul_hook/gui.py:152
+msgid "Process name / PID"
+msgstr "进程名 / PID"
+
+#: src/majsoul_hook/gui.py:158
+msgid "Local cosmetics"
+msgstr "本地装扮"
+
+#: src/majsoul_hook/gui.py:162
+msgid "Start capture"
+msgstr "开始捕获"
+
+#: src/majsoul_hook/gui.py:168
+msgid "Stop capture"
+msgstr "停止捕获"
+
+#: src/majsoul_hook/gui.py:179
+msgid "Resources"
+msgstr "资源"
+
+#: src/majsoul_hook/gui.py:181
+msgid "Resource file"
+msgstr "资源文件"
+
+#: src/majsoul_hook/gui.py:188
+msgid "Browse..."
+msgstr "浏览..."
+
+#: src/majsoul_hook/gui.py:194
+msgid "Check version"
+msgstr "检查版本"
+
+#: src/majsoul_hook/gui.py:201
+msgid "Update resources"
+msgstr "更新资源"
+
+#: src/majsoul_hook/gui.py:205
+msgid "Base URL"
+msgstr "资源来源 URL"
+
+#: src/majsoul_hook/gui.py:214
+msgid "Search"
+msgstr "搜索"
+
+#: src/majsoul_hook/gui.py:216
+msgid "Clear messages"
+msgstr "清空消息"
+
+#: src/majsoul_hook/gui.py:222 src/majsoul_hook/gui.py:254
+msgid "Actions"
+msgstr "动作"
+
+#: src/majsoul_hook/gui.py:235 src/majsoul_hook/gui.py:236
+msgid "Messages"
+msgstr "消息"
+
+#: src/majsoul_hook/gui.py:238 src/majsoul_hook/gui.py:239
+msgid "Logs"
+msgstr "日志"
+
+#: src/majsoul_hook/gui.py:251
+msgid "Time"
+msgstr "时间"
+
+#: src/majsoul_hook/gui.py:252
+msgid "Direction"
+msgstr "方向"
+
+#: src/majsoul_hook/gui.py:253
+msgid "Type"
+msgstr "类型"
+
+#: src/majsoul_hook/gui.py:255
+msgid "Flow"
+msgstr "连接"
+
+#: src/majsoul_hook/gui.py:256
+msgid "ID"
+msgstr "ID"
+
+#: src/majsoul_hook/gui.py:257
+msgid "Protocol message"
+msgstr "协议消息"
+
+#: src/majsoul_hook/gui.py:258
+msgid "Status"
+msgstr "状态"
+
+#: src/majsoul_hook/gui.py:285
+msgid "Select a message to inspect"
+msgstr "选中消息以检查内容"
+
+#: src/majsoul_hook/gui.py:286
+msgid "Copy details"
+msgstr "复制详情"
+
+#: src/majsoul_hook/gui.py:293
+msgid "Overview"
+msgstr "概览"
+
+#: src/majsoul_hook/gui.py:294 src/majsoul_hook/gui.py:557
+msgid "Before"
+msgstr "处理前"
+
+#: src/majsoul_hook/gui.py:295
+msgid "Actual content"
+msgstr "实际内容"
+
+#: src/majsoul_hook/gui.py:296
+msgid "Wire bytes"
+msgstr "原始字节"
+
+#: src/majsoul_hook/gui.py:306
+msgid ""
+"In-memory history: latest 2,000 messages / approx. 64 MiB. Select a row "
+"to inspect original, modified, or injected content."
+msgstr "内存历史：最近 2,000 条消息 / 约 64 MiB。选中一行可检查原始、修改或注入的内容。"
+
+#: src/majsoul_hook/gui.py:384
+msgid "Resource file missing. Update resources first."
+msgstr "资源文件不存在，请先更新资源。"
+
+#: src/majsoul_hook/gui.py:387
+msgid "Starting capture..."
+msgstr "正在启动捕获..."
+
+#: src/majsoul_hook/gui.py:395
+msgid "Stopping capture..."
+msgstr "正在停止捕获..."
+
+#: src/majsoul_hook/gui.py:403
+msgid "Checking resource version..."
+msgstr "正在检查资源版本..."
+
+#: src/majsoul_hook/gui.py:405
+msgid "Updating resources..."
+msgstr "正在更新资源..."
+
+#: src/majsoul_hook/gui.py:412
+msgid "Choose a resource file"
+msgstr "选择资源文件"
+
+#: src/majsoul_hook/gui.py:425
+#, python-brace-format
+msgid "Cannot read local resources: {error}"
+msgstr "无法读取本地资源：{error}"
+
+#: src/majsoul_hook/gui.py:432
+msgid ""
+"No local resources. Click Update resources to build protocol and cosmetic"
+" data."
+msgstr "没有本地资源。点击“更新资源”生成协议和装扮数据。"
+
+#: src/majsoul_hook/gui.py:437
+msgid "unknown"
+msgstr "未知"
+
+#: src/majsoul_hook/gui.py:440
+#, python-brace-format
+msgid ""
+"Local index {version} | Generated {generated_at} | RPC {methods} / "
+"Characters {characters} / Skins {skins} / Titles {titles}"
+msgstr ""
+"本地索引 {version} | 生成于 {generated_at} | RPC {methods} / 角色 {characters} / "
+"皮肤 {skins} / 称号 {titles}"
+
+#: src/majsoul_hook/gui.py:444
+msgid " | No cosmetic configuration"
+msgstr " | 无装扮配置"
+
+#: src/majsoul_hook/gui.py:448
+msgid "Remote index has changed"
+msgstr "远端索引已变化"
+
+#: src/majsoul_hook/gui.py:450
+msgid "Local index matches the remote index"
+msgstr "本地索引与远端一致"
+
+#: src/majsoul_hook/gui.py:456
+msgid ""
+"An index change does not mean every protocol or configuration table "
+"changed."
+msgstr "索引变化不表示每个协议或配置表都发生了变化。"
+
+#: src/majsoul_hook/gui.py:485
+msgid "<unknown message>"
+msgstr "<未知消息>"
+
+#: src/majsoul_hook/gui.py:514
+#, python-brace-format
+msgid "{retained} retained / {dropped} dropped"
+msgstr "保留 {retained} 条 / 丢弃 {dropped} 条"
+
+#: src/majsoul_hook/gui.py:547
+msgid "Local responses and notifications appear as separate Injected rows."
+msgstr "本地响应和通知以独立的“注入”行显示。"
+
+#: src/majsoul_hook/gui.py:565
+msgid "Select a message."
+msgstr "请选择一条消息。"
+
+#: src/majsoul_hook/gui.py:586
+msgid "Capturing"
+msgstr "捕获中"
+
+#: src/majsoul_hook/gui.py:591
+msgid "Resources updated"
+msgstr "资源已更新"
+
+#: src/majsoul_hook/gui.py:593
+msgid "Resource check complete"
+msgstr "资源检查完成"
+
+#: src/majsoul_hook/gui.py:607
+#, python-brace-format
+msgid "Failed: {error}"
+msgstr "失败：{error}"
+
+#: src/majsoul_hook/gui.py:615
+#, python-brace-format
+msgid "Worker exited with code {code}; see Logs"
+msgstr "工作进程以代码 {code} 退出，请查看日志"
+
+#: src/majsoul_hook/gui.py:618
+msgid "Capture stopped"
+msgstr "捕获已停止"
+
+#: src/majsoul_hook/gui.py:634
+msgid "Stopping the worker and closing..."
+msgstr "正在停止工作进程并退出..."
+
+#: src/majsoul_hook/gui_backend.py:21
+msgid "Pass"
+msgstr "透传"
+
+#: src/majsoul_hook/gui_backend.py:22
+msgid "Modified"
+msgstr "修改"
+
+#: src/majsoul_hook/gui_backend.py:23
+msgid "Intercepted"
+msgstr "接管"
+
+#: src/majsoul_hook/gui_backend.py:24
+msgid "Injected"
+msgstr "注入"
+
+#: src/majsoul_hook/gui_backend.py:25
+msgid "Error"
+msgstr "错误"
+
+#: src/majsoul_hook/gui_i18n.py:21
+msgid "System default"
+msgstr "跟随系统"
+
+#: src/majsoul_hook/gui_i18n.py:23
+msgid "request"
+msgstr "请求"
+
+#: src/majsoul_hook/gui_i18n.py:24
+msgid "response"
+msgstr "响应"
+
+#: src/majsoul_hook/gui_i18n.py:25
+msgid "notify"
+msgstr "通知"
+
+#: src/majsoul_hook/gui_i18n.py:26
+msgid "decoded"
+msgstr "已解析"
+
+#: src/majsoul_hook/gui_i18n.py:27
+msgid "orphan_response"
+msgstr "未匹配响应"
+
+#: src/majsoul_hook/gui_i18n.py:28
+msgid "unknown_schema"
+msgstr "未知协议结构"
+
+#: src/majsoul_hook/gui_i18n.py:29
+msgid "malformed"
+msgstr "无效消息帧"

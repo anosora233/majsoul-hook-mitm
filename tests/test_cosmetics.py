@@ -6,7 +6,8 @@ from mitmproxy.test import tflow
 
 from majsoul_hook.addon import CaptureAddon
 from majsoul_hook.cosmetics import StateStore
-from majsoul_hook.wire import Frame, dictionary
+from majsoul_hook.schema import dictionary
+from majsoul_hook.wire import Frame
 
 
 def apply(engine, kind, name, data, *, flow="lobby", request_id=7):

@@ -34,6 +34,7 @@ Resource files contain a format marker, source URL, bundle SHA-256 values, an in
 | `gui_worker.py` | Private JSONL task protocol; capture stays on the worker's main thread. |
 | `gui_dpi.py` | Windows DPI awareness, scaling, and full-frame work-area constraints. |
 | `gui_widgets.py` | Scrollable setup controls and keyboard-focus visibility. |
+| `gui_i18n.py`, `locale/` | Gettext catalog loading, English/Japanese/Chinese translations, system UI language detection, and preferences. |
 
 ## Protocol and editing
 
@@ -53,6 +54,8 @@ The GUI starts one worker at a time. Stdout carries UTF-8 JSONL events; stderr c
 
 An intercepted request and each successfully injected message have separate rows. Tabs show metadata, original/actual decoded content, and complete Base64 frames. Filters do not delete history. Details are not automatically written to disk.
 
+GUI text uses gettext catalogs and a registry that refreshes existing widgets, tabs, headings, and status templates. PO/POT sources are tracked; MO catalogs are generated at build time. Runtime language changes preserve capture and selection. See [localization](localization.md) for maintenance.
+
 Stop commands use stdin; EOF also stops capture if the GUI disappears. The worker disables interception and clears state before exiting. GUI closure requests graceful shutdown before terminating its own worker on timeout. The game process is never terminated.
 
 ## Local files
@@ -62,6 +65,7 @@ Stop commands use stdin; EOF also stops capture if the GUI disappears. The worke
 | `pyproject.toml`, `uv.lock`, `.python-version` | Build, dependencies, Python version | Yes |
 | `data/protocol.json` | Generated protocol/cosmetic snapshot | No |
 | `data/cosmetics-state.json` | Account settings, without login tokens | No |
+| `data/gui-settings.json` | GUI language preference (`auto`, `en`, `ja`, `zh`) | No |
 | `.cache/bundles/` | Download cache, isolated by origin | No |
 | `captures/`, `*.jsonl` | Optional decoded traffic | No |
 | `~/.mitmproxy/` or `--confdir` | Certificates and private keys | No |

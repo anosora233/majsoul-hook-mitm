@@ -13,7 +13,11 @@ uv run --locked ruff format --check src tests
 
 Apply formatting with `uv run --locked ruff format src tests`. Update dependencies with uv and commit `uv.lock`; do not add a second dependency list or machine-specific interpreter paths.
 
+The protobuf runtime requires version 7.36.2 or later within major version 7. Wire patches use the modern descriptor API; older runtimes are unsupported. The lockfile pins the tested release.
+
 Tkinter requires a Python distribution with working Tk support. CLI capture does not import the GUI. Without Tk/display support, GUI tests report skips; other tests still run.
+
+See [GUI localization](localization.md) for gettext catalogs, Babel commands, and translation maintenance. Babel is development/build tooling; the application uses standard-library gettext at runtime.
 
 For restricted Windows cache paths:
 
@@ -31,7 +35,8 @@ Fixtures build synthetic protobuf descriptors in Python. Tests require neither r
 - Protocol: correlation, ID reuse/expiry, malformed frames, unknown schemas, nested actions.
 - Wire/business: unknown fields, local responses, room sequences, query correlation, rollback, account isolation, random choices, reconnect state.
 - Loopback: real forwarding and client-only injection ordering; local requests never reach upstream.
-- GUI: task controls, snapshots, filter combinations, bounded history, worker failure, DPI, window bounds, and small-viewport controls.
+- GUI: task controls, snapshots, filter combinations, bounded history, worker failure, broken-pipe cleanup during startup/shutdown, DPI, window bounds, and small-viewport controls.
+- Localization: system UI language detection, saved overrides, translation placeholders, live switching during capture, and multilingual HiDPI layouts. Protocol data and raw diagnostics retain their original text.
 
 Keep real traffic, tokens, account IDs, downloaded assets, and keys out of fixtures. Synthetic Unicode data is appropriate for testing UTF-8 transport.
 

@@ -1,5 +1,5 @@
 [build-system]
-requires = ["hatchling>=1.27"]
+requires = ["hatchling>=1.27", "babel>=2.18,<3"]
 build-backend = "hatchling.build"
 
 [project]
@@ -11,13 +11,13 @@ requires-python = ">=3.12"
 license = "GPL-3.0-or-later"
 dependencies = [
     "mitmproxy>=12,<13",
-    "protobuf>=5.29,<7",
+    "protobuf>=7.36.2,<8",
     "UnityPy>=1.23,<2",
     "lupa>=2.6,<3",
 ]
 
 [dependency-groups]
-dev = ["pytest>=8,<10", "ruff>=0.12,<1"]
+dev = ["pytest>=8,<10", "ruff>=0.12,<1", "babel>=2.18,<3"]
 
 [project.scripts]
 majsoul-hook = "majsoul_hook.cli:main"
@@ -27,6 +27,9 @@ majsoul-hook-gui = "majsoul_hook.gui:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/majsoul_hook"]
+
+[tool.hatch.build.hooks.custom]
+path = "hatch_build.py"
 
 [tool.hatch.build.targets.sdist]
 include = [
@@ -41,6 +44,17 @@ include = [
     "/.python-version",
     "/.gitignore",
     "/.gitattributes",
+    "/hatch_build.py",
+    "/babel.cfg",
+]
+exclude = ["*.mo"]
+
+[tool.uv]
+cache-keys = [
+    { file = "pyproject.toml" },
+    { file = "hatch_build.py" },
+    { file = "README.md" },
+    { file = "src/majsoul_hook/locale/**/*.po" },
 ]
 
 [tool.pytest.ini_options]

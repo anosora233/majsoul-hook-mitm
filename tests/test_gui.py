@@ -6,7 +6,7 @@ from majsoul_hook.gui_backend import DEFAULT_BASE_URL, EventInbox, MessageHistor
 
 
 @pytest.fixture
-def app(tmp_path, monkeypatch):
+def app(tmp_path, monkeypatch, request):
     tk = pytest.importorskip("tkinter")
     from majsoul_hook.gui import InspectorApp
 
@@ -39,7 +39,14 @@ def app(tmp_path, monkeypatch):
     except tk.TclError as exc:
         pytest.skip(f"Tk display unavailable: {exc}")
     root.withdraw()
-    instance = InspectorApp(root, Backend())
+    options = getattr(request, "param", {})
+    monkeypatch.setattr("majsoul_hook.gui.detect_language", lambda: options.get("system", "en"))
+    settings_path = tmp_path / "gui-settings.json"
+    if preference := options.get("preference"):
+        from majsoul_hook.gui_i18n import save_language
+
+        save_language(settings_path, preference)
+    instance = InspectorApp(root, Backend(), settings_path=settings_path)
     path = tmp_path / "protocol.json"
     path.write_text("{}")
     instance.schema.set(str(path))
@@ -50,7 +57,7 @@ def app(tmp_path, monkeypatch):
 
 def test_capture_controls_and_stop_before_ready(app):
     app.process.set("custom-game.exe")
-    app.cosmetics.set(True)
+    assert app.cosmetics.get() is True
     app.start_button.invoke()
     assert app.backend.config["process"] == "custom-game.exe"
     assert app.backend.config["cosmetics"] is True
@@ -127,6 +134,138 @@ def test_inspect_filter_eviction_and_empty_clear(app):
     assert not app.history.items and not app.tree.get_children()
 
 
+@pytest.mark.parametrize(
+    ("language", "queries"),
+    [("zh", ("响应", "已解析", "修改")), ("ja", ("レスポンス", "解析済み", "変更"))],
+)
+def test_search_matches_localized_cells_and_raw_values(app, language, queries):
+    app.set_language(language)
+    record = {
+        "name": ".lq.Lobby.test",
+        "flow_id": "flow-1",
+        "direction": "server_to_client",
+        "kind": "response",
+        "status": "decoded",
+        "action": "modified",
+        "request_id": 0,
+    }
+    app._append(record)
+    key = app.tree.get_children()[0]
+    app._append({**record, "kind": "notify", "status": "unknown_schema", "action": "pass"})
+    for query in (*queries, "RESPONSE", "decoded", "modified"):
+        app.search.set(query)
+        assert app.tree.get_children() == (key,)
+    app.action_filters["modified"].set(False)
+    assert not app.tree.get_children()
+    app.action_filters["modified"].set(True)
+    assert app.tree.get_children() == (key,)
+    app.set_language("en")
+    assert app.tree.get_children() == (key,)
+    app.search.set(queries[0])
+    assert not app.tree.get_children()
+    app.search.set("")
+    assert len(app.tree.get_children()) == len(app.history.items) == 2
+    assert app.history.items[key][0] == record
+
+
+def test_language_switch_preserves_capture_and_inspection(app, monkeypatch):
+    from importlib.resources import files
+
+    from babel.messages.pofile import read_po
+
+    from majsoul_hook.gui_i18n import LANGUAGES, load_language
+
+    with files("majsoul_hook").joinpath("locale/messages.pot").open("rb") as stream:
+        source_messages = {message.id for message in read_po(stream) if message.id}
+
+    record = {
+        "name": ".lq.Lobby.test",
+        "action": "modified",
+        "kind": "response",
+        "status": "decoded",
+        "before": {"value": "原文"},
+        "after": {"value": 2},
+    }
+    app._append(record)
+    key = app.tree.get_children()[0]
+    app.tree.selection_set(key)
+    app.inspect()
+    original = app.detail_texts["before"].get("1.0", "end")
+    app.start_capture()
+    app._event({"event": "ready"})
+    for language, button, status, action in (
+        ("ja", "キャプチャ開始", "キャプチャ中", "変更"),
+        ("zh", "开始捕获", "捕获中", "修改"),
+        ("en", "Start capture", "Capturing", "Modified"),
+    ):
+        app.language_combo.current(list(LANGUAGES).index(language))
+        app.language_combo.event_generate("<<ComboboxSelected>>")
+        assert app.start_button["text"] == button
+        assert app.status.get() == status
+        assert app.tree.set(key, "action") == action
+        assert app.tree.selection() == (key,)
+        assert app.detail_texts["before"].get("1.0", "end") == original
+        assert app.history.items[key][0] == record
+        assert app.backend.task == "capture" and app.start_button.instate(["disabled"])
+        assert load_language(app.settings_path) == language
+        assert all(source in source_messages for _, source in app._text_targets)
+    monkeypatch.setattr("majsoul_hook.gui.detect_language", lambda: "zh")
+    app.set_language("auto")
+    assert app.language == "zh" and load_language(app.settings_path) == "auto"
+    assert app.resource_summary.get().startswith("没有本地资源")
+    app._event({"event": "error", "message": "raw diagnostic"})
+    app.set_language("ja")
+    assert app.status.get() == "失敗：raw diagnostic"
+    assert "raw diagnostic" in app.log.get("1.0", "end")
+
+
+def test_language_preference_save_failure_is_visible(app, monkeypatch):
+    def fail(*_):
+        raise OSError("read only")
+
+    monkeypatch.setattr("majsoul_hook.gui.save_language", fail)
+    app.set_language("zh")
+    assert app.start_button["text"] == "开始捕获"
+    assert app.status.get() == "无法保存语言设置：read only"
+
+
+@pytest.mark.parametrize(
+    "app",
+    [{"system": "ja"}, {"system": "zh", "preference": "en"}, {"system": "en", "preference": "zh"}],
+    indirect=True,
+)
+def test_startup_language_detection_and_saved_override(app, request):
+    options = request.node.callspec.params["app"]
+    expected = options.get("preference", options["system"])
+    assert app.language == expected
+    assert app.start_button["text"] == app.tr("Start capture")
+    assert app.root.title() == app.tr("Mahjong Soul | Traffic Inspector")
+
+
+def test_resource_result_is_retranslated_without_another_task(app):
+    app._show_resources(
+        {
+            "exists": True,
+            "version": "abcdef",
+            "generated_at": "2026-10-24",
+            "methods": 466,
+            "characters": 12,
+            "skins": 34,
+            "titles": 56,
+            "cosmetics": False,
+            "update_available": True,
+            "remote_version": "1234567890",
+        }
+    )
+    app.set_language("zh")
+    assert "角色 12 / 皮肤 34 / 称号 56" in app.resource_summary.get()
+    assert "远端索引已变化" in app.resource_summary.get()
+    app.set_language("ja")
+    assert "キャラクター 12 / 衣装 34 / 称号 56" in app.resource_summary.get()
+    assert "リモート索引が変更されています" in app.resource_summary.get()
+    assert app.backend.task is None
+
+
 @pytest.mark.parametrize("dpi", [120, 144, 192])
 def test_dpi_change_scales_layout_and_preserves_inspection(app, monkeypatch, dpi):
     from tkinter import font, ttk
@@ -195,7 +334,9 @@ def test_real_window_frame_stays_inside_work_area(app):
     assert top <= y < far_y <= bottom
 
 
-def test_small_hidpi_view_keeps_messages_and_setup_accessible(app, monkeypatch):
+@pytest.mark.parametrize("language", ["en", "ja", "zh"])
+def test_small_hidpi_view_keeps_messages_and_setup_accessible(app, monkeypatch, language):
+    app.set_language(language)
     monkeypatch.setattr("majsoul_hook.gui_dpi.window_dpi", lambda _: 192)
     monkeypatch.setattr("majsoul_hook.gui_dpi.work_area", lambda _: (0, 0, 1366, 728))
     app.dpi_layout.refresh()
@@ -215,7 +356,7 @@ def test_small_hidpi_view_keeps_messages_and_setup_accessible(app, monkeypatch):
         assert check.winfo_rooty() >= app.header.winfo_rooty() + app.header.winfo_height()
         assert check.winfo_rooty() + check.winfo_height() <= app.tabs.winfo_rooty()
     checkbox_positions = [check.winfo_rooty() for check in app.action_checks.values()]
-    for widget in (app.update_button, app.process_entry, app.stop_button):
+    for widget in (app.update_button, app.process_entry, app.stop_button, app.language_combo):
         app.header._focus(SimpleNamespace(widget=widget))
         app.root.update()
         canvas = app.header.canvas

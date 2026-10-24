@@ -3,10 +3,10 @@
 ## Scope
 
 - This repository contains the rebuilt Python package `majsoul_hook`.
-- `majsoul-hook-mitm/` is the archived original and `majsoul-mirage/` is a reference checkout. Both are ignored, read-only inputs. Never edit, format, stage, or vendor them.
+- `majsoul-hook-mitm/` and `majsoul-mirage/` are ignored, read-only reference checkouts. Never edit, format, stage, or vendor them.
 - Use Python only. Do not add JavaScript, TypeScript, Node.js, generated protocol modules, or a protoc requirement. Embedded Lua belongs only to explicit resource extraction.
-- Use English for code, comments, UI strings, commit messages, and documentation. The Japanese and Chinese READMEs are exceptions. Synthetic Unicode test data is permitted.
-- Read-only capture is the default. Cosmetics require `--cosmetics` or the GUI checkbox. Do not add automatic game actions or server-directed synthetic requests.
+- Use English for code, comments, source UI strings, commit messages, and documentation. The Japanese and Chinese READMEs and GUI translation catalog are exceptions. Synthetic Unicode test data is permitted.
+- CLI capture is read-only unless `--cosmetics` is provided. The GUI defaults its local cosmetics checkbox to enabled; users may uncheck it for read-only capture. Do not add automatic game actions or server-directed synthetic requests.
 
 ## Environment
 
@@ -36,6 +36,7 @@ Development uses Python 3.12. After dependency changes, run `uv lock` and includ
 - Tk widgets belong to the main thread; capture/download/extraction belongs to the worker. Capture and resource tasks are mutually exclusive. Closing requests graceful shutdown before terminating its own worker on timeout.
 - Bound GUI history/inbox memory. Observers must not affect forwarding. Separate intercepted and injected rows and retain original/actual content and wire bytes. Keep action checkboxes outside the scrollable setup area.
 - Enable Windows DPI awareness before Tk. Update fonts/layout without rebuilding or losing selection. Constrain the complete native frame to the work area, including negative desktop coordinates, and reserve room for the inspector on small screens.
+- Maintain GUI translations in `locale/*/LC_MESSAGES/messages.po` using the gettext workflow in `docs/localization.md`. Mark deferred labels with `N_`; keep English msgids and placeholders stable. Track PO/POT sources, never generated MO files. Babel is build/development tooling only.
 
 ## Validation and hygiene
 

@@ -2,6 +2,7 @@ import base64
 import hashlib
 import io
 import json
+import threading
 import time
 
 import pytest
@@ -112,3 +113,65 @@ def test_worker_failure_can_be_acknowledged_and_restarted(tmp_path):
             backend.stop(timeout=0)
         backend.acknowledge_finished()
         assert not backend.running
+
+
+@pytest.mark.parametrize("fail_on_start", [False, True])
+def test_broken_pipe_cleanup_preserves_worker_lifecycle(monkeypatch, fail_on_start):
+    exited = threading.Event()
+
+    class Pipe(io.RawIOBase):
+        writes = 0
+
+        def writable(self):
+            return True
+
+        def write(self, data):
+            self.writes += 1
+            if fail_on_start or self.writes > 1:
+                exited.set()
+                message = "initial write" if self.writes == 1 else "cleanup flush"
+                raise BrokenPipeError(message)
+            return len(data)
+
+    class Process:
+        def __init__(self):
+            self.stdin = io.TextIOWrapper(io.BufferedWriter(Pipe()), encoding="utf-8")
+            self.stdout = io.StringIO('{"event":"ready"}\n')
+            self.stderr = io.StringIO()
+
+        def poll(self):
+            return 0 if exited.is_set() else None
+
+        def wait(self, timeout=None):
+            assert exited.wait(5 if timeout is None else timeout)
+            return 0
+
+        def kill(self):
+            exited.set()
+
+    process = Process()
+    monkeypatch.setattr("majsoul_hook.gui_backend.subprocess.Popen", lambda *a, **kw: process)
+    backend = BackendProcess()
+    if fail_on_start:
+        with pytest.raises(BrokenPipeError, match="initial write"):
+            backend.start("capture", {})
+        assert not backend.running and backend.process is None
+        assert backend.inbox.drain() == []
+    else:
+        backend.start("capture", {})
+        backend.stop()
+        events = []
+        deadline = time.monotonic() + 5
+        while time.monotonic() < deadline:
+            events.extend(backend.inbox.drain())
+            if any(item["event"] == "finished" for item in events):
+                break
+            time.sleep(0.01)
+        assert events == [
+            {"event": "ready"},
+            {"event": "finished", "task": "capture", "code": 0},
+        ]
+        assert backend.running
+        backend.acknowledge_finished()
+        assert not backend.running
+    assert all(stream.closed for stream in (process.stdin, process.stdout, process.stderr))

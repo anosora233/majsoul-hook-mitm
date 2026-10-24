@@ -6,7 +6,8 @@ import hashlib
 
 from majsoul_hook.addon import CaptureAddon
 from majsoul_hook.runtime import CaptureMaster
-from majsoul_hook.wire import Frame, dictionary
+from majsoul_hook.schema import dictionary
+from majsoul_hook.wire import Frame
 
 
 async def read_frame(reader):

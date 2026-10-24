@@ -1,0 +1,328 @@
+# Translations template for majsoul-hook-mitm.
+# Copyright (C) 2026 ORGANIZATION
+# This file is distributed under the same license as the majsoul-hook-mitm project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: majsoul-hook-mitm 0.1.0\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2026-10-24 22:54+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: src/majsoul_hook/gui.py:53
+msgid "Idle"
+msgstr ""
+
+#: src/majsoul_hook/gui.py:54
+msgid "Reading local resources..."
+msgstr ""
+
+#: src/majsoul_hook/gui.py:55 src/majsoul_hook/gui.py:577
+msgid "0 messages"
+msgstr ""
+
+#: src/majsoul_hook/gui.py:56 src/majsoul_hook/gui.py:100
+msgid "Mahjong Soul | Traffic Inspector"
+msgstr ""
+
+#: src/majsoul_hook/gui.py:121
+#, python-brace-format
+msgid "Cannot save language preference: {error}"
+msgstr ""
+
+#: src/majsoul_hook/gui.py:134
+msgid "Mahjong Soul Traffic Inspector"
+msgstr ""
+
+#: src/majsoul_hook/gui.py:139
+msgid "Language"
+msgstr ""
+
+#: src/majsoul_hook/gui.py:147
+msgid "Local capture | Protocol decoding | Local cosmetics | Message inspection"
+msgstr ""
+
+#: src/majsoul_hook/gui.py:150
+msgid "Capture"
+msgstr ""
+
+#: src/majsoul_hook/gui.py:152
+msgid "Process name / PID"
+msgstr ""
+
+#: src/majsoul_hook/gui.py:158
+msgid "Local cosmetics"
+msgstr ""
+
+#: src/majsoul_hook/gui.py:162
+msgid "Start capture"
+msgstr ""
+
+#: src/majsoul_hook/gui.py:168
+msgid "Stop capture"
+msgstr ""
+
+#: src/majsoul_hook/gui.py:179
+msgid "Resources"
+msgstr ""
+
+#: src/majsoul_hook/gui.py:181
+msgid "Resource file"
+msgstr ""
+
+#: src/majsoul_hook/gui.py:188
+msgid "Browse..."
+msgstr ""
+
+#: src/majsoul_hook/gui.py:194
+msgid "Check version"
+msgstr ""
+
+#: src/majsoul_hook/gui.py:201
+msgid "Update resources"
+msgstr ""
+
+#: src/majsoul_hook/gui.py:205
+msgid "Base URL"
+msgstr ""
+
+#: src/majsoul_hook/gui.py:214
+msgid "Search"
+msgstr ""
+
+#: src/majsoul_hook/gui.py:216
+msgid "Clear messages"
+msgstr ""
+
+#: src/majsoul_hook/gui.py:222 src/majsoul_hook/gui.py:254
+msgid "Actions"
+msgstr ""
+
+#: src/majsoul_hook/gui.py:235 src/majsoul_hook/gui.py:236
+msgid "Messages"
+msgstr ""
+
+#: src/majsoul_hook/gui.py:238 src/majsoul_hook/gui.py:239
+msgid "Logs"
+msgstr ""
+
+#: src/majsoul_hook/gui.py:251
+msgid "Time"
+msgstr ""
+
+#: src/majsoul_hook/gui.py:252
+msgid "Direction"
+msgstr ""
+
+#: src/majsoul_hook/gui.py:253
+msgid "Type"
+msgstr ""
+
+#: src/majsoul_hook/gui.py:255
+msgid "Flow"
+msgstr ""
+
+#: src/majsoul_hook/gui.py:256
+msgid "ID"
+msgstr ""
+
+#: src/majsoul_hook/gui.py:257
+msgid "Protocol message"
+msgstr ""
+
+#: src/majsoul_hook/gui.py:258
+msgid "Status"
+msgstr ""
+
+#: src/majsoul_hook/gui.py:285
+msgid "Select a message to inspect"
+msgstr ""
+
+#: src/majsoul_hook/gui.py:286
+msgid "Copy details"
+msgstr ""
+
+#: src/majsoul_hook/gui.py:293
+msgid "Overview"
+msgstr ""
+
+#: src/majsoul_hook/gui.py:294 src/majsoul_hook/gui.py:557
+msgid "Before"
+msgstr ""
+
+#: src/majsoul_hook/gui.py:295
+msgid "Actual content"
+msgstr ""
+
+#: src/majsoul_hook/gui.py:296
+msgid "Wire bytes"
+msgstr ""
+
+#: src/majsoul_hook/gui.py:306
+msgid "In-memory history: latest 2,000 messages / approx. 64 MiB. Select a row to inspect original, modified, or injected content."
+msgstr ""
+
+#: src/majsoul_hook/gui.py:384
+msgid "Resource file missing. Update resources first."
+msgstr ""
+
+#: src/majsoul_hook/gui.py:387
+msgid "Starting capture..."
+msgstr ""
+
+#: src/majsoul_hook/gui.py:395
+msgid "Stopping capture..."
+msgstr ""
+
+#: src/majsoul_hook/gui.py:403
+msgid "Checking resource version..."
+msgstr ""
+
+#: src/majsoul_hook/gui.py:405
+msgid "Updating resources..."
+msgstr ""
+
+#: src/majsoul_hook/gui.py:412
+msgid "Choose a resource file"
+msgstr ""
+
+#: src/majsoul_hook/gui.py:425
+#, python-brace-format
+msgid "Cannot read local resources: {error}"
+msgstr ""
+
+#: src/majsoul_hook/gui.py:432
+msgid "No local resources. Click Update resources to build protocol and cosmetic data."
+msgstr ""
+
+#: src/majsoul_hook/gui.py:437
+msgid "unknown"
+msgstr ""
+
+#: src/majsoul_hook/gui.py:440
+#, python-brace-format
+msgid "Local index {version} | Generated {generated_at} | RPC {methods} / Characters {characters} / Skins {skins} / Titles {titles}"
+msgstr ""
+
+#: src/majsoul_hook/gui.py:444
+msgid " | No cosmetic configuration"
+msgstr ""
+
+#: src/majsoul_hook/gui.py:448
+msgid "Remote index has changed"
+msgstr ""
+
+#: src/majsoul_hook/gui.py:450
+msgid "Local index matches the remote index"
+msgstr ""
+
+#: src/majsoul_hook/gui.py:456
+msgid "An index change does not mean every protocol or configuration table changed."
+msgstr ""
+
+#: src/majsoul_hook/gui.py:485
+msgid "<unknown message>"
+msgstr ""
+
+#: src/majsoul_hook/gui.py:514
+#, python-brace-format
+msgid "{retained} retained / {dropped} dropped"
+msgstr ""
+
+#: src/majsoul_hook/gui.py:547
+msgid "Local responses and notifications appear as separate Injected rows."
+msgstr ""
+
+#: src/majsoul_hook/gui.py:565
+msgid "Select a message."
+msgstr ""
+
+#: src/majsoul_hook/gui.py:586
+msgid "Capturing"
+msgstr ""
+
+#: src/majsoul_hook/gui.py:591
+msgid "Resources updated"
+msgstr ""
+
+#: src/majsoul_hook/gui.py:593
+msgid "Resource check complete"
+msgstr ""
+
+#: src/majsoul_hook/gui.py:607
+#, python-brace-format
+msgid "Failed: {error}"
+msgstr ""
+
+#: src/majsoul_hook/gui.py:615
+#, python-brace-format
+msgid "Worker exited with code {code}; see Logs"
+msgstr ""
+
+#: src/majsoul_hook/gui.py:618
+msgid "Capture stopped"
+msgstr ""
+
+#: src/majsoul_hook/gui.py:634
+msgid "Stopping the worker and closing..."
+msgstr ""
+
+#: src/majsoul_hook/gui_backend.py:21
+msgid "Pass"
+msgstr ""
+
+#: src/majsoul_hook/gui_backend.py:22
+msgid "Modified"
+msgstr ""
+
+#: src/majsoul_hook/gui_backend.py:23
+msgid "Intercepted"
+msgstr ""
+
+#: src/majsoul_hook/gui_backend.py:24
+msgid "Injected"
+msgstr ""
+
+#: src/majsoul_hook/gui_backend.py:25
+msgid "Error"
+msgstr ""
+
+#: src/majsoul_hook/gui_i18n.py:21
+msgid "System default"
+msgstr ""
+
+#: src/majsoul_hook/gui_i18n.py:23
+msgid "request"
+msgstr ""
+
+#: src/majsoul_hook/gui_i18n.py:24
+msgid "response"
+msgstr ""
+
+#: src/majsoul_hook/gui_i18n.py:25
+msgid "notify"
+msgstr ""
+
+#: src/majsoul_hook/gui_i18n.py:26
+msgid "decoded"
+msgstr ""
+
+#: src/majsoul_hook/gui_i18n.py:27
+msgid "orphan_response"
+msgstr ""
+
+#: src/majsoul_hook/gui_i18n.py:28
+msgid "unknown_schema"
+msgstr ""
+
+#: src/majsoul_hook/gui_i18n.py:29
+msgid "malformed"
+msgstr ""

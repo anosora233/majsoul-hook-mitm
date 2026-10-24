@@ -1,4 +1,5 @@
-from majsoul_hook.wire import Codec, Frame, dictionary
+from majsoul_hook.schema import dictionary
+from majsoul_hook.wire import Codec, Frame
 
 
 def test_edit_preserves_unknown_fields_at_all_levels(cosmetic_schema):

@@ -12,8 +12,8 @@ from mitmproxy import ctx, http
 
 from .cosmetics import Cosmetics
 from .protocol import ConnectionDecoder, ProtocolError
-from .schema import Schema
-from .wire import Codec, Frame, dictionary
+from .schema import Schema, dictionary
+from .wire import Codec, Frame
 
 logger = logging.getLogger(__name__)
 
