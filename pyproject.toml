@@ -1,0 +1,54 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "majsoul-hook-mitm"
+version = "0.1.0"
+description = "Mahjong Soul local capture with optional client-side cosmetic overrides"
+readme = "README.md"
+requires-python = ">=3.12"
+license = "GPL-3.0-or-later"
+dependencies = [
+    "mitmproxy>=12,<13",
+    "protobuf>=5.29,<7",
+    "UnityPy>=1.23,<2",
+    "lupa>=2.6,<3",
+]
+
+[dependency-groups]
+dev = ["pytest>=8,<10", "ruff>=0.12,<1"]
+
+[project.scripts]
+majsoul-hook = "majsoul_hook.cli:main"
+
+[project.gui-scripts]
+majsoul-hook-gui = "majsoul_hook.gui:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/majsoul_hook"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/src",
+    "/tests",
+    "/docs",
+    "/README*.md",
+    "/AGENTS.md",
+    "/LICENSE",
+    "/pyproject.toml",
+    "/uv.lock",
+    "/.python-version",
+    "/.gitignore",
+    "/.gitattributes",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
