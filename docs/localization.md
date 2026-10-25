@@ -55,4 +55,4 @@ uv run --locked pytest tests/test_gui_i18n.py tests/test_gui.py
 uv run --locked majsoul-hook gui
 ```
 
-The tests check source/template parity, translation completeness, placeholders, compiled catalog contents, startup preferences, live switching, and the three languages at HiDPI. For distribution, `uv build` recompiles the catalogs automatically. Runtime loading uses `importlib.resources` and the class-based [gettext API](https://docs.python.org/3/library/gettext.html#class-based-api), without installing a global `_()` function or changing the process locale.
+The tests check source/template parity, translation completeness, placeholders, compiled catalog contents, startup preferences, and live switching. DPI transitions and small-window access have separate GUI checks, without requiring identical pixel dimensions across platforms. For distribution, `uv build` recompiles the catalogs automatically. Runtime loading uses `importlib.resources` and the class-based [gettext API](https://docs.python.org/3/library/gettext.html#class-based-api), without installing a global `_()` function or changing the process locale.

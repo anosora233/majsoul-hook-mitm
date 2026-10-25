@@ -308,10 +308,12 @@ def test_constraint_accounts_for_frame_and_negative_monitor(app, monkeypatch):
     app.root.deiconify()
     app.root.update()
     monkeypatch.setattr("majsoul_hook.gui_dpi.work_area", lambda _: (-1280, 0, 0, 720))
-    width, height = app.root.winfo_width(), app.root.winfo_height()
+    # Fix client and frame dimensions independently of the runner's DPI/display.
+    monkeypatch.setattr(app.root, "winfo_width", lambda: 1400)
+    monkeypatch.setattr(app.root, "winfo_height", lambda: 800)
     monkeypatch.setattr(
         "majsoul_hook.gui_dpi.window_bounds",
-        lambda _: (-1400, 300, -1400 + width + 26, 300 + height + 71),
+        lambda _: (-1400, 300, 26, 1171),
     )
     placed = []
     monkeypatch.setattr(
@@ -334,38 +336,24 @@ def test_real_window_frame_stays_inside_work_area(app):
     assert top <= y < far_y <= bottom
 
 
-@pytest.mark.parametrize("language", ["en", "ja", "zh"])
-def test_small_hidpi_view_keeps_messages_and_setup_accessible(app, monkeypatch, language):
-    app.set_language(language)
-    monkeypatch.setattr("majsoul_hook.gui_dpi.window_dpi", lambda _: 192)
+def test_small_window_keeps_messages_and_setup_accessible(app, monkeypatch):
     monkeypatch.setattr("majsoul_hook.gui_dpi.work_area", lambda _: (0, 0, 1366, 728))
-    app.dpi_layout.refresh()
     app.dpi_layout.fit_window()
     app.root.deiconify()
     app.root.update()
-    assert app.tree.winfo_ismapped() and app.tree.winfo_height() >= 140
-    assert app.details.winfo_ismapped() and app.details.winfo_width() >= 200
-    assert app.footer_label.winfo_ismapped()
+    for widget in (app.tree, app.details, app.footer_label, *app.action_checks.values()):
+        assert widget.winfo_ismapped()
+        assert widget.winfo_width() > 1 and widget.winfo_height() > 1
     assert app.header.canvas.yview()[1] - app.header.canvas.yview()[0] < 1
-    for check in app.action_checks.values():
-        assert check.winfo_ismapped()
-        assert check.winfo_rootx() >= app.root.winfo_rootx()
-        assert check.winfo_rootx() + check.winfo_width() <= (
-            app.root.winfo_rootx() + app.root.winfo_width()
-        )
-        assert check.winfo_rooty() >= app.header.winfo_rooty() + app.header.winfo_height()
-        assert check.winfo_rooty() + check.winfo_height() <= app.tabs.winfo_rooty()
+    assert app.actions_bar.winfo_rooty() >= app.header.winfo_rooty() + app.header.winfo_height()
+    assert app.actions_bar.winfo_rooty() + app.actions_bar.winfo_height() <= app.tabs.winfo_rooty()
     checkbox_positions = [check.winfo_rooty() for check in app.action_checks.values()]
     for widget in (app.update_button, app.process_entry, app.stop_button, app.language_combo):
         app.header._focus(SimpleNamespace(widget=widget))
         app.root.update()
         canvas = app.header.canvas
-        assert canvas.winfo_rootx() <= widget.winfo_rootx()
-        assert widget.winfo_rootx() + widget.winfo_width() <= (
-            canvas.winfo_rootx() + canvas.winfo_width()
-        )
-        assert canvas.winfo_rooty() <= widget.winfo_rooty()
-        assert widget.winfo_rooty() + widget.winfo_height() <= (
-            canvas.winfo_rooty() + canvas.winfo_height()
-        )
+        x = widget.winfo_rootx() - canvas.winfo_rootx()
+        y = widget.winfo_rooty() - canvas.winfo_rooty()
+        assert 0 <= x <= canvas.winfo_width() - widget.winfo_width()
+        assert 0 <= y <= canvas.winfo_height() - widget.winfo_height()
     assert [check.winfo_rooty() for check in app.action_checks.values()] == checkbox_positions

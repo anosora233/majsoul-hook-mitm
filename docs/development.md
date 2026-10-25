@@ -38,7 +38,7 @@ Fixtures build synthetic protobuf descriptors in Python. Tests require neither r
 - Wire/business: unknown fields, local responses, room sequences, query correlation, rollback, account isolation, random choices, reconnect state.
 - Loopback: real forwarding and client-only injection ordering; local requests never reach upstream.
 - GUI: task controls, snapshots, filter combinations, bounded history, worker failure, broken-pipe cleanup during startup/shutdown, DPI, window bounds, and small-viewport controls.
-- Localization: system UI language detection, saved overrides, translation placeholders, live switching during capture, and multilingual HiDPI layouts. Protocol data and raw diagnostics retain their original text.
+- Localization: system UI language detection, saved overrides, translation placeholders, and live switching during capture. Protocol data and raw diagnostics retain their original text.
 
 Keep real traffic, tokens, account IDs, downloaded assets, and keys out of fixtures. Synthetic Unicode data is appropriate for testing UTF-8 transport.
 
