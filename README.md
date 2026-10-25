@@ -16,6 +16,10 @@ A Mahjong Soul traffic inspector with local cosmetic customization.
 - Customize local characters, skins, titles, and emoji through the game’s existing controls.
 - English, Japanese, and Simplified Chinese GUI with automatic language detection and HiDPI support.
 
+## ⚠️ Disclaimer
+
+Unofficial project. Traffic interception and local cosmetic changes may violate game rules and risk account restrictions. Use only with authorization, protect sensitive data, and read the [disclaimer](docs/disclaimer.md) before use.
+
 ## 🚀 Quick start
 
 Install [uv](https://docs.astral.sh/uv/getting-started/installation/), then run from the repository root:

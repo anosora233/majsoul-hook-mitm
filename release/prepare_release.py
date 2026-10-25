@@ -24,15 +24,13 @@ def package_names(version):
     for system in ("macos", "linux"):
         for arch in ("x64", "arm64"):
             packages[f"packages-{system}-{arch}"] = [f"{prefix}-{system}-{arch}-portable.tar.gz"]
-    for arch in ("x64", "arm64"):
-        packages[f"packages-docker-{arch}"] = [f"{prefix}-linux-{arch}-docker.tar.gz"]
     return packages
 
 
 def prepare_assets(artifacts, output, version):
     packages = package_names(version)
     if {path.name for path in artifacts.iterdir()} != set(packages):
-        raise ValueError("Expected the complete set of eight package artifacts")
+        raise ValueError("Expected the complete set of six package artifacts")
     verified = []
     for artifact, names in packages.items():
         directory = artifacts / artifact

@@ -29,11 +29,12 @@ def artifacts(tmp_path):
 
 def test_release_assets_verify_all_targets_and_exclude_build_metadata(artifacts, tmp_path):
     output = tmp_path / "public"
-    assert prepare_release.prepare_assets(artifacts, output, "0.1.0") == 10
-    assert len(list(output.iterdir())) == 21
+    assert prepare_release.prepare_assets(artifacts, output, "0.1.0") == 8
+    assert len(list(output.iterdir())) == 17
     assert not list(output.glob("*.json"))
     manifest = (output / "SHA256SUMS").read_text(encoding="ascii").splitlines()
-    assert len(manifest) == 10
+    assert len(manifest) == 8
+    assert not list(output.glob("*-docker*"))
     for line in manifest:
         digest, name = line.split()
         assert hashlib.sha256((output / name).read_bytes()).hexdigest() == digest

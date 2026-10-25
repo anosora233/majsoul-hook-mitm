@@ -10,6 +10,8 @@ COPY src/ ./src/
 RUN uv sync --locked --no-dev --no-editable
 
 FROM python:3.14-slim-bookworm
+LABEL org.opencontainers.image.source="https://github.com/anosora233/majsoul-hook-mitm" \
+      org.opencontainers.image.licenses="GPL-3.0-or-later"
 RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates libstdc++6 libgomp1 && rm -rf /var/lib/apt/lists/*
 COPY --from=builder /opt/venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH" MAJSOUL_HOOK_HOME=/workspace PYTHONUNBUFFERED=1

@@ -25,7 +25,7 @@ Actual movement between mixed-DPI monitors is not covered. Ordinary pytest runs 
 - The Windows EXE installer compiled successfully with Inno Setup 7.1.0, including the desktop-shortcut option selected by default. Actual installation, upgrade, and uninstallation have not been tested.
 - Python wheel/source archives were built and inspected for translations, packaging sources, and exclusion of local runtime data. Actionlint validated the GitHub workflow.
 - [GitHub Actions run 40188124106](https://github.com/anosora233/majsoul-hook-mitm/actions/runs/40188124106) passed on Windows x64, macOS x64/ARM64, and Linux x64/ARM64. Each desktop target passed 120 core tests, 18 isolated GUI checks, and frozen startup/worker smoke checks. Both Docker builds passed diagnostics; Python distributions and all platform packages were uploaded.
-- macOS ad-hoc signature structure passed `codesign --verify --deep --strict`. Developer ID signing/notarization, actual Windows installer lifecycle, frozen-package live interception, and real-resource extraction outside Windows remain unverified. The new release-assembly and draft-creation jobs still need their first CI run. See [packaging](packaging.md).
+- macOS ad-hoc signature structure passed `codesign --verify --deep --strict`. Developer ID signing/notarization, actual Windows installer lifecycle, frozen-package live interception, and real-resource extraction outside Windows remain unverified. The new GHCR publication workflow and release assembly without Docker archives still need their first CI run. See [packaging](packaging.md).
 
 ## Pending user-assisted validation
 

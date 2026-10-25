@@ -5,8 +5,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from release import build as build_windows
-from release import windows_installer
+from release import build, windows_installer
 
 
 def test_gui_import_does_not_load_worker_dependencies():
@@ -31,19 +30,17 @@ def test_build_refuses_to_replace_portable_user_data(tmp_path, monkeypatch):
     data = bundle / "data" / "cosmetics-state.json"
     data.parent.mkdir(parents=True)
     data.write_text('{"synthetic": true}', encoding="utf-8")
-    monkeypatch.setattr(
-        build_windows, "sys", SimpleNamespace(platform="win32", executable=sys.executable)
-    )
-    monkeypatch.setattr(build_windows.platform, "machine", lambda: "AMD64")
+    monkeypatch.setattr(build, "sys", SimpleNamespace(platform="win32", executable=sys.executable))
+    monkeypatch.setattr(build.platform, "machine", lambda: "AMD64")
     with pytest.raises(ValueError, match="local data"):
-        build_windows.main(["--output", str(tmp_path)])
+        build.main(["--output", str(tmp_path)])
     assert data.read_text(encoding="utf-8") == '{"synthetic": true}'
 
 
 def test_build_rejects_unsupported_target_before_building(tmp_path, monkeypatch):
-    monkeypatch.setattr(build_windows, "sys", SimpleNamespace(platform="freebsd"))
+    monkeypatch.setattr(build, "sys", SimpleNamespace(platform="freebsd"))
     with pytest.raises(SystemExit) as error:
-        build_windows.main(["--output", str(tmp_path / "output")])
+        build.main(["--output", str(tmp_path / "output")])
     assert error.value.code == 2
     assert not (tmp_path / "output").exists()
 
@@ -84,9 +81,9 @@ def test_exe_installer_stages_installed_marker_without_changing_portable_bundle(
     ],
 )
 def test_native_build_targets(monkeypatch, system, machine, target):
-    monkeypatch.setattr(build_windows, "sys", SimpleNamespace(platform=system))
-    monkeypatch.setattr(build_windows.platform, "machine", lambda: machine)
-    assert build_windows.target_name() == target
+    monkeypatch.setattr(build, "sys", SimpleNamespace(platform=system))
+    monkeypatch.setattr(build.platform, "machine", lambda: machine)
+    assert build.target_name() == target
 
 
 def test_unix_archive_preserves_executable_mode_and_symlink(tmp_path):
@@ -103,7 +100,7 @@ def test_unix_archive_preserves_executable_mode_and_symlink(tmp_path):
         link.symlink_to(binary.name)
     except OSError:
         pytest.skip("Creating symlinks requires privileges on this Windows host")
-    archive = build_windows.archive_bundle(bundle, tmp_path, "0.1.0", "macos-arm64")
+    archive = build.archive_bundle(bundle, tmp_path, "0.1.0", "macos-arm64")
     with tarfile.open(archive) as packed:
         assert packed.getmember("Majsoul Hook.app/Contents/MacOS/worker-link").issym()
         mode = packed.getmember("Majsoul Hook.app/Contents/MacOS/majsoul-hook").mode

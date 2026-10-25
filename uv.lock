@@ -640,7 +640,6 @@ dependencies = [
 
 [package.dev-dependencies]
 build = [
-    { name = "babel" },
     { name = "pyinstaller" },
 ]
 dev = [
@@ -658,10 +657,7 @@ requires-dist = [
 ]
 
 [package.metadata.requires-dev]
-build = [
-    { name = "babel", specifier = ">=2.18,<3" },
-    { name = "pyinstaller", specifier = ">=6.22.3,<7" },
-]
+build = [{ name = "pyinstaller", specifier = ">=6.22.3,<7" }]
 dev = [
     { name = "babel", specifier = ">=2.18,<3" },
     { name = "pytest", specifier = ">=8,<10" },

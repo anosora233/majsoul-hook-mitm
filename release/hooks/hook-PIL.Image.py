@@ -2,7 +2,7 @@
 
 UnityPy imports Pillow eagerly, but this application extracts text assets only.
 The GUI uses Tk's native PNG loader. Keep PNG support for dependency compatibility;
-AVIF, WebP, color management, and font rendering are excluded in windows.spec.
+AVIF, WebP, color management, and font rendering are excluded in app.spec.
 """
 
 hiddenimports = ["PIL.PngImagePlugin"]

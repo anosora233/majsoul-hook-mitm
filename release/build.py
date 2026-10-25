@@ -14,8 +14,6 @@ import tomllib
 import zipfile
 from pathlib import Path
 
-from babel.messages.frontend import CommandLineInterface
-
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
@@ -123,7 +121,6 @@ def main(argv=None):
         raise ValueError("Build work directory must stay inside the repository")
     work.mkdir(parents=True, exist_ok=True)
     license_file = python_license()
-    CommandLineInterface().run(["pybabel", "compile", "-d", str(ROOT / "src/majsoul_hook/locale")])
     log = work / "pyinstaller.log"
     with log.open("w", encoding="utf-8") as stream:
         process = subprocess.run(

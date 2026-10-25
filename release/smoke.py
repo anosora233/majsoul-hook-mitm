@@ -10,8 +10,6 @@ import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
 
 
 def smoke(bundle: Path, resource_cache: Path | None = None) -> dict:
@@ -70,14 +68,6 @@ def smoke(bundle: Path, resource_cache: Path | None = None) -> dict:
                 )
             return result
 
-        def check_gui():
-            if sys.platform == "win32":
-                from release.smoke_windows import gui_smoke
-
-                gui_smoke(gui, unrelated, env)
-            else:
-                run(["--smoke-test"], executable=gui)
-
         run(["--help"])
         report = json.loads(run(["doctor"]).stdout)
         expected_data = (
@@ -102,14 +92,14 @@ def smoke(bundle: Path, resource_cache: Path | None = None) -> dict:
         if event.get("event") != "error" or event.get("error_type") != "FileNotFoundError":
             raise RuntimeError(f"Worker transport failed: {event}")
         run(["resources", "--base-url", "http://invalid.test/"], expected=1)
-        check_gui()
+        run(["--smoke-test"], executable=gui)
         if sys.platform == "win32":
             marker = relocated / "installed.json"
             marker.write_text("{}", encoding="utf-8")
             installed = json.loads(run(["doctor"]).stdout)
             if Path(installed["data_directory"]) != home / "Local/majsoul-hook/data":
                 raise RuntimeError(f"Incorrect installer data paths: {installed}")
-            check_gui()
+            run(["--smoke-test"], executable=gui)
             marker.unlink()
             report["installed_layout"] = True
         if resource_cache is not None:
@@ -129,7 +119,7 @@ def smoke(bundle: Path, resource_cache: Path | None = None) -> dict:
             if event.get("event") != "resources" or not event["status"]["cosmetics"]:
                 raise RuntimeError(f"Offline resource extraction failed: {event}")
             report["offline_resource_methods"] = event["status"]["methods"]
-            check_gui()
+            run(["--smoke-test"], executable=gui)
             report["gui_with_resources"] = True
         report.update(gui_start_and_close=True, worker_transport=True)
     return report

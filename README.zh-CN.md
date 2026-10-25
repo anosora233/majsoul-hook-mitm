@@ -16,6 +16,10 @@
 - 通过游戏原有界面，在本地切换角色、皮肤、称号和表情。
 - 英／日／中三语 GUI，自动检测系统语言，支持 HiDPI。
 
+## ⚠️ 免责声明
+
+本项目非官方项目。流量拦截与本地装扮修改可能违反游戏规则，并导致账号受限或封禁。请仅在获得授权的情况下使用，妥善保护敏感数据，并在使用前阅读[免责声明](docs/disclaimer.md)。
+
 ## 🚀 快速开始
 
 安装 [uv](https://docs.astral.sh/uv/getting-started/installation/)，在仓库根目录运行：
@@ -36,7 +40,7 @@ Python 3.14 由 uv 管理。GUI 需要正常的 Tkinter 环境；Windows 捕获�
 
 “本地装扮”默认启用，只读检查时取消勾选。装扮修改仅在本地可见。通过“语言”选项可切换界面语言。
 
-## 📚 文档（英语）
+## 📚 文档
 
 [CLI 与使用说明](docs/usage.md) · [打包与 CI](docs/packaging.md) · [开发](docs/development.md) · [国际化](docs/localization.md) · [架构](docs/architecture.md) · [验证状态](docs/validation.md) · [路线图](docs/roadmap.md)
 

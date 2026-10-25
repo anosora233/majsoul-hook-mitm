@@ -2,7 +2,7 @@
 
 Native packages use Python 3.14 and PyInstaller **onedir**. The GUI and console worker share native dependencies. Build each target on its own operating system and architecture; PyInstaller does not cross-compile these packages.
 
-The tracked icon source is `src/majsoul_hook/assets/icon.svg`. The package build hook renders a 1024px PNG for Tk and PyInstaller during `uv sync` or wheel creation. The renderer is a build-only dependency; generated PNG files are ignored and excluded from source distributions. SVG changes invalidate uv's editable-build cache.
+The package build hook generates translations and renders `src/majsoul_hook/assets/icon.svg` to a 1024px PNG during `uv sync` or wheel creation. PyInstaller consumes those generated assets without a second compilation step. The renderer and Babel are build/development dependencies; generated PNG/MO files are ignored and excluded from source distributions. SVG and PO changes invalidate uv's editable-build cache.
 
 ## Formats and CI targets
 
@@ -14,15 +14,15 @@ The tracked icon source is `src/majsoul_hook/assets/icon.svg`. The package build
 | Linux x64 | Portable folder in `.tar.gz` | `ubuntu-24.04`, Debian 12 build container |
 | Linux ARM64 | Portable folder in `.tar.gz` | `ubuntu-24.04-arm`, Debian 12 build container |
 | Python | `.whl` and source `.tar.gz` | Ubuntu |
-| Docker, Linux x64/ARM64 | `docker save` image archive `.tar.gz` | Native Ubuntu runners |
+| Docker, Linux x64/ARM64 | Multi-platform versioned image in GHCR on version-tag pushes | Native Ubuntu runners |
 
-The [Build packages workflow](../.github/workflows/build.yml) runs manually through **Actions → Build packages → Run workflow**, or automatically for `v*` tags. Desktop builds reject a tag that differs from the version in `pyproject.toml`. Each job uploads an artifact named `packages-<target>`, with SHA-256 checksums. Python packages use `SHA256SUMS`. Docker images are exported independently for each architecture. The workflow does not push a registry, upload to PyPI, or submit to Microsoft Store.
+The [Build packages workflow](../.github/workflows/build.yml) runs manually through **Actions → Build packages → Run workflow**, or automatically for `v*` tags. Builds reject a tag that differs from the version in `pyproject.toml`. Each desktop/Python job uploads an artifact named `packages-<target>`, with SHA-256 checksums. Python packages use `SHA256SUMS`. Docker builds run diagnostics on both architectures. Manual runs do not push images; version-tag pushes publish verified images to GHCR. The workflow does not upload to PyPI or submit to Microsoft Store.
 
 Desktop CI checks Ruff, core tests, and every GUI test in a separate interpreter. Linux GUI tests and frozen smoke checks run under Xvfb. Build logs are uploaded even when a build fails. Linux packages are built against Debian 12's glibc baseline, not musl/Alpine. Kernel requirements for local capture are separate from the packaging baseline.
 
 ## Prepare a release
 
-The `release-assets` job waits for all build jobs, verifies the ten packages against their checksums, and collects them with individual `.sha256` files and one combined `SHA256SUMS`. Only named public packages are copied; build reports and logs remain in Actions artifacts. Manual runs exercise this assembly without creating a Release.
+The `release-assets` job waits for all build jobs, verifies the eight desktop/Python packages against their checksums, and collects them with individual `.sha256` files and one combined `SHA256SUMS`. Only named public packages are copied; build reports and logs remain in Actions artifacts. Manual runs exercise this assembly without creating a Release. Docker images are distributed through GHCR rather than Release attachments.
 
 For a new version, update `pyproject.toml`, run `uv lock`, and add English notes at `release/notes/v<VERSION>.md`. Commit and push the changes, then complete a manual build before pushing an annotated tag matching the project version:
 
@@ -31,7 +31,7 @@ git tag -a v0.1.0 -m "Release v0.1.0"
 git push origin v0.1.0
 ```
 
-A successful tag-triggered build creates a **draft** GitHub Release and uploads the verified assets. Only this job receives `contents: write`. Rerunning it may refresh the draft; it refuses to change an already published Release. Inspect the downloads and notes before manually publishing the draft. No tag or Release is created by the local preparation script.
+A successful tag-triggered build publishes the versioned GHCR manifest, then creates a **draft** GitHub Release and uploads the verified assets. Only the draft job receives `contents: write`. Rerunning it may refresh the draft; it refuses to change an already published Release. Container images are available before the draft is publicly published. Inspect the downloads and notes before manually publishing the draft. No tag or Release is created by the local preparation script.
 
 ## Build locally
 
@@ -88,11 +88,22 @@ docker build -t majsoul-hook:local .
 docker run --rm majsoul-hook:local doctor
 ```
 
-Load a CI image using `docker load -i <docker-archive.tar.gz>`, then use the image tag printed by Docker. Image tags currently use `majsoul-hook:ci-x64` or `majsoul-hook:ci-arm64`. Container defaults use `/workspace`; mount a writable volume there to retain generated resources. Host-process local capture is not configured or tested by the image: host kernel, namespace, and privilege requirements remain the operator's responsibility. No privileged container is started by CI.
+Container builds use the same `build.yml` trigger as desktop packages. Each native Docker job builds once and runs diagnostics. Only version-tag pushes log in with the repository's `GITHUB_TOKEN` and push architecture images. After all builds and release-asset checks pass, a manifest joins their recorded digests under one version tag. There is no `latest` alias. Only Docker publishing jobs receive `packages: write`; no personal token is normally required.
+
+For example, after publishing a `v0.1.1` tag that includes this workflow:
+
+```text
+docker pull ghcr.io/anosora233/majsoul-hook-mitm:0.1.1
+docker run --rm ghcr.io/anosora233/majsoul-hook-mitm:0.1.1 doctor
+```
+
+Existing tags retain their original workflow; new version tags must include this configuration to publish images. Initially created GHCR packages are private by default; change the package visibility to Public once if anonymous pulls are wanted. Source labels link the image to this repository.
+
+Container defaults use `/workspace`; mount a writable volume there to retain generated resources. Host-process local capture is not configured or tested by the image: host kernel, namespace, and privilege requirements remain the operator's responsibility. No privileged container is started by CI.
 
 ## Validation and size
 
-Frozen smoke checks relocate the bundle into a path containing spaces and non-ASCII characters, launch from another working directory, check native helpers and TLS CA data, exercise worker JSONL errors, and open/close the GUI. With a resource cache, they also extract resources and reopen the GUI with the generated schema. These checks never activate local interception or change trust.
+Frozen smoke checks relocate the bundle into a path containing spaces and non-ASCII characters, launch from another working directory, check native helpers and TLS CA data, exercise worker JSONL errors, and open/close the GUI through its `--smoke-test` entry point on every platform. With a resource cache, they also extract resources and reopen the GUI with the generated schema. These checks never activate local interception or change trust.
 
 The spec excludes mitmproxy's alternate interfaces, setuptools, and optional Pillow codecs. Separate GUI/console analyses keep worker dependencies out of the GUI Python archive. The console's superset `base_library.zip` is shared. UPX and binary stripping are disabled, and Python assertions/docstrings remain intact. `size.json` records component and archive sizes.
 
