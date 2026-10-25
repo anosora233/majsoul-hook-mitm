@@ -32,11 +32,11 @@ class Schema:
         self.message_class("lq.Wrapper")
 
     @classmethod
-    def load(cls, path: Path) -> "Schema":
+    def load(cls, path: Path) -> Schema:
         return cls.from_document(json.loads(path.read_text(encoding="utf-8")))
 
     @classmethod
-    def from_document(cls, document: dict) -> "Schema":
+    def from_document(cls, document: dict) -> Schema:
         if not isinstance(document, dict) or document.get("format") != 1:
             raise ValueError("Unsupported protocol resource format; update resources")
         schema = cls(base64.b64decode(document["descriptor"], validate=True), document["service"])

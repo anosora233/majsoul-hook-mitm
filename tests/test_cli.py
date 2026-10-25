@@ -58,3 +58,12 @@ def test_cli_explicit_cosmetics(cosmetic_schema, cosmetic_config, monkeypatch, t
     main(["capture", "--process", "1234", "--cosmetics", "--state", str(tmp_path / "state.json")])
     assert isinstance(capture.await_args.kwargs["cosmetics"], Cosmetics)
     assert capture.await_args.kwargs["cosmetics"].store.path == tmp_path / "state.json"
+
+
+def test_doctor_reports_runtime_without_capture(monkeypatch, capsys):
+    import json
+
+    report = {"ok": True, "frozen": False}
+    monkeypatch.setattr("majsoul_hook.diagnostics.check_runtime", lambda: report)
+    main(["doctor"])
+    assert json.loads(capsys.readouterr().out) == report

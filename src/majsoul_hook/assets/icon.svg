@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256" role="img" aria-labelledby="title desc">
+  <title id="title">Majsoul Hook</title>
+  <desc id="desc">An ivory mahjong tile with two emerald arrows representing bidirectional traffic.</desc>
+  <defs>
+    <linearGradient id="jade" x1="40" y1="32" x2="216" y2="232" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1c9b79"/>
+      <stop offset="1" stop-color="#075848"/>
+    </linearGradient>
+    <linearGradient id="ivory" x1="64" y1="20" x2="196" y2="220" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#fffef8"/>
+      <stop offset="1" stop-color="#ece8d8"/>
+    </linearGradient>
+  </defs>
+  <rect x="30" y="30" width="196" height="210" rx="42" fill="url(#jade)"/>
+  <rect x="30" y="16" width="196" height="208" rx="42" fill="url(#ivory)" stroke="#075848" stroke-width="4"/>
+  <rect x="40" y="26" width="176" height="188" rx="32" fill="none" stroke="#fff" stroke-opacity=".65" stroke-width="2"/>
+  <g fill="none" stroke="url(#jade)" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M76 124v-20a24 24 0 0 1 24-24h64"/>
+    <path d="M180 116v20a24 24 0 0 1-24 24H92"/>
+  </g>
+  <g fill="#08745a" stroke="#08745a" stroke-width="6" stroke-linejoin="round">
+    <path d="m164 60 20 20-20 20z"/>
+    <path d="m92 140-20 20 20 20z"/>
+  </g>
+</svg>

@@ -1,0 +1,15 @@
+*
+!Dockerfile
+!pyproject.toml
+!uv.lock
+!.python-version
+!README.md
+!LICENSE
+!hatch_build.py
+!babel.cfg
+!src/
+!src/**
+src/**/__pycache__/
+src/**/*.pyc
+src/**/*.mo
+src/majsoul_hook/assets/icon.png

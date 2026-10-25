@@ -25,7 +25,7 @@ uv sync --locked
 uv run --locked majsoul-hook gui
 ```
 
-Python 3.12 由 uv 管理。GUI 需要正常的 Tkinter 环境；Windows 捕获时可能请求管理员权限。
+Python 3.14 由 uv 管理。GUI 需要正常的 Tkinter 环境；Windows 捕获时可能请求管理员权限。
 
 ## 🎮 使用 GUI
 
@@ -38,7 +38,7 @@ Python 3.12 由 uv 管理。GUI 需要正常的 Tkinter 环境；Windows 捕获�
 
 ## 📚 文档（英语）
 
-[CLI 与使用说明](docs/usage.md) · [开发](docs/development.md) · [国际化](docs/localization.md) · [架构](docs/architecture.md) · [验证状态](docs/validation.md) · [路线图](docs/roadmap.md)
+[CLI 与使用说明](docs/usage.md) · [打包与 CI](docs/packaging.md) · [开发](docs/development.md) · [国际化](docs/localization.md) · [架构](docs/architecture.md) · [验证状态](docs/validation.md) · [路线图](docs/roadmap.md)
 
 ## 📄 许可证与致谢
 

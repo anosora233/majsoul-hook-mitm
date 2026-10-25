@@ -13,8 +13,8 @@ from urllib.request import Request, urlopen
 
 from google.protobuf.message import DecodeError
 
+from .config import DEFAULT_BASE_URL, INDEX, normalize_base_url
 from .gui_i18n import N_
-from .resources import DEFAULT_BASE_URL, INDEX, normalize_base_url
 from .schema import Schema
 
 ACTION_LABELS = {
@@ -141,6 +141,16 @@ class EventInbox:
             return events
 
 
+def worker_command(task: str) -> list[str]:
+    executable = Path(sys.executable)
+    if getattr(sys, "frozen", False):
+        suffix = ".exe" if executable.suffix.lower() == ".exe" else ""
+        return [str(executable.with_name("majsoul-hook" + suffix)), "--gui-worker", task]
+    if executable.name.lower() == "pythonw.exe":
+        executable = executable.with_name("python.exe")
+    return [str(executable), "-u", "-m", "majsoul_hook.gui_worker", task]
+
+
 class BackendProcess:
     def __init__(self):
         self.inbox = EventInbox()
@@ -156,11 +166,8 @@ class BackendProcess:
     def start(self, task: str, config: dict):
         if self.running:
             raise RuntimeError("A backend task is already running")
-        executable = Path(sys.executable)
-        if executable.name.lower() == "pythonw.exe":
-            executable = executable.with_name("python.exe")
         process = subprocess.Popen(
-            [str(executable), "-u", "-m", "majsoul_hook.gui_worker", task],
+            worker_command(task),
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
@@ -215,7 +222,7 @@ class BackendProcess:
         for stream in (process.stdin, process.stdout, process.stderr):
             try:
                 stream.close()
-            except (OSError, ValueError):
+            except OSError, ValueError:
                 # Closing stdin may flush buffered commands after the worker exits.
                 pass
 
@@ -230,7 +237,7 @@ class BackendProcess:
             try:
                 process.stdin.write('{"command":"stop"}\n')
                 process.stdin.flush()
-            except (OSError, ValueError):
+            except OSError, ValueError:
                 pass
 
         def force_stop():

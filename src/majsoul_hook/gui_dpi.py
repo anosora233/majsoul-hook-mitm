@@ -14,16 +14,16 @@ def enable_dpi_awareness():
         user32 = ctypes.windll.user32
         if user32.SetProcessDpiAwarenessContext(ctypes.c_void_p(-4)):
             return
-    except (AttributeError, OSError):
+    except AttributeError, OSError:
         pass
     try:
         if ctypes.windll.shcore.SetProcessDpiAwareness(2) == 0:
             return
-    except (AttributeError, OSError):
+    except AttributeError, OSError:
         pass
     try:
         ctypes.windll.user32.SetProcessDPIAware()
-    except (AttributeError, OSError):
+    except AttributeError, OSError:
         pass
 
 
@@ -35,7 +35,7 @@ def window_dpi(root):
             api.restype = wintypes.UINT
             if dpi := api(root.winfo_id()):
                 return float(dpi)
-        except (AttributeError, OSError):
+        except AttributeError, OSError:
             pass
     return float(root.winfo_fpixels("1i"))
 
@@ -63,7 +63,7 @@ def work_area(root):
             info = MonitorInfo(size=ctypes.sizeof(MonitorInfo))
             if get_info(monitor_from_window(root.winfo_id(), 2), ctypes.byref(info)):
                 return info.work.left, info.work.top, info.work.right, info.work.bottom
-        except (AttributeError, OSError):
+        except AttributeError, OSError:
             pass
     return 0, 0, root.winfo_screenwidth(), root.winfo_screenheight()
 

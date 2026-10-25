@@ -1,0 +1,139 @@
+name: Build packages
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+jobs:
+  desktop:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: windows-2025
+            target: windows-x64
+          - runner: macos-15
+            target: macos-arm64
+          - runner: macos-15-intel
+            target: macos-x64
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: astral-sh/setup-uv@v10.3.2
+        with:
+          version: '0.12.22'
+          enable-cache: true
+      - uses: ./.github/actions/build-desktop
+      - uses: actions/upload-artifact@v7.0.2
+        with:
+          name: packages-${{ matrix.target }}
+          path: |
+            dist/*.zip
+            dist/*.tar.gz
+            dist/*-installer.exe
+            dist/*.sha256
+            dist/*.json
+          if-no-files-found: error
+          compression-level: 0
+      - name: Upload diagnostics
+        if: always()
+        uses: actions/upload-artifact@v7.0.2
+        with:
+          name: logs-${{ matrix.target }}
+          path: build/**/*.log
+          if-no-files-found: ignore
+  linux:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            target: linux-x64
+          - runner: ubuntu-24.04-arm
+            target: linux-arm64
+    runs-on: ${{ matrix.runner }}
+    container: debian:bookworm
+    timeout-minutes: 40
+    steps:
+      - name: Install build and display dependencies
+        run: |
+          apt-get update
+          apt-get install --no-install-recommends -y git ca-certificates binutils build-essential xvfb xauth libx11-6 libxext6 libxrender1 libfontconfig1 libxft2 libxss1 libglib2.0-0
+      - uses: actions/checkout@v7.0.1
+      - uses: astral-sh/setup-uv@v10.3.2
+        with:
+          version: '0.12.22'
+          enable-cache: true
+      - uses: ./.github/actions/build-desktop
+      - uses: actions/upload-artifact@v7.0.2
+        with:
+          name: packages-${{ matrix.target }}
+          path: |
+            dist/*.tar.gz
+            dist/*.sha256
+            dist/*.json
+          if-no-files-found: error
+          compression-level: 0
+      - name: Upload diagnostics
+        if: always()
+        uses: actions/upload-artifact@v7.0.2
+        with:
+          name: logs-${{ matrix.target }}
+          path: build/**/*.log
+          if-no-files-found: ignore
+  python:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: astral-sh/setup-uv@v10.3.2
+        with:
+          version: '0.12.22'
+          enable-cache: true
+      - name: Build wheel and source distribution
+        run: |
+          uv python install
+          uv build --out-dir dist/python
+      - name: Hash Python packages
+        working-directory: dist/python
+        run: sha256sum *.whl *.tar.gz > SHA256SUMS
+      - uses: actions/upload-artifact@v7.0.2
+        with:
+          name: packages-python
+          path: dist/python/
+          if-no-files-found: error
+          compression-level: 0
+  docker:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            arch: x64
+          - runner: ubuntu-24.04-arm
+            arch: arm64
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: astral-sh/setup-uv@v10.3.2
+        with:
+          version: '0.12.22'
+          enable-cache: true
+      - name: Build and inspect image
+        run: |
+          docker build --tag majsoul-hook:ci-${{ matrix.arch }} .
+          docker run --rm majsoul-hook:ci-${{ matrix.arch }} doctor
+          uv run --locked --group build python release/export_image.py majsoul-hook:ci-${{ matrix.arch }}
+      - uses: actions/upload-artifact@v7.0.2
+        with:
+          name: packages-docker-${{ matrix.arch }}
+          path: |
+            dist/*-docker.tar.gz
+            dist/*-docker.tar.gz.sha256
+          if-no-files-found: error
+          compression-level: 0

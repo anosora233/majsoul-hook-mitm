@@ -7,11 +7,11 @@ venv/
 /.agents/
 /.codex/
 /.aws/
-/majsoul-hook-mitm/
-/majsoul-mirage/
+/archive/
 __pycache__/
 *.py[cod]
 *.mo
+/src/majsoul_hook/assets/icon.png
 *.egg-info/
 .pytest_cache/
 .ruff_cache/

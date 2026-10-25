@@ -3,7 +3,7 @@
 ## Scope
 
 - This repository contains the rebuilt Python package `majsoul_hook`.
-- `majsoul-hook-mitm/` and `majsoul-mirage/` are ignored, read-only reference checkouts. Never edit, format, stage, or vendor them.
+- `archive/majsoul-hook-mitm/` and `archive/majsoul-mirage/` are ignored, read-only reference checkouts. Never edit, format, stage, or vendor them.
 - Use Python only. Do not add JavaScript, TypeScript, Node.js, generated protocol modules, or a protoc requirement. Embedded Lua belongs only to explicit resource extraction.
 - Use English for code, comments, source UI strings, commit messages, and documentation. The Japanese and Chinese READMEs and GUI translation catalog are exceptions. Synthetic Unicode test data is permitted.
 - CLI capture is read-only unless `--cosmetics` is provided. The GUI defaults its local cosmetics checkbox to enabled; users may uncheck it for read-only capture. Do not add automatic game actions or server-directed synthetic requests.
@@ -23,7 +23,7 @@ uv run --locked ruff check src tests
 uv run --locked ruff format --check src tests
 ```
 
-Development uses Python 3.12. After dependency changes, run `uv lock` and include the lockfile. If Windows restricts caches, use project-local `UV_CACHE_DIR` and a fresh pytest `--basetemp` under `.cache/`. Never commit machine-specific runtime paths.
+Development uses Python 3.14. After dependency changes, run `uv lock` and include the lockfile. If Windows restricts caches, use project-local `UV_CACHE_DIR` and a fresh pytest `--basetemp` under `.cache/`. Never commit machine-specific runtime paths.
 
 ## Implementation invariants
 
@@ -37,6 +37,10 @@ Development uses Python 3.12. After dependency changes, run `uv lock` and includ
 - Bound GUI history/inbox memory. Observers must not affect forwarding. Separate intercepted and injected rows and retain original/actual content and wire bytes. Keep action checkboxes outside the scrollable setup area.
 - Enable Windows DPI awareness before Tk. Update fonts/layout without rebuilding or losing selection. Constrain the complete native frame to the work area, including negative desktop coordinates, and reserve room for the inspector on small screens.
 - Maintain GUI translations in `locale/*/LC_MESSAGES/messages.po` using the gettext workflow in `docs/localization.md`. Mark deferred labels with `N_`; keep English msgids and placeholders stable. Track PO/POT sources, never generated MO files. Babel is build/development tooling only.
+- Track `assets/icon.svg` as the icon source. The package build hook generates the ignored PNG for Tk and native packaging; keep SVG rendering dependencies out of runtime imports and frozen bundles.
+- Native builds use PyInstaller onedir with sibling GUI/console executables; macOS wraps these in an app bundle. Frozen workers launch the console binary, never `python -m`. Portable Windows/Linux data stays beside the binaries; installed Windows and macOS apps use user data directories. Never package local state, caches, captures, or keys; never overwrite a used bundle during rebuilding. See `docs/packaging.md`.
+- Cross-platform packages are built natively by GitHub Actions. Windows distributes a portable ZIP and Inno Setup EXE installer. Keep macOS signing/notarization and live local-capture validation distinct from successful compilation. Docker CI must not start privileged containers or intercept host traffic. Do not publish releases, registries, PyPI, or Store submissions as part of a build-only task.
+- Keep GUI imports independent of CLI, capture, and extraction implementations so its separately analyzed executable stays small. Shared defaults, validation, and atomic writes belong in `config.py`.
 
 ## Validation and hygiene
 

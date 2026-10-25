@@ -8,7 +8,7 @@ Tests cover protocol parsing, fixture-based resource extraction, passthrough, co
 
 DPI transitions at 125%, 150%, and 200% are simulated. Native Windows rendering has also been checked at 200%. A simulated 1366×728 work area preserves the inspector, fixed action filters, and scrollable setup access. Negative-coordinate work-area constraints are tested without requiring a second display.
 
-Actual movement between mixed-DPI monitors is not covered. Tk/display initialization failures are reported as skips and require a separate rerun.
+Actual movement between mixed-DPI monitors is not covered. Ordinary pytest runs report Tk/display initialization failures as skips. The isolated GUI runner used by desktop CI rejects skips; see [development](development.md#setup-and-checks).
 
 ## Real Windows observations: 2026-10-24
 
@@ -16,6 +16,15 @@ Actual movement between mixed-DPI monitors is not covered. Tk/display initializa
 - Observed lobby flows used `scheme=http`, `client_tls=False`, and `server_tls=False`. Plaintext WebSockets needed no CA. This does not establish other connections' transport or certificate-verification behavior.
 - The GUI backend checked the remote index and generated protocol/cosmetic resources. An unused test process selector reached local-capture readiness and stopped with exit code zero; the worker exited. This did not capture the game.
 - Native window rendering verified complete work-area bounds and constrained layouts. Socket tests verified synthetic cosmetic edits/injections.
+
+## Packaging observations: 2026-10-25
+
+- Python 3.14 Windows onedir relocation, GUI startup/shutdown, worker JSONL transport, and offline extraction of 466 protocol methods passed locally.
+- The SVG-derived icon passed the same Windows frozen checks. Wheels include the generated PNG; source distributions retain only the SVG. The renderer is build-only and absent from the frozen package.
+- Installed Windows storage was exercised using the installer marker in a temporary copy; settings stayed outside the program directory.
+- The Windows EXE installer compiled successfully with Inno Setup 7.1.0, including the desktop-shortcut option selected by default. Actual installation, upgrade, and uninstallation have not been tested.
+- Python wheel/source archives were built and inspected for translations, packaging sources, and exclusion of local runtime data. Actionlint validated the GitHub workflow.
+- Native macOS/Linux packages, Docker image builds, clean-machine Windows execution, signing/notarization, and frozen-package interception remain pending. At the time of these checks, no Git remote was configured and Actions had not run. See [packaging](packaging.md).
 
 ## Pending user-assisted validation
 

@@ -25,7 +25,7 @@ uv sync --locked
 uv run --locked majsoul-hook gui
 ```
 
-Python 3.12 is managed by uv. The GUI needs working Tkinter support; Windows capture may request administrator permission.
+Python 3.14 is managed by uv. The GUI needs working Tkinter support; Windows capture may request administrator permission.
 
 ## 🎮 Use the GUI
 
@@ -38,7 +38,7 @@ Python 3.12 is managed by uv. The GUI needs working Tkinter support; Windows cap
 
 ## 📚 Documentation
 
-[CLI and usage](docs/usage.md) · [Development](docs/development.md) · [Localization](docs/localization.md) · [Architecture](docs/architecture.md) · [Validation status](docs/validation.md) · [Roadmap](docs/roadmap.md)
+[CLI and usage](docs/usage.md) · [Packages and CI](docs/packaging.md) · [Development](docs/development.md) · [Localization](docs/localization.md) · [Architecture](docs/architecture.md) · [Validation status](docs/validation.md) · [Roadmap](docs/roadmap.md)
 
 ## 📄 License & credits
 

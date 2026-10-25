@@ -1,6 +1,6 @@
 # Usage
 
-Run commands from the repository root. Relative resource and state paths use the working directory. uv manages Python 3.12 and the project environment.
+For source runs, use the repository root; relative resource and state paths use the working directory. uv manages Python 3.14 and the project environment. Native packages run without Python: portable folders keep default data beside their executables, while installed apps use user data directories. See [packaging](packaging.md).
 
 ## GUI
 
@@ -9,7 +9,7 @@ uv sync --locked
 uv run --locked majsoul-hook gui
 ```
 
-The GUI requires working standard-library Tkinter support. Windows also has the `uv run --locked majsoul-hook-gui` entry point. Local capture may request administrator permission. Other platforms depend on [mitmproxy local-capture support](https://docs.mitmproxy.org/stable/concepts/modes/#local-capture).
+The GUI requires working standard-library Tkinter support. The alternative entry point is `uv run --locked majsoul-hook-gui`. Local capture may request administrator permission. Other platforms depend on [mitmproxy local-capture support](https://docs.mitmproxy.org/stable/concepts/modes/#local-capture).
 
 Update resources on first use, choose the game's process name or PID, start capture, and reconnect the game. The default selector is `Jantama_MahjongSoul`; a browser may use a separate network process. Local cosmetics start enabled in the GUI. Uncheck the option for read-only inspection.
 
@@ -49,7 +49,7 @@ CLI capture is read-only unless `--cosmetics` is provided. `--process` selects o
 
 Console output contains summaries by default. `--verbose` and `--output` include full original decoded payloads. CLI JSONL actions are `pass`, `modified`, `local`, `error_blocked`, and `error_passthrough`. Unknown schemas retain Base64; unmatched responses are `orphan_response`. Field names, bytes, and 64-bit integers follow protobuf JSON conventions.
 
-Plaintext `ws://` needs no CA. Intercepting certificate-verified `wss://` generally requires the client to trust mitmproxy's CA. The program does not install CAs or change trust automatically. Logs show scheme, port, and both TLS flags. `--confdir` selects a certificate directory, defaulting to `~/.mitmproxy/`, without loading user YAML. See [mitmproxy's certificate documentation](https://docs.mitmproxy.org/stable/concepts/certificates/).
+Plaintext `ws://` needs no CA. Intercepting certificate-verified `wss://` generally requires the client to trust mitmproxy's CA. The program does not install CAs or change trust automatically. Logs show scheme, port, and both TLS flags. `--confdir` selects a certificate directory without loading user YAML. Source runs normally use `~/.mitmproxy/`; frozen builds and `MAJSOUL_HOOK_HOME` use the [distribution's data root](packaging.md#running-packages-and-storing-data). See [mitmproxy's certificate documentation](https://docs.mitmproxy.org/stable/concepts/certificates/).
 
 ## Local cosmetics
 

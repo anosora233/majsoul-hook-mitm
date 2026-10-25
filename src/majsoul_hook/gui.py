@@ -3,10 +3,12 @@
 import json
 import tkinter as tk
 from datetime import datetime
+from importlib.resources import files
 from pathlib import Path
 from tkinter import filedialog, font, ttk
 
-from .cli import capture_process
+from .app_paths import default_confdir, default_path
+from .config import DEFAULT_BASE_URL, capture_process
 from .gui_backend import ACTION_LABELS, BackendProcess, MessageHistory, local_resource_status
 from .gui_dpi import DpiLayout, enable_dpi_awareness
 from .gui_i18n import (
@@ -19,7 +21,6 @@ from .gui_i18n import (
     translate,
 )
 from .gui_widgets import ScrollableHeader
-from .resources import DEFAULT_BASE_URL
 
 MESSAGE_COLUMNS = (
     ("time", N_("Time"), 88),
@@ -34,8 +35,11 @@ MESSAGE_COLUMNS = (
 
 
 class InspectorApp:
-    def __init__(self, root: tk.Tk, backend=None, *, settings_path=Path("data/gui-settings.json")):
+    def __init__(self, root: tk.Tk, backend=None, *, settings_path=None):
         self.root = root
+        settings_path = (
+            settings_path if settings_path is not None else default_path("data/gui-settings.json")
+        )
         self.settings_path = settings_path
         self.language_preference = load_language(settings_path)
         self.language = (
@@ -53,7 +57,7 @@ class InspectorApp:
         self.stopping = False
         self.process = tk.StringVar(value="Jantama_MahjongSoul")
         self.cosmetics = tk.BooleanVar(value=True)
-        self.schema = tk.StringVar(value=str(Path("data/protocol.json").resolve()))
+        self.schema = tk.StringVar(value=str(default_path("data/protocol.json").resolve()))
         self.base_url = tk.StringVar(value=DEFAULT_BASE_URL)
         self.search = tk.StringVar()
         self.action_filters = {action: tk.BooleanVar(value=True) for action in ACTION_LABELS}
@@ -64,6 +68,10 @@ class InspectorApp:
         self._set(self.resource_summary, "Reading local resources...")
         self._set(self.count, "0 messages")
         root.title(self.tr("Mahjong Soul | Traffic Inspector"))
+        self._icon = tk.PhotoImage(
+            master=root, file=str(files("majsoul_hook").joinpath("assets/icon.png"))
+        )
+        root.iconphoto(True, self._icon)
         self.dpi_layout.fit_window()
         style = ttk.Style(root)
         if "vista" in style.theme_names():
@@ -374,11 +382,13 @@ class InspectorApp:
         self.stop_button.configure(state="normal" if task == "capture" else "disabled")
 
     def _start(self, task):
+        confdir = default_confdir()
         config = {
             "process": capture_process(self.process.get()) if task == "capture" else "",
             "schema": str(Path(self.schema.get()).resolve()),
-            "state": str(Path("data/cosmetics-state.json").resolve()),
-            "cache": str(Path(".cache/bundles").resolve()),
+            "state": str(default_path("data/cosmetics-state.json").resolve()),
+            "cache": str(default_path(".cache/bundles").resolve()),
+            "confdir": str(confdir) if confdir is not None else None,
             "cosmetics": self.cosmetics.get(),
             "base_url": self.base_url.get().strip(),
         }
@@ -650,10 +660,12 @@ class InspectorApp:
         self.backend.stop(timeout=15 if self.backend.task == "capture" else 2)
 
 
-def main():
+def main(*, smoke_test=False):
     enable_dpi_awareness()
     root = tk.Tk()
-    InspectorApp(root)
+    app = InspectorApp(root)
+    if smoke_test:
+        root.after(500, app.close)
     root.mainloop()
 
 

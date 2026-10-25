@@ -10,34 +10,19 @@ import logging
 import re
 from datetime import UTC, datetime
 from pathlib import Path
-from urllib.parse import quote, urlsplit
+from urllib.parse import quote
 from urllib.request import Request, urlopen
 
 from google.protobuf import descriptor_pb2
 
+from .config import DEFAULT_BASE_URL, INDEX, atomic_write, normalize_base_url
 from .cosmetic_resources import CFG_PATTERN, export_cosmetics
 from .schema import Schema
 
-DEFAULT_BASE_URL = "https://game.maj-soul.com/assetbundles/DXT/"
-INDEX = "bundle_info_so.majset"
 CONFIG = "myassets/docs/proto_config.bytes"
 MODULE = re.compile(r"^luabyte/lua/protol/[^/]+_pb\.lua\.bytes$")
 XOR_KEY = b"wrelupqezdfrqdsd"
 logger = logging.getLogger(__name__)
-
-
-def normalize_base_url(base_url: str) -> str:
-    base_url = base_url.strip().rstrip("/") + "/"
-    if urlsplit(base_url).scheme != "https":
-        raise ValueError("Resource base URL must use HTTPS")
-    return base_url
-
-
-def atomic_write(path: Path, content: bytes) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    temporary = path.with_suffix(path.suffix + ".tmp")
-    temporary.write_bytes(content)
-    temporary.replace(path)
 
 
 def export_descriptor(modules: dict[str, str]) -> bytes:

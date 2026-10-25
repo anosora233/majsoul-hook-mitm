@@ -21,6 +21,8 @@ Resource files contain a format marker, source URL, bundle SHA-256 values, an in
 | Module | Responsibility |
 | --- | --- |
 | `cli.py` | Arguments, process selection, and dispatch. |
+| `config.py` | Shared defaults, input validation, and atomic writes. |
+| `app_paths.py`, `diagnostics.py` | Source/portable defaults and read-only dependency checks. |
 | `resources.py` | HTTPS bundle discovery/cache, protocol Lua extraction, descriptors, and atomic output. |
 | `cosmetic_resources.py` | ExcelTool/block-table loading and configuration projection. |
 | `schema.py` | Independent descriptor pool, dynamic messages, and protobuf JSON conversion. |
@@ -68,6 +70,6 @@ Stop commands use stdin; EOF also stops capture if the GUI disappears. The worke
 | `data/gui-settings.json` | GUI language preference (`auto`, `en`, `ja`, `zh`) | No |
 | `.cache/bundles/` | Download cache, isolated by origin | No |
 | `captures/`, `*.jsonl` | Optional decoded traffic | No |
-| `~/.mitmproxy/` or `--confdir` | Certificates and private keys | No |
+| CA directory or explicit `--confdir` | Certificates and private keys | No |
 
-Use only one cosmetic capture process per state file. Room/random game choices live in memory; saved preferences survive restarts.
+Runtime paths above are relative to the [distribution's data root](packaging.md#running-packages-and-storing-data); explicit CLI paths use the working directory. That section also defines source/frozen CA defaults. Use only one cosmetic capture process per state file. Room/random game choices live in memory; saved preferences survive restarts.

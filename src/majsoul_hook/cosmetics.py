@@ -8,7 +8,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from time import monotonic
 
-from .resources import atomic_write
+from .config import atomic_write
 from .schema import Schema, dictionary
 from .wire import Codec, Frame
 
@@ -85,7 +85,7 @@ class Effect:
 
 class Cosmetics:
     @classmethod
-    def from_schema(cls, schema: Schema, state_path: Path) -> "Cosmetics":
+    def from_schema(cls, schema: Schema, state_path: Path) -> Cosmetics:
         if not schema.cosmetic_config:
             raise ValueError("Update resources with cosmetics enabled first")
         return cls(schema, schema.cosmetic_config, StateStore(state_path))
@@ -131,7 +131,7 @@ class Cosmetics:
             try:
                 content = json.loads(self.codec.read(frame, frame.wrapper.name).content)
                 return isinstance(content, dict) and type(content.get("emo_id")) is int
-            except (ValueError, TypeError):
+            except ValueError, TypeError:
                 return False
         return False
 
@@ -332,7 +332,7 @@ class Cosmetics:
                 elif name == ".lq.FastTest.broadcastInGame":
                     try:
                         content = json.loads(data.get("content", ""))
-                    except (ValueError, TypeError):
+                    except ValueError, TypeError:
                         content = None
                     if isinstance(content, dict) and type(content.get("emo_id")) is int:
                         local, response = True, {}

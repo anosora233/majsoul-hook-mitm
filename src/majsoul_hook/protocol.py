@@ -136,5 +136,5 @@ class ConnectionDecoder:
             if encoded:
                 raw = decode_action(raw)
             action["data"] = self.schema.decode(qualified(action["name"]), raw)
-        except (KeyError, ValueError, DecodeError):
+        except KeyError, ValueError, DecodeError:
             warnings.append(f"Cannot decode nested action {action['name']}")

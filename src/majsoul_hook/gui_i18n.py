@@ -10,7 +10,7 @@ from functools import cache
 from importlib.resources import files
 from pathlib import Path
 
-from .resources import atomic_write
+from .config import atomic_write
 
 
 def N_(source: str) -> str:
@@ -56,14 +56,14 @@ def detect_language() -> str:
             language_id = ctypes.windll.kernel32.GetUserDefaultUILanguage()
             if language := locale.windows_locale.get(language_id):
                 return normalize_language(language)
-        except (AttributeError, OSError):
+        except AttributeError, OSError:
             pass
     for name in ("LC_ALL", "LC_MESSAGES", "LANG"):
         if value := os.environ.get(name):
             return normalize_language(value)
     try:
         return normalize_language(locale.getlocale()[0])
-    except (ValueError, TypeError):
+    except ValueError, TypeError:
         return "en"
 
 
@@ -72,7 +72,7 @@ def load_language(path: Path) -> str:
         document = json.loads(path.read_text(encoding="utf-8"))
         value = document.get("language") if isinstance(document, dict) else None
         return value if isinstance(value, str) and value in LANGUAGES else "auto"
-    except (OSError, ValueError):
+    except OSError, ValueError:
         return "auto"
 
 

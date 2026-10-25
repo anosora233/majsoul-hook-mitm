@@ -89,7 +89,7 @@ class Frame:
     wrapper: Message
 
     @classmethod
-    def parse(cls, schema: Schema, content: bytes, *, max_size: int = MAX_FRAME_SIZE) -> "Frame":
+    def parse(cls, schema: Schema, content: bytes, *, max_size: int = MAX_FRAME_SIZE) -> Frame:
         if not content or content[0] not in (1, 2, 3) or len(content) > max_size:
             raise ValueError("Invalid frame kind or size")
         offset = 1 if content[0] == 1 else 3

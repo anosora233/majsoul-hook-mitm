@@ -1,5 +1,5 @@
 [build-system]
-requires = ["hatchling>=1.27", "babel>=2.18,<3"]
+requires = ["hatchling>=1.27", "babel>=2.18,<3", "resvg-py>=0.5,<0.6"]
 build-backend = "hatchling.build"
 
 [project]
@@ -7,7 +7,7 @@ name = "majsoul-hook-mitm"
 version = "0.1.0"
 description = "Mahjong Soul local capture with optional client-side cosmetic overrides"
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.14"
 license = "GPL-3.0-or-later"
 dependencies = [
     "mitmproxy>=12,<13",
@@ -18,6 +18,7 @@ dependencies = [
 
 [dependency-groups]
 dev = ["pytest>=8,<10", "ruff>=0.12,<1", "babel>=2.18,<3"]
+build = ["pyinstaller>=6.22.3,<7", "babel>=2.18,<3"]
 
 [project.scripts]
 majsoul-hook = "majsoul_hook.cli:main"
@@ -46,8 +47,13 @@ include = [
     "/.gitattributes",
     "/hatch_build.py",
     "/babel.cfg",
+    "/release",
+    "/.github/workflows",
+    "/.github/actions",
+    "/Dockerfile",
+    "/.dockerignore",
 ]
-exclude = ["*.mo"]
+exclude = ["*.mo", "/src/majsoul_hook/assets/icon.png"]
 
 [tool.uv]
 cache-keys = [
@@ -55,13 +61,14 @@ cache-keys = [
     { file = "hatch_build.py" },
     { file = "README.md" },
     { file = "src/majsoul_hook/locale/**/*.po" },
+    { file = "src/majsoul_hook/assets/icon.svg" },
 ]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 
 [tool.ruff]
-target-version = "py312"
+target-version = "py314"
 line-length = 100
 
 [tool.ruff.lint]

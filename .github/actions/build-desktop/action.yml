@@ -1,0 +1,44 @@
+name: Build native desktop packages
+description: Use the project Python, test source, and build the host's packages.
+runs:
+  using: composite
+  steps:
+    - name: Install project Python and dependencies
+      shell: bash
+      run: |
+        uv python install
+        uv sync --locked --group build
+    - name: Check source
+      shell: bash
+      run: |
+        uv run --locked --group build ruff check src tests release hatch_build.py
+        uv run --locked --group build ruff format --check src tests release hatch_build.py
+        uv run --locked --group build pytest -q -rs --ignore=tests/test_gui.py
+    - name: Test GUI on Linux
+      if: runner.os == 'Linux'
+      shell: bash
+      run: xvfb-run -a uv run --locked --group build python release/test_gui.py
+    - name: Test GUI on Windows and macOS
+      if: runner.os != 'Linux'
+      shell: bash
+      run: uv run --locked --group build python release/test_gui.py
+    - name: Install Windows installer compiler
+      if: runner.os == 'Windows'
+      shell: pwsh
+      run: choco install innosetup --yes --no-progress
+    - name: Build Windows packages
+      if: runner.os == 'Windows'
+      shell: bash
+      run: uv run --locked --group build python release/build.py --installer
+    - name: Build Linux package
+      if: runner.os == 'Linux'
+      shell: bash
+      run: xvfb-run -a uv run --locked --group build python release/build.py
+    - name: Build macOS app
+      if: runner.os == 'macOS'
+      shell: bash
+      run: uv run --locked --group build python release/build.py
+    - name: Verify macOS app signature structure
+      if: runner.os == 'macOS'
+      shell: bash
+      run: codesign --verify --deep --strict 'dist/Majsoul Hook.app'
