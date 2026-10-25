@@ -45,7 +45,9 @@ jobs:
         uses: actions/upload-artifact@v7.0.2
         with:
           name: logs-${{ matrix.target }}
-          path: build/**/*.log
+          path: |
+            build/**/*.log
+            build/**/warn-*.txt
           if-no-files-found: ignore
   linux:
     strategy:
@@ -84,7 +86,9 @@ jobs:
         uses: actions/upload-artifact@v7.0.2
         with:
           name: logs-${{ matrix.target }}
-          path: build/**/*.log
+          path: |
+            build/**/*.log
+            build/**/warn-*.txt
           if-no-files-found: ignore
   python:
     runs-on: ubuntu-24.04
@@ -107,6 +111,64 @@ jobs:
           path: dist/python/
           if-no-files-found: error
           compression-level: 0
+  release-assets:
+    needs: [desktop, linux, python, docker]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: astral-sh/setup-uv@v10.3.2
+        with:
+          version: '0.12.22'
+      - uses: actions/download-artifact@v8.0.2
+        with:
+          pattern: packages-*
+          path: build/release-artifacts
+      - name: Verify and collect release packages
+        env:
+          RELEASE_TAG: ${{ github.ref_type == 'tag' && github.ref_name || '' }}
+        run: uv run --no-project --python 3.14 python release/prepare_release.py --tag "$RELEASE_TAG"
+      - uses: actions/upload-artifact@v7.0.2
+        with:
+          name: release-assets
+          path: dist/release/
+          if-no-files-found: error
+          compression-level: 0
+  draft-release:
+    needs: release-assets
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    concurrency:
+      group: draft-release-${{ github.ref }}
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/download-artifact@v8.0.2
+        with:
+          name: release-assets
+          path: dist/release
+      - name: Create or update draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        shell: bash
+        run: |
+          notes="release/notes/$RELEASE_TAG.md"
+          if draft=$(gh release view "$RELEASE_TAG" --json isDraft --jq .isDraft 2>/dev/null); then
+            if [ "$draft" != true ]; then
+              echo "Refusing to change an already published release" >&2
+              exit 1
+            fi
+            gh release edit "$RELEASE_TAG" --title "Majsoul Hook $RELEASE_TAG" --notes-file "$notes"
+            gh release upload "$RELEASE_TAG" dist/release/* --clobber
+          else
+            gh release create "$RELEASE_TAG" dist/release/* --draft --verify-tag \
+              --title "Majsoul Hook $RELEASE_TAG" --notes-file "$notes"
+          fi
   docker:
     strategy:
       fail-fast: false

@@ -16,9 +16,22 @@ The tracked icon source is `src/majsoul_hook/assets/icon.svg`. The package build
 | Python | `.whl` and source `.tar.gz` | Ubuntu |
 | Docker, Linux x64/ARM64 | `docker save` image archive `.tar.gz` | Native Ubuntu runners |
 
-The [Build packages workflow](../.github/workflows/build.yml) runs manually through **Actions → Build packages → Run workflow**, or automatically for `v*` tags. Desktop builds reject a tag that differs from the version in `pyproject.toml`. Each job uploads an artifact named `packages-<target>`, with SHA-256 checksums. Python packages use `SHA256SUMS`. Docker images are exported independently for each architecture; the workflow does not push a registry, publish GitHub Releases, upload to PyPI, or submit to Microsoft Store.
+The [Build packages workflow](../.github/workflows/build.yml) runs manually through **Actions → Build packages → Run workflow**, or automatically for `v*` tags. Desktop builds reject a tag that differs from the version in `pyproject.toml`. Each job uploads an artifact named `packages-<target>`, with SHA-256 checksums. Python packages use `SHA256SUMS`. Docker images are exported independently for each architecture. The workflow does not push a registry, upload to PyPI, or submit to Microsoft Store.
 
 Desktop CI checks Ruff, core tests, and every GUI test in a separate interpreter. Linux GUI tests and frozen smoke checks run under Xvfb. Build logs are uploaded even when a build fails. Linux packages are built against Debian 12's glibc baseline, not musl/Alpine. Kernel requirements for local capture are separate from the packaging baseline.
+
+## Prepare a release
+
+The `release-assets` job waits for all build jobs, verifies the ten packages against their checksums, and collects them with individual `.sha256` files and one combined `SHA256SUMS`. Only named public packages are copied; build reports and logs remain in Actions artifacts. Manual runs exercise this assembly without creating a Release.
+
+For a new version, update `pyproject.toml`, run `uv lock`, and add English notes at `release/notes/v<VERSION>.md`. Commit and push the changes, then complete a manual build before pushing an annotated tag matching the project version:
+
+```text
+git tag -a v0.1.0 -m "Release v0.1.0"
+git push origin v0.1.0
+```
+
+A successful tag-triggered build creates a **draft** GitHub Release and uploads the verified assets. Only this job receives `contents: write`. Rerunning it may refresh the draft; it refuses to change an already published Release. Inspect the downloads and notes before manually publishing the draft. No tag or Release is created by the local preparation script.
 
 ## Build locally
 

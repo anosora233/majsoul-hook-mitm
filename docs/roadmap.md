@@ -23,7 +23,7 @@ Acceptance: readiness, transport, and parsing failures are recognizable without 
 - Offline replay of synthetic or reviewed anonymized binary samples through the existing decoder.
 - Report descriptor/method counts and mappings whose message types are absent from public resources.
 - Extend checks for deterministic resource content, interruption recovery, and corrupt/missing caches.
-- Run the prepared native build workflow on all target platforms and resolve platform-specific failures; keep synthetic CI checks independent of elevated interception.
+- Exercise the new release-assembly and draft workflow after the successful native build run; keep synthetic CI checks independent of elevated interception.
 
 Acceptance: a clean checkout installs and runs synthetic tests without the game, reference repositories, downloaded resources, or Node.js.
 
